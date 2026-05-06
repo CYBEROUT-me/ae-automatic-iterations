@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>AE Iterations</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<div id="layer-section">
+  <div id="layer-info">No layer selected</div>
+  <button id="btn-refresh">Refresh Layer</button>
+</div>
+
+<div id="change-type-section">
+  <label>Change type:</label>
+  <select id="change-type">
+    <option value="shapeColor">Shape Color</option>
+    <option value="textColor">Text Color</option>
+    <option value="textFont">Text Font</option>
+  </select>
+</div>
+
+<div id="font-search-section" class="hidden">
+  <input type="text" id="font-search" placeholder="Search font…" autocomplete="off"/>
+  <div id="font-dropdown" class="hidden"></div>
+</div>
+
+<div id="iterations-section">
+  <div class="iter-header">
+    <span class="col-iter">Iter</span>
+    <span class="col-value" id="col-value-label">Color</span>
+  </div>
+
+  <div class="iter-row" data-i="0">
+    <span class="iter-num">1</span>
+    <div class="color-cell">
+      <input type="color" class="color-pick" value="#ff0000"/>
+      <input type="text"  class="hex-input"  value="#FF0000" maxlength="7"/>
+    </div>
+    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+  </div>
+
+  <div class="iter-row" data-i="1">
+    <span class="iter-num">2</span>
+    <div class="color-cell">
+      <input type="color" class="color-pick" value="#00ff00"/>
+      <input type="text"  class="hex-input"  value="#00FF00" maxlength="7"/>
+    </div>
+    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+  </div>
+
+  <div class="iter-row" data-i="2">
+    <span class="iter-num">3</span>
+    <div class="color-cell">
+      <input type="color" class="color-pick" value="#0000ff"/>
+      <input type="text"  class="hex-input"  value="#0000FF" maxlength="7"/>
+    </div>
+    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+  </div>
+
+  <div class="iter-row" data-i="3">
+    <span class="iter-num">4</span>
+    <div class="color-cell">
+      <input type="color" class="color-pick" value="#ffff00"/>
+      <input type="text"  class="hex-input"  value="#FFFF00" maxlength="7"/>
+    </div>
+    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+  </div>
+
+  <div class="iter-row" data-i="4">
+    <span class="iter-num">5</span>
+    <div class="color-cell">
+      <input type="color" class="color-pick" value="#ff00ff"/>
+      <input type="text"  class="hex-input"  value="#FF00FF" maxlength="7"/>
+    </div>
+    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+  </div>
+</div>
+
+<div id="run-section">
+  <div id="btn-row">
+    <button id="btn-test" disabled>Test Apply</button>
+    <button id="btn-run" disabled>Run Iterations</button>
+  </div>
+  <div id="status"></div>
+  <pre id="debug-log" class="hidden"></pre>
+</div>
+
+<script src="js/CSInterface.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

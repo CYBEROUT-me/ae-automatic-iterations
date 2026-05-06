@@ -12,6 +12,10 @@
   <button id="btn-refresh">Refresh Layer</button>
 </div>
 
+<div id="same-all-section" class="hidden">
+  <label><input type="checkbox" id="same-for-all" checked/> Same value for all layers</label>
+</div>
+
 <div id="change-type-section">
   <label>Change type:</label>
   <select id="change-type">
@@ -38,7 +42,7 @@
       <input type="color" class="color-pick" value="#ff0000"/>
       <input type="text"  class="hex-input"  value="#FF0000" maxlength="7"/>
     </div>
-    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+    <input type="text" class="font-input hidden" placeholder="Font (PostScript name)"/>
   </div>
 
   <div class="iter-row" data-i="1">
@@ -47,7 +51,7 @@
       <input type="color" class="color-pick" value="#00ff00"/>
       <input type="text"  class="hex-input"  value="#00FF00" maxlength="7"/>
     </div>
-    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+    <input type="text" class="font-input hidden" placeholder="Font (PostScript name)"/>
   </div>
 
   <div class="iter-row" data-i="2">
@@ -56,7 +60,7 @@
       <input type="color" class="color-pick" value="#0000ff"/>
       <input type="text"  class="hex-input"  value="#0000FF" maxlength="7"/>
     </div>
-    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+    <input type="text" class="font-input hidden" placeholder="Font (PostScript name)"/>
   </div>
 
   <div class="iter-row" data-i="3">
@@ -65,7 +69,7 @@
       <input type="color" class="color-pick" value="#ffff00"/>
       <input type="text"  class="hex-input"  value="#FFFF00" maxlength="7"/>
     </div>
-    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+    <input type="text" class="font-input hidden" placeholder="Font (PostScript name)"/>
   </div>
 
   <div class="iter-row" data-i="4">
@@ -74,9 +78,11 @@
       <input type="color" class="color-pick" value="#ff00ff"/>
       <input type="text"  class="hex-input"  value="#FF00FF" maxlength="7"/>
     </div>
-    <input type="text" class="font-input hidden" placeholder="PostScript name"/>
+    <input type="text" class="font-input hidden" placeholder="Font (PostScript name)"/>
   </div>
 </div>
+
+<div id="extra-layers-section"></div>
 
 <div id="run-section">
   <div id="btn-row">

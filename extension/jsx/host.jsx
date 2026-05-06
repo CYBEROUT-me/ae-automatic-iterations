@@ -1,4 +1,6 @@
-// host.jsx — CEP entry point.  All logic lives in lib/*.jsx.
+// host.jsx — CEP entry point.
+// NOTE: install.sh concatenates lib/*.jsx + this file (minus #include lines)
+//       into the deployed host.jsx, so #include is only used for direct dev loading.
 
 #include "lib/naming.jsx"
 #include "lib/layer-utils.jsx"
@@ -7,7 +9,50 @@
 #include "lib/collect.jsx"
 #include "lib/project.jsx"
 
-// ── CEP: read selected layer ──────────────────────────────────────────────────
+// ── Per-layer apply helpers ───────────────────────────────────────────────────
+
+// val = { color: [r,g,b] | null, font: "str" | null }
+// Returns array of log strings.
+function applyLayerValue(layer, lc, val) {
+    var log = [];
+    if (lc.layerType === "shape") {
+        var ok = applyChange(layer, { changeType: "shapeColor", fillPath: lc.fillPath, value: val.color });
+        log.push("→ shapeColor: " + (ok ? "OK" : "FAILED"));
+    } else if (lc.layerType === "text") {
+        if (val.color) {
+            var okC = applyChange(layer, { changeType: "textColor", value: val.color });
+            log.push("→ textColor: " + (okC ? "OK" : "FAILED"));
+        }
+        if (val.font) {
+            var okF = applyChange(layer, { changeType: "textFont", value: val.font });
+            log.push("→ textFont: " + (okF ? "OK" : "FAILED"));
+        }
+        if (!val.color && !val.font) log.push("→ nothing to apply (no color, no font)");
+    } else {
+        log.push("→ skipped (unsupported type: " + lc.layerType + ")");
+    }
+    return log;
+}
+
+// Same as applyLayerValue but returns an error string on failure, or null on success.
+function applyLayerValueStrict(layer, lc, val, iterNum) {
+    if (lc.layerType === "shape") {
+        var ok = applyChange(layer, { changeType: "shapeColor", fillPath: lc.fillPath, value: val.color });
+        if (!ok) return "Iter " + iterNum + ": shapeColor failed — layer " + lc.index + "  fillPath=" + lc.fillPath;
+    } else if (lc.layerType === "text") {
+        if (val.color) {
+            var okC = applyChange(layer, { changeType: "textColor", value: val.color });
+            if (!okC) return "Iter " + iterNum + ": textColor failed — layer " + lc.index;
+        }
+        if (val.font) {
+            var okF = applyChange(layer, { changeType: "textFont", value: val.font });
+            if (!okF) return "Iter " + iterNum + ": textFont failed — layer " + lc.index;
+        }
+    }
+    return null;
+}
+
+// ── CEP: read ALL selected layers ─────────────────────────────────────────────
 
 function getLayerInfoJSON() {
     try {
@@ -16,32 +61,42 @@ function getLayerInfoJSON() {
         var sel = comp.selectedLayers;
         if (sel.length === 0) return JSON.stringify({ error: "No layer selected" });
 
-        var layer = sel[0];
-        var type  = getLayerType(layer);
-        var info  = { name: layer.name, index: layer.index, compName: comp.name, type: type };
-
-        if (type === "shape") {
-            info.fills = collectFills(layer.property("Contents"), "Contents");
-        } else if (type === "text") {
-            var td     = layer.property("Source Text").value;
-            info.color = td.fillColor;
-            info.font  = td.font;
+        var layers = [];
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            var type  = getLayerType(layer);
+            var info  = { name: layer.name, index: layer.index, type: type };
+            if (type === "shape") {
+                info.fills = collectFills(layer.property("Contents"), "Contents");
+            } else if (type === "text") {
+                var td     = layer.property("Source Text").value;
+                info.color = td.fillColor;
+                info.font  = td.font;
+            }
+            layers.push(info);
         }
 
-        return JSON.stringify(info);
+        return JSON.stringify({ compName: comp.name, layers: layers });
     } catch (e) {
         return JSON.stringify({ error: e.message });
     }
 }
 
 // ── CEP: debug — apply only, no render/collect ────────────────────────────────
-// cfg: { layerIndex, compName, changeType, fillPath, value }
-// Returns detailed log so the panel can show exactly what happened.
+// cfg: { compName, layers:[{index, fillPath, layerType}], value:[{color,font},...] }
 
 function debugApplyChangeJSON(configJSON) {
     try {
         var cfg = JSON.parse(configJSON);
         var log = [];
+
+        // Show which ITR comps are in the project
+        var itrComps  = findItrComps();
+        var itrFound  = [];
+        for (var s = 0; s < ITR_SUFFIXES.length; s++) {
+            if (itrComps[ITR_SUFFIXES[s]]) itrFound.push(itrComps[ITR_SUFFIXES[s]].name);
+        }
+        log.push("ITR comps: " + (itrFound.length ? itrFound.join(", ") : "NONE FOUND — check comp names"));
 
         var comp = null;
         for (var ci = 1; ci <= app.project.numItems; ci++) {
@@ -49,38 +104,28 @@ function debugApplyChangeJSON(configJSON) {
             if ((it instanceof CompItem) && it.name === cfg.compName) { comp = it; break; }
         }
         if (!comp) return JSON.stringify({ error: "Comp not found: " + cfg.compName });
-        log.push("Comp: " + comp.name);
-
-        var layer = comp.layer(cfg.layerIndex);
-        if (!layer) return JSON.stringify({ error: "No layer at index " + cfg.layerIndex });
-        log.push("Layer: " + layer.name + "  index=" + layer.index);
-
-        var type = getLayerType(layer);
-        log.push("Type: " + type);
-
-        if (type === "shape") {
-            var fills = collectFills(layer.property("Contents"), "Contents");
-            log.push("Fills found: " + fills.length);
-            for (var f = 0; f < fills.length; f++) log.push("  " + fills[f].path);
-            log.push("fillPath used: " + cfg.fillPath);
-        }
+        log.push("Target comp: " + comp.name);
 
         app.beginUndoGroup("Debug Apply");
-        var ok = applyChange(layer, { changeType: cfg.changeType, fillPath: cfg.fillPath, value: cfg.value });
+        for (var li = 0; li < cfg.layers.length; li++) {
+            var lc    = cfg.layers[li];
+            var layer = comp.layer(lc.index);
+            if (!layer) { log.push("Layer " + lc.index + ": NOT FOUND"); continue; }
+            log.push("Layer " + lc.index + ": " + layer.name + "  [" + lc.layerType + "]  fillPath=" + lc.fillPath);
+            var val = cfg.value[li]; // { color, font }
+            var results = applyLayerValue(layer, lc, val);
+            for (var ri = 0; ri < results.length; ri++) log.push("  " + results[ri]);
+        }
         app.endUndoGroup();
 
-        log.push("applyChange: " + (ok ? "OK" : "FAILED"));
-
-        if (!ok) return JSON.stringify({ error: "applyChange returned false — wrong path or type mismatch", log: log });
         return JSON.stringify({ success: true, log: log });
-
     } catch (e) {
         return JSON.stringify({ error: e.message });
     }
 }
 
 // ── CEP: run all 5 iterations ─────────────────────────────────────────────────
-// cfg: { layerIndex, compName, changeType, fillPath, values[5] }
+// cfg: { compName, layers:[{index, fillPath, layerType}], values:[[{color,font},...] × 5] }
 
 function runIterationsJSON(configJSON) {
     try {
@@ -102,24 +147,32 @@ function runIterationsJSON(configJSON) {
             }
             if (!comp) return JSON.stringify({ error: "Iter " + (iter + 1) + ": comp not found: " + currentCompName });
 
-            var layer = comp.layer(cfg.layerIndex);
-            if (!layer) return JSON.stringify({ error: "Iter " + (iter + 1) + ": no layer at index " + cfg.layerIndex });
-
+            // Apply to every selected layer
             app.beginUndoGroup("Iteration " + (iter + 1));
-            var ok = applyChange(layer, { changeType: cfg.changeType, fillPath: cfg.fillPath, value: cfg.values[iter] });
+            for (var li = 0; li < cfg.layers.length; li++) {
+                var lc    = cfg.layers[li];
+                var layer = comp.layer(lc.index);
+                if (!layer) { warnings.push("Iter " + (iter + 1) + ": layer " + lc.index + " not found"); continue; }
+                var val = cfg.values[iter][li]; // { color, font }
+                var err = applyLayerValueStrict(layer, lc, val, iter + 1);
+                if (err) {
+                    app.endUndoGroup();
+                    return JSON.stringify({ error: err });
+                }
+            }
             app.endUndoGroup();
-
-            if (!ok) return JSON.stringify({ error: "Iter " + (iter + 1) + ": applyChange failed. changeType=" + cfg.changeType + "  fillPath=" + cfg.fillPath });
 
             app.project.save(currentFile);
 
-            var baseName      = currentFile.name.replace(/\.[^.]+$/, "");
-            var collectFolder = new Folder(currentFile.parent.fsName + "/" + baseName + " folder");
+            var baseName        = currentFile.name.replace(/\.[^.]+$/, "");
+            var deliveryFolder  = new Folder(currentFile.parent.fsName + "/" + baseName);
+            if (!deliveryFolder.exists) deliveryFolder.create();
+            var collectFolder   = new Folder(deliveryFolder.fsName + "/" + baseName + " folder");
             if (!collectFolder.exists) collectFolder.create();
 
             var itrComps = findItrComps();
-            try { renderPNGs(itrComps, collectFolder); }    catch (e) { warnings.push("Iter " + (iter + 1) + " PNG: " + e.message); }
-            try { renderVideos(itrComps, collectFolder); }  catch (e) { warnings.push("Iter " + (iter + 1) + " video: " + e.message); }
+            try { renderPNGs(itrComps, deliveryFolder); }   catch (e) { warnings.push("Iter " + (iter + 1) + " PNG: " + e.message); }
+            try { renderVideos(itrComps, deliveryFolder); } catch (e) { warnings.push("Iter " + (iter + 1) + " video: " + e.message); }
             try { performCollect(currentFile, collectFolder); } catch (e) { warnings.push("Iter " + (iter + 1) + " collect: " + e.message); }
 
             if (iter < 4) {

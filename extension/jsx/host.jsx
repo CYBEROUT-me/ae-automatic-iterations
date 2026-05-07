@@ -106,6 +106,7 @@ function debugApplyChangeJSON(configJSON) {
         if (!comp) return JSON.stringify({ error: "Comp not found: " + cfg.compName });
         log.push("Target comp: " + comp.name);
 
+        app.beginSuppressDialogs();
         app.beginUndoGroup("Debug Apply");
         for (var li = 0; li < cfg.layers.length; li++) {
             var lc    = cfg.layers[li];
@@ -117,9 +118,11 @@ function debugApplyChangeJSON(configJSON) {
             for (var ri = 0; ri < results.length; ri++) log.push("  " + results[ri]);
         }
         app.endUndoGroup();
+        app.endSuppressDialogs(false);
 
         return JSON.stringify({ success: true, log: log });
     } catch (e) {
+        try { app.endSuppressDialogs(false); } catch (e2) {}
         return JSON.stringify({ error: e.message });
     }
 }
@@ -138,6 +141,8 @@ function runIterationsJSON(configJSON) {
         var currentCompName = cfg.compName;
         var warnings        = [];
 
+        app.beginSuppressDialogs();
+
         for (var iter = 0; iter < 5; iter++) {
 
             var comp = null;
@@ -145,7 +150,10 @@ function runIterationsJSON(configJSON) {
                 var it = app.project.item(ci);
                 if ((it instanceof CompItem) && it.name === currentCompName) { comp = it; break; }
             }
-            if (!comp) return JSON.stringify({ error: "Iter " + (iter + 1) + ": comp not found: " + currentCompName });
+            if (!comp) {
+                app.endSuppressDialogs(false);
+                return JSON.stringify({ error: "Iter " + (iter + 1) + ": comp not found: " + currentCompName });
+            }
 
             // Apply to every selected layer
             app.beginUndoGroup("Iteration " + (iter + 1));
@@ -157,6 +165,7 @@ function runIterationsJSON(configJSON) {
                 var err = applyLayerValueStrict(layer, lc, val, iter + 1);
                 if (err) {
                     app.endUndoGroup();
+                    app.endSuppressDialogs(false);
                     return JSON.stringify({ error: err });
                 }
             }
@@ -187,9 +196,11 @@ function runIterationsJSON(configJSON) {
             }
         }
 
+        app.endSuppressDialogs(false);
         return JSON.stringify({ success: true, warnings: warnings });
 
     } catch (e) {
+        try { app.endSuppressDialogs(false); } catch (e2) {}
         return JSON.stringify({ error: e.message });
     }
 }

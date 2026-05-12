@@ -9,6 +9,44 @@
 #include "lib/collect.jsx"
 #include "lib/project.jsx"
 
+// ── CEP: read specific layers by timeline index (no selection required) ───────
+// cfg: { compName, layers: [{index, layerType}] }
+
+function readLayerValuesJSON(configJSON) {
+    try {
+        var cfg  = JSON.parse(configJSON);
+        var comp = null;
+        for (var ci = 1; ci <= app.project.numItems; ci++) {
+            var it = app.project.item(ci);
+            if ((it instanceof CompItem) && it.name === cfg.compName) { comp = it; break; }
+        }
+        if (!comp) return JSON.stringify({ error: "Comp not found: " + cfg.compName });
+
+        var results = [];
+        for (var li = 0; li < cfg.layers.length; li++) {
+            var lc    = cfg.layers[li];
+            var layer = comp.layer(lc.index);
+            if (!layer) { results.push(null); continue; }
+
+            var info = { type: lc.layerType };
+            if (lc.layerType === "shape") {
+                var fills = collectFills(layer.property("Contents"), "Contents");
+                info.fills = fills;
+                info.color = fills.length ? fills[0].color : null;
+            } else if (lc.layerType === "text") {
+                var td     = layer.property("Source Text").value;
+                info.color = td.fillColor;
+                info.font  = td.font;
+            }
+            results.push(info);
+        }
+
+        return JSON.stringify({ success: true, layers: results });
+    } catch (e) {
+        return JSON.stringify({ error: e.message });
+    }
+}
+
 // ── Per-layer apply helpers ───────────────────────────────────────────────────
 
 // val = { color: [r,g,b] | null, font: "str" | null }
@@ -174,7 +212,9 @@ function runIterationsJSON(configJSON) {
             app.project.save(currentFile);
 
             var baseName        = currentFile.name.replace(/\.[^.]+$/, "");
-            var deliveryFolder  = new Folder(currentFile.parent.fsName + "/" + baseName);
+            var gdFolder        = new Folder(currentFile.parent.fsName + "/GD");
+            if (!gdFolder.exists) gdFolder.create();
+            var deliveryFolder  = new Folder(gdFolder.fsName + "/" + baseName);
             if (!deliveryFolder.exists) deliveryFolder.create();
             var collectFolder   = new Folder(deliveryFolder.fsName + "/" + baseName + " folder");
             if (!collectFolder.exists) collectFolder.create();

@@ -234,6 +234,20 @@
                     row.appendChild(fi);
                 }
 
+                // Sample button
+                var pb = document.createElement("button");
+                pb.className   = "sample-btn";
+                pb.title       = "Capture current AE values into this row";
+                pb.innerHTML   = "&#8592;";
+                pb.dataset.row = iter;
+                (function (rowIdx, liIdx, pbEl) {
+                    pbEl.addEventListener("click", function () {
+                        if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
+                        sampleRow(rowIdx, liIdx, pbEl);
+                    });
+                })(iter, li, pb);
+                row.appendChild(pb);
+
                 group.appendChild(row);
             }
 
@@ -325,6 +339,98 @@
 
         return result;
     }
+
+    // ── Per-row sample (AE → extension) ──────────────────────────────────────
+    // Reads current layer state from AE and populates the target row's inputs.
+
+    function fillRowFromLayer(iter, layer, section) {
+        var hex;
+        if (layer.type === "shape" && layer.fills && layer.fills.length) {
+            hex = rgbToHex(layer.fills[0].color).toUpperCase();
+        } else if (layer.type === "text" && layer.color) {
+            hex = rgbToHex(layer.color).toUpperCase();
+        }
+        if (hex) {
+            var cp = section.querySelectorAll(".color-pick");
+            var hi = section.querySelectorAll(".hex-input");
+            if (cp[iter]) cp[iter].value = hex.toLowerCase();
+            if (hi[iter]) hi[iter].value = hex;
+        }
+        if (layer.type === "text" && layer.font) {
+            var fi = section.querySelectorAll(".font-input");
+            if (fi[iter]) fi[iter].value = layer.font;
+        }
+    }
+
+    function fillExtraRowFromLayer(iter, layerIdx, layer) {
+        var hex;
+        if (layer.type === "shape" && layer.fills && layer.fills.length) {
+            hex = rgbToHex(layer.fills[0].color).toUpperCase();
+        } else if (layer.type === "text" && layer.color) {
+            hex = rgbToHex(layer.color).toUpperCase();
+        }
+        if (hex) {
+            var cp = extraLayersSection.querySelector('.color-pick[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+            var hi = extraLayersSection.querySelector('.hex-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+            if (cp) cp.value = hex.toLowerCase();
+            if (hi) hi.value = hex;
+        }
+        if (layer.type === "text" && layer.font) {
+            var fi = extraLayersSection.querySelector('.font-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+            if (fi) fi.value = layer.font;
+        }
+    }
+
+    // Reads a specific layer by its timeline index — no selection needed.
+    function sampleRow(iter, layerIdx, btn) {
+        if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
+
+        var target = layerInfo.layers[layerIdx];
+        if (!target) { setStatus("Layer info missing — click Refresh first.", true); return; }
+
+        var cfg = {
+            compName: layerInfo.compName,
+            layers: [{ index: target.index, layerType: target.type }]
+        };
+
+        if (btn) btn.classList.add("sampling");
+        setStatus("Reading from AE…");
+
+        cs.evalScript(
+            "readLayerValuesJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")",
+            function (result) {
+                if (btn) btn.classList.remove("sampling");
+                try {
+                    var res = JSON.parse(result);
+                    if (res.error) { setStatus(res.error, true); return; }
+
+                    var fresh = res.layers[0];
+                    if (!fresh) { setStatus("Layer not found in comp.", true); return; }
+
+                    // Merge fresh values back into stored layerInfo
+                    if (fresh.color) target.color = fresh.color;
+                    if (fresh.font)  target.font  = fresh.font;
+                    if (fresh.fills) target.fills  = fresh.fills;
+
+                    if (layerIdx === 0) {
+                        fillRowFromLayer(iter, target, document.getElementById("iterations-section"));
+                    } else {
+                        fillExtraRowFromLayer(iter, layerIdx, target);
+                    }
+
+                    setStatus("Row " + (iter + 1) + " captured from AE", false, true);
+                } catch (e) { setStatus("Parse error: " + e.message, true); }
+            }
+        );
+    }
+
+    // Wire static sample buttons — always layer 0 (main section)
+    document.querySelectorAll("#iterations-section .sample-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
+            sampleRow(parseInt(this.dataset.row, 10), 0, this);
+        });
+    });
 
     // ── Test Apply ────────────────────────────────────────────────────────────
 

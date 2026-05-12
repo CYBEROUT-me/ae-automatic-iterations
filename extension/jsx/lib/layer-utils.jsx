@@ -3,8 +3,8 @@
 var ITR_SUFFIXES = ["ITR_9x16", "ITR_1x1", "ITR_16x9"];
 
 function getLayerType(layer) {
-    if (layer.property("Contents"))    return "shape";
-    if (layer.property("Source Text")) return "text";
+    if (layer instanceof ShapeLayer) return "shape";
+    if (layer instanceof TextLayer)  return "text";
     return "unknown";
 }
 

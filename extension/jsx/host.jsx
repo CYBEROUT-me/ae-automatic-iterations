@@ -37,6 +37,12 @@ function readLayerValuesJSON(configJSON) {
                 var td     = layer.property("Source Text").value;
                 info.color = td.fillColor;
                 info.font  = td.font;
+            } else if (lc.layerType === "stroke") {
+                try {
+                    var sp = lc.fillPath.split("/"), sc = layer;
+                    for (var pi = 0; pi < sp.length; pi++) sc = sc.property(sp[pi]);
+                    info.color = sc.property("Color").value;
+                } catch (e) { info.color = null; }
             }
             results.push(info);
         }
@@ -56,6 +62,9 @@ function applyLayerValue(layer, lc, val) {
     if (lc.layerType === "shape") {
         var ok = applyChange(layer, { changeType: "shapeColor", fillPath: lc.fillPath, value: val.color });
         log.push("→ shapeColor: " + (ok ? "OK" : "FAILED"));
+    } else if (lc.layerType === "stroke") {
+        var ok = applyChange(layer, { changeType: "strokeColor", fillPath: lc.fillPath, value: val.color });
+        log.push("→ strokeColor: " + (ok ? "OK" : "FAILED"));
     } else if (lc.layerType === "text") {
         if (val.color) {
             var okC = applyChange(layer, { changeType: "textColor", value: val.color });
@@ -77,6 +86,9 @@ function applyLayerValueStrict(layer, lc, val, iterNum) {
     if (lc.layerType === "shape") {
         var ok = applyChange(layer, { changeType: "shapeColor", fillPath: lc.fillPath, value: val.color });
         if (!ok) return "Iter " + iterNum + ": shapeColor failed — layer " + lc.index + "  fillPath=" + lc.fillPath;
+    } else if (lc.layerType === "stroke") {
+        var ok = applyChange(layer, { changeType: "strokeColor", fillPath: lc.fillPath, value: val.color });
+        if (!ok) return "Iter " + iterNum + ": strokeColor failed — layer " + lc.index + "  path=" + lc.fillPath;
     } else if (lc.layerType === "text") {
         if (val.color) {
             var okC = applyChange(layer, { changeType: "textColor", value: val.color });
@@ -105,7 +117,8 @@ function getLayerInfoJSON() {
             var type  = getLayerType(layer);
             var info  = { name: layer.name, index: layer.index, type: type };
             if (type === "shape") {
-                info.fills = collectFills(layer.property("Contents"), "Contents");
+                info.fills   = collectFills(layer.property("Contents"), "Contents");
+                info.strokes = collectStrokes(layer.property("Contents"), "Contents");
             } else if (type === "text") {
                 var td     = layer.property("Source Text").value;
                 info.color = td.fillColor;

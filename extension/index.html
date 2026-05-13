@@ -2,10 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src https://api.github.com https://github.com https://*.githubusercontent.com https://uploads.github.com;"/>
 <title>AE Iterations</title>
 <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
+
+<div id="update-banner" class="hidden">
+  <span>Update <strong id="update-version"></strong> available</span>
+  <button id="btn-update">Install</button>
+</div>
 
 <div id="layer-section">
   <div id="layer-info">No layer selected</div>
@@ -28,6 +34,17 @@
 <div id="font-search-section" class="hidden">
   <input type="text" id="font-search" placeholder="Search font…" autocomplete="off"/>
   <div id="font-dropdown" class="hidden"></div>
+</div>
+
+<div id="preset-section">
+  <button id="btn-presets">Presets</button>
+  <div id="preset-panel" class="hidden">
+    <div id="preset-save-row">
+      <input type="text" id="preset-name-input" placeholder="Palette name…" maxlength="30"/>
+      <button id="btn-save-preset">Save</button>
+    </div>
+    <div id="preset-list"></div>
+  </div>
 </div>
 
 <div id="iterations-section">
@@ -99,6 +116,7 @@
 </div>
 
 <script src="js/CSInterface.js"></script>
+<script src="js/version.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

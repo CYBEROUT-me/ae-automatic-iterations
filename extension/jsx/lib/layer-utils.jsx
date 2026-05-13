@@ -28,6 +28,26 @@ function collectFills(propGroup, pathSoFar) {
     return fills;
 }
 
+// Returns [{path: "Contents/Group 1/Contents/Stroke 1", color: [r,g,b]}, ...]
+function collectStrokes(propGroup, pathSoFar) {
+    var strokes = [];
+    var count;
+    try { count = propGroup.numProperties; } catch (e) { return strokes; }
+    for (var i = 1; i <= count; i++) {
+        var prop;
+        try { prop = propGroup.property(i); } catch (e) { continue; }
+        var propPath = pathSoFar + "/" + prop.name;
+        if (prop.matchName === "ADBE Vector Shape - Stroke" ||
+            prop.matchName === "ADBE Vector Graphic - Stroke") {
+            try { strokes.push({ path: propPath, color: prop.property("Color").value }); } catch (e) {}
+        } else if (prop.propertyType !== PropertyType.PROPERTY) {
+            var sub = collectStrokes(prop, propPath);
+            for (var s = 0; s < sub.length; s++) strokes.push(sub[s]);
+        }
+    }
+    return strokes;
+}
+
 function findItrComps() {
     var found = {};
     for (var i = 1; i <= app.project.numItems; i++) {

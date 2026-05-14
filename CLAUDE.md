@@ -1,25 +1,26 @@
-# AE Iteration Automation
+# AE Iterations — CEP Extension
 
-Automates creating 5 project iterations in After Effects — each with a different shape color, text color, or text font — and delivers each iteration as a self-contained collect folder with 3 PNG renders.
+Automates creating 5 After Effects project iterations, each with a different value for one or more properties (shape color, stroke color, text color, text font, or video effects). Each iteration is delivered as a self-contained collected folder with 3 PNG renders.
 
 ---
 
-## Project Goal
+## What the Extension Does
 
-Given a base project like `LO_10794_4378_M11_S0_EN_usr_CAM_PRI_Video_ITR_9x16.aep`, produce 5 deliverables:
+Given a base project `LO_10794_4378_M11_S0_EN_usr_CAM_PRI_Video_ITR_9x16.aep`, the user selects layers, sets 5 values per layer, and clicks **Run Iterations**. Output:
 
 ```
-LO_10794_... ← iteration 1  (base project, value 1 applied)
-LO_10795_... ← iteration 2  (copy, value 2 applied)
-LO_10796_... ← iteration 3
-LO_10797_... ← iteration 4
-LO_10798_... ← iteration 5
+LO_10794_... folder/   ← iteration 1 (base project)
+LO_10795_... folder/   ← iteration 2
+LO_10796_... folder/   ← iteration 3
+LO_10797_... folder/   ← iteration 4
+LO_10798_... folder/   ← iteration 5
 ```
 
-Each deliverable folder contains:
-- `[projectName].aep` — collected (self-contained) project
+Each folder contains:
+
+- `[projectName].aep` — collected, self-contained project
 - `(Footage)/` — all footage copied and relinked
-- `[ITR_9x16].png`, `[ITR_1x1].png`, `[ITR_16x9].png` — first-frame renders
+- `[name]_ITR_9x16.png`, `_ITR_1x1.png`, `_ITR_16x9.png` — first-frame renders
 
 ---
 
@@ -27,7 +28,7 @@ Each deliverable folder contains:
 
 Pattern: `LO_AAAAA_BBBB_M11_S0_EN_usr_CAM_PRI_Video_ITR_9x16`
 
-**Segment index 1** (0-indexed, the second segment) is the iteration ID. It increments +1 per copy.
+**Segment index 1** (second `_`-delimited segment) is the iteration ID, incremented +1 per copy.
 
 ```javascript
 function incrementProjectId(nameWithoutExt) {
@@ -37,105 +38,134 @@ function incrementProjectId(nameWithoutExt) {
 }
 ```
 
-The `.aep` extension is stripped before parsing and re-added after.
-
 ---
 
 ## The 3 Precomps
 
-Always render the first frame (time = 0) of the 3 comps whose names **end with**:
+Always render frame 0 of the 3 comps whose names **end with**:
 - `ITR_9x16`
 - `ITR_1x1`
 - `ITR_16x9`
-
-Output: PNG files into the project's output folder.
 
 ---
 
 ## What Can Be Iterated
 
-- Shape layer fill color (traverses `Contents` recursively for `ADBE Vector Shape - Fill`)
-- Text layer fill color (`layer.property("Source Text").value.fillColor`)
-- Text layer font (`layer.property("Source Text").value.font` — PostScript name)
+| Layer Type | Properties |
+|---|---|
+| Shape layer | Fill color (per fill group), stroke color (per stroke group) |
+| Text layer | Fill color, font (PostScript name) |
+| Video / footage / precomp | Flip horizontal, black & white, tint + tint amount, hue shift |
+
+Layer type is auto-detected on Refresh. Multiple layers can be iterated together.
 
 ---
 
-## Module Breakdown & Build Order
+## Repository Structure
 
-| # | File | Purpose |
-|---|------|---------|
-| 1 | `scripts/01_render-precomps.jsx` | Find the 3 ITR comps, render frame 0 as PNG |
-| 2 | `scripts/02_collect.jsx` | Collect project to `[name] folder/` (extracted from Finish Him) |
-| 3 | `scripts/03_copy-project.jsx` | Copy .aep with ID+1, save to same folder |
-| 4 | `scripts/04_read-layers.jsx` | Read selected layers, return type + current values as JSON |
-| 5 | `scripts/05_apply-change.jsx` | Apply one iteration value (color/font) to a specified layer |
-| 6 | `jsx/host.jsx` | CEP orchestrator — combines 1–5, called from panel |
-| 7 | CEP Extension | HTML panel: layer picker, 5 value rows, run button |
+```
+extension/                  ← the CEP extension (source of truth)
+  CSXS/manifest.xml
+  index.html
+  css/style.css
+  js/
+    CSInterface.js          (Adobe-provided, do not edit)
+    main.js                 (panel logic)
+    version.js              (current version string)
+  jsx/
+    host.jsx                (built by install.sh / package.sh — do not edit directly)
+    lib/
+      naming.jsx            (incrementProjectId, project name utils)
+      layer-utils.jsx       (getLayerType, collectFills, collectStrokes, readVideoLayerState)
+      apply-change.jsx      (applyShapeFillColor, applyShapeStrokeColor, applyTextColor, applyTextFont)
+      apply-video.jsx       (applyVideoLayer — flip, B&W, tint, hue)
+      render.jsx            (saveFrameToPng, renderPrecomps)
+      collect.jsx           (collect project to folder, relink footage)
+      project.jsx           (copy project with incremented ID)
+  presets/
+    library.json            (built-in preset library, updated with releases)
+  changelog.json            (release history shown in panel)
+install.sh                  (dev: builds host.jsx and copies to CEP extensions folder)
+package.sh                  (release: bumps version, builds zip, creates GitHub release)
+```
+
+> `jsx/host.jsx` is **generated** — it concatenates all `lib/*.jsx` files then appends the host body. Edit the lib files, not host.jsx directly.
 
 ---
 
-## CEP Extension
+## Development Workflow
 
-**Install path:** `~/Library/Application Support/Adobe/CEP/extensions/com.aeiter.iteration/`
+**Install (dev):**
+```bash
+bash install.sh
+```
+Builds `host.jsx`, copies the extension to `~/Library/Application Support/Adobe/CEP/extensions/com.aeiter.iteration/`. Restart After Effects after.
 
-**Enable unsigned extensions (dev mode, run once):**
+**Enable unsigned extensions (once per machine):**
 ```bash
 defaults write com.adobe.CSXS.11 PlayerDebugMode 1
-```
-(CSXS version 11 = After Effects 26)
-
-**Manifest host version:** `<Host Name="AEFT" Version="26.0" />`
-
-**File structure:**
-```
-com.aeiter.iteration/
-├── CSXS/
-│   └── manifest.xml
-├── index.html
-├── css/
-│   └── style.css
-├── js/
-│   ├── CSInterface.js     (Adobe-provided)
-│   └── main.js
-└── jsx/
-    └── host.jsx
+defaults write com.adobe.CSXS.12 PlayerDebugMode 1
 ```
 
-Font list is loaded via Node.js: `child_process.execSync('system_profiler SPFontsDataType -json')` parses PostScript names on macOS.
+**Release:**
+
+```bash
+export GITHUB_TOKEN=ghp_xxxxxxxxxxxx
+bash package.sh          # auto-increments patch version
+bash package.sh 1.2.0    # explicit version
+```
+
+Bumps `version.js`, builds `AE-Iterations.zip`, commits, tags, pushes, creates GitHub release with zip attached.
+
+---
+
+## Versioning
+
+- `extension/js/version.js` — version string used at runtime in the panel
+- `extension/CSXS/manifest.xml` — CEP bundle version (keep in sync)
+- `extension/changelog.json` — human-readable release notes shown in panel
+
+When releasing, update all three + add an entry to `changelog.json` before running `package.sh`.
+
+---
+
+## Presets
+
+**Built-in library:** `extension/presets/library.json` — ships with the extension, updated on each release.
+
+**User presets:** saved to `~/Library/Application Support/AE Iterations/user-presets.json` — outside the extension folder, survives updates.
+
+Preset format:
+
+```json
+{
+  "name": "Palette Name",
+  "type": "color",
+  "iterations": [
+    { "color": "#FF0000" },
+    { "color": "#00FF00" },
+    ...
+  ]
+}
+```
+
+Video presets use `"type": "video"` and iteration objects with `{ flip, bw, tint, tintAmount, hue }`.
 
 ---
 
 ## Key ExtendScript APIs
 
 | What | API |
-|------|-----|
+| --- | --- |
 | Current project file | `app.project.file` |
 | Render frame as PNG | `comp.saveFrameToPng(0, new File(path))` |
-| Shape fill color prop | `contents.property("ADBE Vector Shape - Fill").property("Color")` |
-| Text fill color | `layer.property("Source Text").value.fillColor` → set via TextDocument |
+| Shape fill color | `contents.property("ADBE Vector Shape - Fill").property("Color")` |
+| Shape stroke color | `contents.property("ADBE Vector Shape - Stroke").property("Color")` |
+| Text fill color | `layer.property("Source Text").value.fillColor` (set via TextDocument) |
 | Text font | `layer.property("Source Text").value.font` (PostScript name) |
+| Video flip | `layer.transform.scale.setValue([-x, y])` |
+| Hue/Saturation effect | matchName `ADBE HUE SATURATION` |
+| Tint effect | matchName `ADBE Tint` |
 | Copy file | `srcFile.copy(destFsPath)` |
 | Open project | `app.open(new File(path))` |
 | Save project | `app.project.save(file)` |
-| Render queue | `app.project.renderQueue` |
-
----
-
-## Reuse from Finish Him 2.1.jsx
-
-| Function | Lines | Used in |
-|----------|-------|---------|
-| `saveFrame()` | 108–118 | Module 1 |
-| `binPath(item)` | 133–140 | Module 2 |
-| `binFolder(item)` | 142–151 | Module 2 |
-| `claimDest()` | 154–167 | Module 2 |
-| `copySingleFile()` | 169–172 | Module 2 |
-| `copySequence()` | 175–198 | Module 2 |
-| `applyRelinks()` | 239–247 | Module 2 |
-| `applyProxyRelinks()` | 249–257 | Module 2 |
-
----
-
-## Existing Files
-
-- `Finish Him 2.1.jsx` — production delivery script (PNG preview + custom collect + render). Source of reusable utilities above.

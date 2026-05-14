@@ -1,0 +1,60 @@
+[
+  {
+    "version": "1.0.7",
+    "date": "2026-05-14",
+    "changes": [
+      "Per-iteration preview: click any iteration number to instantly preview that iteration in AE (Ctrl+Z to undo)",
+      "Changelog button (ℹ) shows release history directly in the panel",
+      "Removed Test Apply button — iteration preview replaces it"
+    ]
+  },
+  {
+    "version": "1.0.6",
+    "date": "2026-05-14",
+    "changes": [
+      "Video/footage layer support: flip horizontal, black & white, tint with adjustable amount, hue shift",
+      "Video effect presets: Warm Tints, Cool Tints, Hue Variants, Mirror Mix",
+      "Preset panel filters by layer type (color vs video) automatically",
+      "Fixed tint amount — default 50% instead of 100%"
+    ]
+  },
+  {
+    "version": "1.0.5",
+    "date": "2026-05-13",
+    "changes": [
+      "Stroke color support for shape layers",
+      "Stroke grouped inside the same card as fill with a visual divider",
+      "Fixed: same-for-all checkbox no longer copies fill color to stroke rows",
+      "Fixed: stroke row inputs now found correctly across the whole document"
+    ]
+  },
+  {
+    "version": "1.0.4",
+    "date": "2026-05-13",
+    "changes": [
+      "Color preset system with built-in library (12 palettes)",
+      "User presets saved to ~/Library/Application Support/AE Iterations/user-presets.json",
+      "User presets survive extension updates"
+    ]
+  },
+  {
+    "version": "1.0.3",
+    "date": "2026-05-13",
+    "changes": [
+      "UI redesign: dark near-black theme, olive accent, pill buttons",
+      "Auto-update via GitHub releases with one-click install",
+      "Per-row sample button captures current AE layer values",
+      "Dialog suppression during script execution",
+      "All output folders placed inside a GD subfolder"
+    ]
+  },
+  {
+    "version": "1.0.2",
+    "date": "2026-05-12",
+    "changes": [
+      "Mixed shape + text layer selection",
+      "Font inputs shown automatically for text layers",
+      "Layer type auto-detected on refresh"
+    ]
+  }
+]

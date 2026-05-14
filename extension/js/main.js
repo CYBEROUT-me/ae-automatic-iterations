@@ -17,7 +17,6 @@
     var fontDropdown       = document.getElementById("font-dropdown");
     var colLabel           = document.getElementById("col-value-label");
     var btnRun             = document.getElementById("btn-run");
-    var btnTest            = document.getElementById("btn-test");
     var statusEl           = document.getElementById("status");
     var debugLog           = document.getElementById("debug-log");
     var sameAllSection     = document.getElementById("same-all-section");
@@ -64,34 +63,215 @@
         });
     }
 
-    // ── Main row color sync ───────────────────────────────────────────────────
+    // ── Row builders ──────────────────────────────────────────────────────────
 
-    function attachMainSync() {
-        var cps = document.querySelectorAll("#iterations-section .color-pick");
-        var his = document.querySelectorAll("#iterations-section .hex-input");
-        for (var i = 0; i < cps.length; i++) syncColorPair(cps[i], his[i]);
+    var DEFAULT_COLORS = ["#FF0000","#00FF00","#0000FF","#FFFF00","#FF00FF"];
+
+    function makeIterNum(iter) {
+        var num = document.createElement("span");
+        num.className    = "iter-num";
+        num.textContent  = iter + 1;
+        num.dataset.iter = iter;
+        num.title        = "Preview iteration " + (iter + 1) + " in AE";
+        if (_activePreviewNum === iter) num.classList.add("active");
+        num.addEventListener("click", function () { previewIteration(iter); });
+        return num;
     }
 
-    attachMainSync();
+    function buildColorRow(iter, layerIdx, lInfo) {
+        var row = document.createElement("div");
+        row.className = "iter-row";
+        row.appendChild(makeIterNum(iter));
+
+        var cell = document.createElement("div");
+        cell.className = "color-cell";
+
+        var cp = document.createElement("input");
+        cp.type          = "color";
+        cp.className     = "color-pick";
+        cp.dataset.layer = layerIdx;
+        cp.dataset.row   = iter;
+
+        var hi = document.createElement("input");
+        hi.type          = "text";
+        hi.className     = "hex-input";
+        hi.maxLength     = 7;
+        hi.dataset.layer = layerIdx;
+        hi.dataset.row   = iter;
+
+        var hex = DEFAULT_COLORS[iter];
+        if (lInfo) {
+            if (lInfo.type === "shape" && lInfo.fills && lInfo.fills.length)
+                hex = rgbToHex(lInfo.fills[0].color).toUpperCase();
+            else if ((lInfo.type === "text" || lInfo.type === "stroke") && lInfo.color)
+                hex = rgbToHex(lInfo.color).toUpperCase();
+        }
+        cp.value = hex.toLowerCase();
+        hi.value = hex.toUpperCase();
+        syncColorPair(cp, hi);
+
+        cell.appendChild(cp);
+        cell.appendChild(hi);
+        row.appendChild(cell);
+
+        if (lInfo && lInfo.type === "text") {
+            var fi = document.createElement("input");
+            fi.type          = "text";
+            fi.className     = "font-input";
+            fi.placeholder   = "PostScript name";
+            fi.dataset.layer = layerIdx;
+            fi.dataset.row   = iter;
+            if (lInfo.font) fi.value = lInfo.font;
+            attachFontFocus(fi);
+            row.appendChild(fi);
+        }
+
+        var pb = document.createElement("button");
+        pb.className = "sample-btn";
+        pb.title     = "Capture current AE values into this row";
+        pb.innerHTML = "&#8592;";
+        pb.dataset.layer = layerIdx;
+        pb.dataset.row   = iter;
+        (function (ri, li, el) {
+            el.addEventListener("click", function () {
+                if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
+                sampleRow(ri, li, el);
+            });
+        })(iter, layerIdx, pb);
+        row.appendChild(pb);
+
+        return row;
+    }
+
+    function buildVideoRow(iter, layerIdx, videoState) {
+        var row = document.createElement("div");
+        row.className = "iter-row";
+        row.appendChild(makeIterNum(iter));
+
+        // Flip toggle
+        var flipBtn = document.createElement("button");
+        flipBtn.className    = "video-toggle" + (videoState && videoState.flip ? " active" : "");
+        flipBtn.title        = "Flip Horizontal";
+        flipBtn.textContent  = "↔";
+        flipBtn.dataset.prop  = "flip";
+        flipBtn.dataset.layer = layerIdx;
+        flipBtn.dataset.row   = iter;
+        flipBtn.addEventListener("click", function () { this.classList.toggle("active"); });
+        row.appendChild(flipBtn);
+
+        // B&W toggle
+        var bwBtn = document.createElement("button");
+        bwBtn.className    = "video-toggle" + (videoState && videoState.bw ? " active" : "");
+        bwBtn.title        = "Black & White";
+        bwBtn.textContent  = "B&W";
+        bwBtn.dataset.prop  = "bw";
+        bwBtn.dataset.layer = layerIdx;
+        bwBtn.dataset.row   = iter;
+        bwBtn.addEventListener("click", function () { this.classList.toggle("active"); });
+        row.appendChild(bwBtn);
+
+        // Tint checkbox + color
+        var tintCell = document.createElement("div");
+        tintCell.className = "tint-cell";
+
+        var tintChk = document.createElement("input");
+        tintChk.type          = "checkbox";
+        tintChk.className     = "tint-check";
+        tintChk.dataset.layer = layerIdx;
+        tintChk.dataset.row   = iter;
+        var hasTint = videoState && videoState.tint;
+        tintChk.checked = !!hasTint;
+
+        var tintClr = document.createElement("input");
+        tintClr.type          = "color";
+        tintClr.className     = "tint-pick";
+        tintClr.dataset.layer = layerIdx;
+        tintClr.dataset.row   = iter;
+        tintClr.value = hasTint ? rgbToHex(videoState.tint).toLowerCase() : "#ff6b35";
+        tintClr.disabled = !tintChk.checked;
+
+        var tintAmt = document.createElement("input");
+        tintAmt.type          = "number";
+        tintAmt.className     = "tint-amount";
+        tintAmt.min           = 0;
+        tintAmt.max           = 100;
+        tintAmt.value         = videoState && videoState.tintAmount !== undefined ? videoState.tintAmount : 50;
+        tintAmt.dataset.layer = layerIdx;
+        tintAmt.dataset.row   = iter;
+        tintAmt.title         = "Tint amount (%)";
+        tintAmt.disabled      = !tintChk.checked;
+
+        tintChk.addEventListener("change", function () {
+            tintClr.disabled = !this.checked;
+            tintAmt.disabled = !this.checked;
+        });
+
+        tintCell.appendChild(tintChk);
+        tintCell.appendChild(tintClr);
+        tintCell.appendChild(tintAmt);
+        row.appendChild(tintCell);
+
+        // Hue input
+        var hueInp = document.createElement("input");
+        hueInp.type          = "number";
+        hueInp.className     = "hue-input";
+        hueInp.min           = -180;
+        hueInp.max           = 180;
+        hueInp.value         = videoState ? (videoState.hue || 0) : 0;
+        hueInp.dataset.layer = layerIdx;
+        hueInp.dataset.row   = iter;
+        hueInp.title         = "Hue shift (degrees)";
+        row.appendChild(hueInp);
+
+        // Sample button
+        var pb = document.createElement("button");
+        pb.className = "sample-btn";
+        pb.title     = "Capture current AE values into this row";
+        pb.innerHTML = "&#8592;";
+        pb.dataset.layer = layerIdx;
+        pb.dataset.row   = iter;
+        (function (ri, li, el) {
+            el.addEventListener("click", function () {
+                if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
+                sampleRow(ri, li, el);
+            });
+        })(iter, layerIdx, pb);
+        row.appendChild(pb);
+
+        return row;
+    }
+
+    function buildRowForLayer(iter, layerIdx, lInfo) {
+        return lInfo && lInfo.type === "video"
+            ? buildVideoRow(iter, layerIdx, lInfo.videoState)
+            : buildColorRow(iter, layerIdx, lInfo);
+    }
+
+    function rebuildMainRows() {
+        var mainRows = document.getElementById("main-rows");
+        mainRows.innerHTML = "";
+        var lInfo = layerInfo ? layerInfo.layers[0] : null;
+        for (var i = 0; i < 5; i++) {
+            mainRows.appendChild(buildRowForLayer(i, 0, lInfo));
+        }
+        var isVideo = lInfo && lInfo.type === "video";
+        if (colLabel) colLabel.textContent = isVideo ? "Effects" : "Color";
+    }
+
+    // Build default color rows on load
+    rebuildMainRows();
 
     // ── Layer-type-aware UI ───────────────────────────────────────────────────
     // Shows/hides font inputs based on whether any selected layer is a text layer.
 
     function applyLayerTypes(layers) {
-        var hasText = false;
+        var hasText  = false;
+        var hasVideo = layers.length > 0 && layers[0].type === "video";
         for (var i = 0; i < layers.length; i++) {
             if (layers[i].type === "text") { hasText = true; break; }
         }
-
-        fontSection.classList.toggle("hidden", !hasText);
-
-        var rows = document.querySelectorAll("#iterations-section .iter-row");
-        for (var r = 0; r < rows.length; r++) {
-            var fi = rows[r].querySelector(".font-input");
-            if (fi) fi.classList.toggle("hidden", !hasText);
-        }
-
-        if (colLabel) colLabel.textContent = hasText ? "Color & Font" : "Color";
+        fontSection.classList.toggle("hidden", !hasText || hasVideo);
+        if (!hasVideo && colLabel) colLabel.textContent = hasText ? "Color & Font" : "Color";
     }
 
     // ── Refresh layer ─────────────────────────────────────────────────────────
@@ -107,7 +287,6 @@
                 renderLayerInfo(info);
                 setStatus("");
                 btnRun.disabled  = false;
-                btnTest.disabled = false;
             } catch (e) {
                 setStatus("Parse error: " + e.message, true);
             }
@@ -144,34 +323,9 @@
         sameAllSection.classList.toggle("hidden", !multi);
         if (!multi) sameForAllChk.checked = true;
 
-        prefillMainRows(info.layers[0]);
+        rebuildMainRows();
         applyLayerTypes(info.layers);
         rebuildExtraLayers();
-    }
-
-    function prefillMainRows(layer) {
-        if (!layer) return;
-        var hex;
-        if (layer.type === "shape" && layer.fills && layer.fills.length) {
-            hex = rgbToHex(layer.fills[0].color).toUpperCase();
-        } else if (layer.type === "text" && layer.color) {
-            hex = rgbToHex(layer.color).toUpperCase();
-        }
-        var cps = document.querySelectorAll("#iterations-section .color-pick");
-        var his = document.querySelectorAll("#iterations-section .hex-input");
-        var fis = document.querySelectorAll("#iterations-section .font-input");
-        if (hex) {
-            for (var j = 0; j < 5; j++) {
-                if (cps[j]) cps[j].value = hex.toLowerCase();
-                if (his[j]) his[j].value = hex;
-            }
-        }
-        if (layer.font) {
-            for (var m = 0; m < 5; m++) {
-                if (fis[m]) fis[m].value = layer.font;
-            }
-            fontSearch.value = layer.font;
-        }
     }
 
     // ── "Same for all" checkbox ───────────────────────────────────────────────
@@ -261,8 +415,7 @@
         sub.textContent = "Stroke";
         sec.appendChild(sub);
 
-        var rows = buildIterRows(lInfo, li, false);
-        for (var r = 0; r < rows.length; r++) sec.appendChild(rows[r]);
+        for (var r = 0; r < 5; r++) sec.appendChild(buildRowForLayer(r, li, lInfo));
         container.appendChild(sec);
     }
 
@@ -317,12 +470,107 @@
             label.textContent = lInfo2.name + " [" + lInfo2.type + "]";
             group.appendChild(label);
 
-            var rows = buildIterRows(lInfo2, li2, lInfo2.type === "text");
-            for (var r2 = 0; r2 < rows.length; r2++) group.appendChild(rows[r2]);
+            for (var r2 = 0; r2 < 5; r2++) group.appendChild(buildRowForLayer(r2, li2, lInfo2));
 
             extraLayersSection.appendChild(group);
             containers[lInfo2.index] = group;
         }
+    }
+
+    // ── Per-iteration preview ─────────────────────────────────────────────────
+
+    var _activePreviewNum = null;
+
+    function previewIteration(iter) {
+        if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
+
+        var numLayers  = layerInfo.layers.length;
+        var sameForAll = numLayers === 1 || sameForAllChk.checked;
+
+        var v0 = readRowValue(0, iter);
+        if (!v0) return;
+
+        var value = [v0];
+        if (!sameForAll) {
+            for (var li = 1; li < numLayers; li++) {
+                var vli = readRowValue(li, iter);
+                if (!vli) return;
+                value.push(vli);
+            }
+        } else {
+            for (var li2 = 1; li2 < numLayers; li2++) {
+                var layer2 = layerInfo.layers[li2];
+                if (layer2.type === "stroke" || layer2.type === "video") {
+                    var vOwn = readRowValue(li2, iter);
+                    if (!vOwn) return;
+                    value.push(vOwn);
+                } else {
+                    value.push({ color: v0.color, font: layer2.type === "text" ? v0.font : null });
+                }
+            }
+        }
+
+        var cfg = { compName: layerInfo.compName, layers: buildLayers(), value: value };
+
+        // Highlight the active iteration number across all groups
+        document.querySelectorAll(".iter-num").forEach(function (el) {
+            el.classList.toggle("active", parseInt(el.dataset.iter, 10) === iter);
+        });
+        _activePreviewNum = iter;
+
+        btnRun.disabled = btnRefresh.disabled = true;
+        setStatus("Previewing iteration " + (iter + 1) + "…");
+        debugLog.classList.add("hidden");
+
+        cs.evalScript(
+            "debugApplyChangeJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")",
+            function (result) {
+                btnRun.disabled = btnRefresh.disabled = false;
+                try {
+                    var res = JSON.parse(result);
+                    if (res.error) { setStatus("Preview failed: " + res.error, true); }
+                    else           { setStatus("Iteration " + (iter + 1) + " previewed — Ctrl+Z to undo", false, true); }
+                } catch (e) { setStatus("Unexpected: " + result, true); }
+            }
+        );
+    }
+
+    // ── Unified value reading ─────────────────────────────────────────────────
+
+    function readVideoRowValue(layerIdx, iter) {
+        var q = function (sel) { return document.querySelector(sel + '[data-layer="' + layerIdx + '"][data-row="' + iter + '"]'); };
+        var flipBtn = q('.video-toggle[data-prop="flip"]');
+        var bwBtn   = q('.video-toggle[data-prop="bw"]');
+        var tintChk = q('.tint-check');
+        var tintClr = q('.tint-pick');
+        var tintAmt = q('.tint-amount');
+        var hueInp  = q('.hue-input');
+        var hasTint = tintChk && tintChk.checked && tintClr;
+        return {
+            flip:       flipBtn ? flipBtn.classList.contains("active") : false,
+            bw:         bwBtn   ? bwBtn.classList.contains("active")   : false,
+            tint:       hasTint ? hexToRgb(tintClr.value) : null,
+            tintAmount: hasTint && tintAmt ? (parseInt(tintAmt.value, 10) || 50) : 50,
+            hue:        hueInp  ? (parseInt(hueInp.value, 10) || 0)   : 0
+        };
+    }
+
+    function readColorRowValue(layerIdx, iter, lInfo) {
+        var hiEl = document.querySelector('.hex-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+        var hex  = hiEl ? normaliseHex(hiEl.value) : null;
+        if (!hex) { setStatus("Layer " + (layerIdx + 1) + " row " + (iter + 1) + ": invalid hex.", true); return null; }
+        var font = null;
+        if (lInfo && lInfo.type === "text") {
+            var fiEl = document.querySelector('.font-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+            font = fiEl ? fiEl.value.trim() || null : null;
+        }
+        return { color: hexToRgb(hex), font: font };
+    }
+
+    function readRowValue(layerIdx, iter) {
+        var lInfo = layerInfo.layers[layerIdx];
+        if (lInfo.type === "video") return readVideoRowValue(layerIdx, iter);
+        return readColorRowValue(layerIdx, iter, lInfo);
     }
 
     // ── Build cfg.layers ──────────────────────────────────────────────────────
@@ -337,47 +585,13 @@
             } else if (li.type === "stroke") {
                 fillPath = li.strokePath;
             }
+            // video: fillPath unused
             cfgLayers.push({ index: li.index, fillPath: fillPath, layerType: li.type });
         }
         return cfgLayers;
     }
 
     // ── Build cfg.values ──────────────────────────────────────────────────────
-    // values[iter][layerIdx] = { color: [r,g,b], font: "str"|null }
-    // color is always set; font is null for shape layers or when font input is empty.
-
-    function readMainRowValue(layerData, iter) {
-        var his = document.querySelectorAll("#iterations-section .hex-input");
-        var fis = document.querySelectorAll("#iterations-section .font-input");
-
-        var hex = his[iter] ? normaliseHex(his[iter].value) : null;
-        if (!hex) { setStatus("Row " + (iter + 1) + ": invalid hex color.", true); return null; }
-
-        var font = null;
-        if (layerData.type === "text") {
-            font = fis[iter] ? fis[iter].value.trim() || null : null;
-        }
-
-        return { color: hexToRgb(hex), font: font };
-    }
-
-    function readExtraRowValue(layerData, layerIdx, iter) {
-        var hiEl = document.querySelector(
-            '.hex-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]'
-        );
-        var hex = hiEl ? normaliseHex(hiEl.value) : null;
-        if (!hex) { setStatus("Layer " + (layerIdx + 1) + " row " + (iter + 1) + ": invalid hex.", true); return null; }
-
-        var font = null;
-        if (layerData.type === "text") {
-            var fiEl = document.querySelector(
-                '.font-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]'
-            );
-            font = fiEl ? fiEl.value.trim() || null : null;
-        }
-
-        return { color: hexToRgb(hex), font: font };
-    }
 
     function buildValues() {
         var numLayers  = layerInfo.layers.length;
@@ -385,29 +599,29 @@
         var result     = [];
 
         for (var iter = 0; iter < 5; iter++) {
-            var v0 = readMainRowValue(layerInfo.layers[0], iter);
+            var v0 = readRowValue(0, iter);
             if (!v0) return null;
 
             var iterVals = [v0];
 
             if (!sameForAll) {
                 for (var li = 1; li < numLayers; li++) {
-                    var vli = readExtraRowValue(layerInfo.layers[li], li, iter);
+                    var vli = readRowValue(li, iter);
                     if (!vli) return null;
                     iterVals.push(vli);
                 }
             } else {
-                // Same color for all AE layers; strokes always read their own rows.
                 for (var li2 = 1; li2 < numLayers; li2++) {
                     var layer2 = layerInfo.layers[li2];
-                    if (layer2.type === "stroke") {
-                        var vStroke = readExtraRowValue(layer2, li2, iter);
-                        if (!vStroke) return null;
-                        iterVals.push(vStroke);
+                    // Strokes and video layers always use their own row values
+                    if (layer2.type === "stroke" || layer2.type === "video") {
+                        var vOwn = readRowValue(li2, iter);
+                        if (!vOwn) return null;
+                        iterVals.push(vOwn);
                     } else {
                         iterVals.push({
                             color: v0.color,
-                            font: layer2.type === "text" ? v0.font : null
+                            font:  layer2.type === "text" ? v0.font : null
                         });
                     }
                 }
@@ -422,48 +636,43 @@
     // ── Per-row sample (AE → extension) ──────────────────────────────────────
     // Reads current layer state from AE and populates the target row's inputs.
 
-    function fillRowFromLayer(iter, layer, section) {
-        var hex;
-        if (layer.type === "shape" && layer.fills && layer.fills.length) {
-            hex = rgbToHex(layer.fills[0].color).toUpperCase();
-        } else if ((layer.type === "text" || layer.type === "stroke") && layer.color) {
-            hex = rgbToHex(layer.color).toUpperCase();
-        }
-        if (hex) {
-            var cp = section.querySelectorAll(".color-pick");
-            var hi = section.querySelectorAll(".hex-input");
-            if (cp[iter]) cp[iter].value = hex.toLowerCase();
-            if (hi[iter]) hi[iter].value = hex;
-        }
-        if (layer.type === "text" && layer.font) {
-            var fi = section.querySelectorAll(".font-input");
-            if (fi[iter]) fi[iter].value = layer.font;
+    function fillRowFromSample(iter, layerIdx, fresh) {
+        var q = function (sel) {
+            return document.querySelector(sel + '[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+        };
+
+        if (fresh.videoState) {
+            var vs = fresh.videoState;
+            var flipBtn = q('.video-toggle[data-prop="flip"]');
+            var bwBtn   = q('.video-toggle[data-prop="bw"]');
+            var tintChk = q('.tint-check');
+            var tintClr = q('.tint-pick');
+            var hueInp  = q('.hue-input');
+            if (flipBtn) flipBtn.classList.toggle("active", !!vs.flip);
+            if (bwBtn)   bwBtn.classList.toggle("active",   !!vs.bw);
+            var tintAmt2 = q('.tint-amount');
+            if (tintChk)  { tintChk.checked = !!vs.tint; }
+            if (tintClr)  { tintClr.disabled = !vs.tint; if (vs.tint) tintClr.value = rgbToHex(vs.tint).toLowerCase(); }
+            if (tintAmt2) { tintAmt2.disabled = !vs.tint; if (vs.tintAmount !== undefined) tintAmt2.value = vs.tintAmount; }
+            if (hueInp)   hueInp.value = vs.hue || 0;
+        } else {
+            var hex;
+            if (fresh.fills && fresh.fills.length) hex = rgbToHex(fresh.fills[0].color).toUpperCase();
+            else if (fresh.color)                  hex = rgbToHex(fresh.color).toUpperCase();
+            if (hex) {
+                var cp = q(".color-pick"), hi = q(".hex-input");
+                if (cp) cp.value = hex.toLowerCase();
+                if (hi) hi.value = hex;
+            }
+            if (fresh.font) {
+                var fi = q(".font-input");
+                if (fi) fi.value = fresh.font;
+            }
         }
     }
 
-    function fillExtraRowFromLayer(iter, layerIdx, layer) {
-        var hex;
-        if (layer.type === "shape" && layer.fills && layer.fills.length) {
-            hex = rgbToHex(layer.fills[0].color).toUpperCase();
-        } else if ((layer.type === "text" || layer.type === "stroke") && layer.color) {
-            hex = rgbToHex(layer.color).toUpperCase();
-        }
-        if (hex) {
-            var cp = document.querySelector('.color-pick[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
-            var hi = document.querySelector('.hex-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
-            if (cp) cp.value = hex.toLowerCase();
-            if (hi) hi.value = hex;
-        }
-        if (layer.type === "text" && layer.font) {
-            var fi = document.querySelector('.font-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
-            if (fi) fi.value = layer.font;
-        }
-    }
-
-    // Reads a specific layer by its timeline index — no selection needed.
     function sampleRow(iter, layerIdx, btn) {
         if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
-
         var target = layerInfo.layers[layerIdx];
         if (!target) { setStatus("Layer info missing — click Refresh first.", true); return; }
 
@@ -482,94 +691,18 @@
                 try {
                     var res = JSON.parse(result);
                     if (res.error) { setStatus(res.error, true); return; }
-
                     var fresh = res.layers[0];
                     if (!fresh) { setStatus("Layer not found in comp.", true); return; }
-
-                    // Merge fresh values back into stored layerInfo
-                    if (fresh.color) target.color = fresh.color;
-                    if (fresh.font)  target.font  = fresh.font;
-                    if (fresh.fills) target.fills  = fresh.fills;
-
-                    if (layerIdx === 0) {
-                        fillRowFromLayer(iter, target, document.getElementById("iterations-section"));
-                    } else {
-                        fillExtraRowFromLayer(iter, layerIdx, target);
-                    }
-
+                    if (fresh.color)      target.color      = fresh.color;
+                    if (fresh.font)       target.font       = fresh.font;
+                    if (fresh.fills)      target.fills      = fresh.fills;
+                    if (fresh.videoState) target.videoState = fresh.videoState;
+                    fillRowFromSample(iter, layerIdx, fresh);
                     setStatus("Row " + (iter + 1) + " captured from AE", false, true);
                 } catch (e) { setStatus("Parse error: " + e.message, true); }
             }
         );
     }
-
-    // Wire static sample buttons — always layer 0 (main section)
-    document.querySelectorAll("#iterations-section .sample-btn").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
-            sampleRow(parseInt(this.dataset.row, 10), 0, this);
-        });
-    });
-
-    // ── Test Apply ────────────────────────────────────────────────────────────
-
-    btnTest.addEventListener("click", function () {
-        if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
-
-        var numLayers  = layerInfo.layers.length;
-        var sameForAll = numLayers === 1 || sameForAllChk.checked;
-
-        var v0 = readMainRowValue(layerInfo.layers[0], 0);
-        if (!v0) return;
-
-        var value = [v0];
-
-        if (!sameForAll) {
-            for (var li = 1; li < numLayers; li++) {
-                var vli = readExtraRowValue(layerInfo.layers[li], li, 0);
-                if (!vli) return;
-                value.push(vli);
-            }
-        } else {
-            for (var li2 = 1; li2 < numLayers; li2++) {
-                var layer2 = layerInfo.layers[li2];
-                if (layer2.type === "stroke") {
-                    var vStroke = readExtraRowValue(layer2, li2, 0);
-                    if (!vStroke) return;
-                    value.push(vStroke);
-                } else {
-                    value.push({
-                        color: v0.color,
-                        font: layer2.type === "text" ? v0.font : null
-                    });
-                }
-            }
-        }
-
-        var cfg = {
-            compName: layerInfo.compName,
-            layers:   buildLayers(),
-            value:    value
-        };
-
-        btnTest.disabled = btnRun.disabled = btnRefresh.disabled = true;
-        setStatus("Testing…");
-        debugLog.classList.add("hidden");
-
-        cs.evalScript(
-            "debugApplyChangeJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")",
-            function (result) {
-                btnTest.disabled = btnRun.disabled = btnRefresh.disabled = false;
-                try {
-                    var res   = JSON.parse(result);
-                    var lines = res.log ? res.log.slice() : [];
-                    if (res.error) { lines.push("ERROR: " + res.error); setStatus("Test failed — see log below", true); }
-                    else           { setStatus("Test OK — applied (Ctrl+Z to undo)", false, true); }
-                    showDebugLog(lines);
-                } catch (e) { setStatus("Unexpected: " + result, true); }
-            }
-        );
-    });
 
     // ── Run iterations ────────────────────────────────────────────────────────
 
@@ -585,14 +718,14 @@
             values:   values
         };
 
-        btnRun.disabled = btnTest.disabled = btnRefresh.disabled = true;
+        btnRun.disabled = btnRefresh.disabled = true;
         setStatus("Running…");
         debugLog.classList.add("hidden");
 
         cs.evalScript(
             "runIterationsJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")",
             function (result) {
-                btnRun.disabled = btnTest.disabled = btnRefresh.disabled = false;
+                btnRun.disabled = btnRefresh.disabled = false;
                 try {
                     var res = JSON.parse(result);
                     if (res.error) {
@@ -806,28 +939,46 @@
         } catch (e) { setStatus("Could not save preset: " + e.message, true); }
     }
 
-    function getCurrentColors() {
-        var his = document.querySelectorAll("#iterations-section .hex-input");
-        var colors = [];
-        for (var i = 0; i < his.length; i++) {
-            var h = normaliseHex(his[i].value);
-            colors.push(h || "#FF0000");
-        }
-        return colors;
+    function isVideoMode() {
+        return layerInfo && layerInfo.layers[0] && layerInfo.layers[0].type === "video";
     }
 
-    function applyPreset(colors) {
-        var cps = document.querySelectorAll("#iterations-section .color-pick");
-        var his = document.querySelectorAll("#iterations-section .hex-input");
+    function applyColorPreset(colors) {
         for (var i = 0; i < 5; i++) {
             var hex = normaliseHex(colors[i]);
             if (!hex) continue;
-            if (cps[i]) cps[i].value = hex.toLowerCase();
-            if (his[i]) his[i].value = hex;
+            var cp = document.querySelector('.color-pick[data-layer="0"][data-row="' + i + '"]');
+            var hi = document.querySelector('.hex-input[data-layer="0"][data-row="' + i + '"]');
+            if (cp) cp.value = hex.toLowerCase();
+            if (hi) hi.value = hex.toUpperCase();
         }
     }
 
-    function buildSwatches(colors) {
+    function applyVideoPreset(iterations) {
+        for (var i = 0; i < 5; i++) {
+            var it  = iterations[i] || {};
+            var q   = function (sel, row) { return document.querySelector(sel + '[data-layer="0"][data-row="' + row + '"]'); };
+            var fb  = q('.video-toggle[data-prop="flip"]', i);
+            var bb  = q('.video-toggle[data-prop="bw"]',   i);
+            var tc  = q('.tint-check', i);
+            var tp  = q('.tint-pick',  i);
+            var hi2 = q('.hue-input',  i);
+            if (fb)  fb.classList.toggle("active", !!it.flip);
+            if (bb)  bb.classList.toggle("active", !!it.bw);
+            var ta  = q('.tint-amount', i);
+            if (tc)  tc.checked = !!it.tint;
+            if (tp)  { tp.disabled = !it.tint; if (it.tint) tp.value = it.tint.toLowerCase(); }
+            if (ta)  { ta.disabled = !it.tint; ta.value = it.tintAmount !== undefined ? it.tintAmount : 50; }
+            if (hi2) hi2.value = it.hue || 0;
+        }
+    }
+
+    function applyPreset(preset) {
+        if (preset.type === "video") applyVideoPreset(preset.iterations);
+        else applyColorPreset(preset.colors);
+    }
+
+    function buildColorSwatches(colors) {
         var wrap = document.createElement("div");
         wrap.className = "preset-swatches";
         colors.forEach(function (c) {
@@ -839,16 +990,54 @@
         return wrap;
     }
 
+    function buildVideoSwatches(iterations) {
+        var wrap = document.createElement("div");
+        wrap.className = "preset-swatches";
+        iterations.forEach(function (it) {
+            var s = document.createElement("div");
+            s.className = "preset-swatch";
+            s.style.background = it.tint || (it.bw ? "#555" : "#333");
+            s.title = [it.flip?"↔":"", it.bw?"B&W":"", it.tint?"tint":"", it.hue?"hue":""].filter(Boolean).join(" ") || "normal";
+            wrap.appendChild(s);
+        });
+        return wrap;
+    }
+
+    function getCurrentPreset() {
+        if (isVideoMode()) {
+            var iters = [];
+            for (var i = 0; i < 5; i++) iters.push(readVideoRowValue(0, i));
+            return { type: "video", iterations: iters.map(function(v) {
+                return { flip: v.flip, bw: v.bw, tint: v.tint ? rgbToHex(v.tint) : null, hue: v.hue };
+            })};
+        }
+        var colors = [];
+        for (var j = 0; j < 5; j++) {
+            var hi = document.querySelector('.hex-input[data-layer="0"][data-row="' + j + '"]');
+            colors.push(hi ? hi.value : "#FF0000");
+        }
+        return { colors: colors };
+    }
+
     function renderPresetList() {
         var list = document.getElementById("preset-list");
         list.innerHTML = "";
-        var userPresets = loadUserPresets();
+        var video      = isVideoMode();
+        var userPresets = loadUserPresets().filter(function (p) {
+            return video ? p.type === "video" : p.type !== "video";
+        });
+
+        var libPresets = getLibraryPresets().filter(function (p) {
+            return video ? p.type === "video" : p.type !== "video";
+        });
 
         function makeItem(preset, isUser, idx) {
             var item = document.createElement("div");
             item.className = "preset-item";
 
-            item.appendChild(buildSwatches(preset.colors));
+            item.appendChild(preset.type === "video"
+                ? buildVideoSwatches(preset.iterations)
+                : buildColorSwatches(preset.colors));
 
             var name = document.createElement("span");
             name.className   = "preset-name";
@@ -858,7 +1047,7 @@
             var applyBtn = document.createElement("button");
             applyBtn.className   = "preset-apply";
             applyBtn.textContent = "Apply";
-            applyBtn.addEventListener("click", function () { applyPreset(preset.colors); });
+            applyBtn.addEventListener("click", function () { applyPreset(preset); });
             item.appendChild(applyBtn);
 
             if (isUser) {
@@ -892,7 +1081,7 @@
         libLabel.className   = "preset-group-label";
         libLabel.textContent = "Library";
         list.appendChild(libLabel);
-        getLibraryPresets().forEach(function (p) { list.appendChild(makeItem(p, false, -1)); });
+        libPresets.forEach(function (p) { list.appendChild(makeItem(p, false, -1)); });
     }
 
     var btnPresets    = document.getElementById("btn-presets");
@@ -909,12 +1098,69 @@
     btnSavePreset.addEventListener("click", function () {
         var name = presetNameIn.value.trim();
         if (!name) { presetNameIn.focus(); return; }
-        var colors = getCurrentColors();
+        var preset   = getCurrentPreset();
+        preset.name  = name;
         var up = loadUserPresets();
-        up.unshift({ name: name, colors: colors });
+        up.unshift(preset);
         saveUserPresets(up);
         presetNameIn.value = "";
         renderPresetList();
+    });
+
+    // ── Changelog ─────────────────────────────────────────────────────────────
+
+    var btnChangelog    = document.getElementById("btn-changelog");
+    var changelogSection = document.getElementById("changelog-section");
+    var changelogList   = document.getElementById("changelog-list");
+
+    function loadChangelog() {
+        try {
+            var fs      = require("fs");
+            var path    = require("path");
+            var extPath = cs.getSystemPath(SystemPath.EXTENSION);
+            var clPath  = path.join(extPath, "changelog.json");
+            return JSON.parse(fs.readFileSync(clPath, "utf8"));
+        } catch (e) { return []; }
+    }
+
+    function renderChangelog() {
+        changelogList.innerHTML = "";
+        var entries = loadChangelog();
+        entries.forEach(function (entry) {
+            var div = document.createElement("div");
+            div.className = "cl-entry";
+
+            var header = document.createElement("div");
+            header.className = "cl-header";
+
+            var ver = document.createElement("span");
+            ver.className   = "cl-version";
+            ver.textContent = "v" + entry.version;
+
+            var date = document.createElement("span");
+            date.className   = "cl-date";
+            date.textContent = entry.date;
+
+            header.appendChild(ver);
+            header.appendChild(date);
+            div.appendChild(header);
+
+            var ul = document.createElement("ul");
+            ul.className = "cl-changes";
+            (entry.changes || []).forEach(function (c) {
+                var li = document.createElement("li");
+                li.textContent = c;
+                ul.appendChild(li);
+            });
+            div.appendChild(ul);
+            changelogList.appendChild(div);
+        });
+    }
+
+    btnChangelog.addEventListener("click", function () {
+        var open = changelogSection.classList.toggle("hidden");
+        btnChangelog.classList.toggle("open", !open);
+        if (!open) renderChangelog();
     });
 
     // ── Init ──────────────────────────────────────────────────────────────────

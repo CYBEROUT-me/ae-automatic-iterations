@@ -5,6 +5,7 @@
 #include "lib/naming.jsx"
 #include "lib/layer-utils.jsx"
 #include "lib/apply-change.jsx"
+#include "lib/apply-video.jsx"
 #include "lib/render.jsx"
 #include "lib/collect.jsx"
 #include "lib/project.jsx"
@@ -43,6 +44,8 @@ function readLayerValuesJSON(configJSON) {
                     for (var pi = 0; pi < sp.length; pi++) sc = sc.property(sp[pi]);
                     info.color = sc.property("Color").value;
                 } catch (e) { info.color = null; }
+            } else if (lc.layerType === "video") {
+                info.videoState = readVideoLayerState(layer);
             }
             results.push(info);
         }
@@ -65,6 +68,9 @@ function applyLayerValue(layer, lc, val) {
     } else if (lc.layerType === "stroke") {
         var ok = applyChange(layer, { changeType: "strokeColor", fillPath: lc.fillPath, value: val.color });
         log.push("→ strokeColor: " + (ok ? "OK" : "FAILED"));
+    } else if (lc.layerType === "video") {
+        var ok = applyVideoLayer(layer, val);
+        log.push("→ videoEffects: " + (ok ? "OK" : "FAILED"));
     } else if (lc.layerType === "text") {
         if (val.color) {
             var okC = applyChange(layer, { changeType: "textColor", value: val.color });
@@ -89,6 +95,9 @@ function applyLayerValueStrict(layer, lc, val, iterNum) {
     } else if (lc.layerType === "stroke") {
         var ok = applyChange(layer, { changeType: "strokeColor", fillPath: lc.fillPath, value: val.color });
         if (!ok) return "Iter " + iterNum + ": strokeColor failed — layer " + lc.index + "  path=" + lc.fillPath;
+    } else if (lc.layerType === "video") {
+        var ok = applyVideoLayer(layer, val);
+        if (!ok) return "Iter " + iterNum + ": video effects failed — layer " + lc.index;
     } else if (lc.layerType === "text") {
         if (val.color) {
             var okC = applyChange(layer, { changeType: "textColor", value: val.color });
@@ -123,6 +132,8 @@ function getLayerInfoJSON() {
                 var td     = layer.property("Source Text").value;
                 info.color = td.fillColor;
                 info.font  = td.font;
+            } else if (type === "video") {
+                info.videoState = readVideoLayerState(layer);
             }
             layers.push(info);
         }

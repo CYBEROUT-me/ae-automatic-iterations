@@ -5,7 +5,32 @@ var ITR_SUFFIXES = ["ITR_9x16", "ITR_1x1", "ITR_16x9"];
 function getLayerType(layer) {
     if (layer instanceof ShapeLayer) return "shape";
     if (layer instanceof TextLayer)  return "text";
+    if (layer instanceof AVLayer)    return "video";
     return "unknown";
+}
+
+function readVideoLayerState(layer) {
+    var state = { flip: false, bw: false, tint: null, hue: 0 };
+    try {
+        var sv = layer.transform.scale.value;
+        state.flip = sv[0] < 0;
+        for (var i = 1; i <= layer.Effects.numProperties; i++) {
+            var eff = layer.Effects.property(i);
+            if (eff.matchName === "ADBE HUE SATURATION") {
+                state.hue = Math.round(eff.property("Master Hue").value);
+                state.bw  = eff.property("Master Saturation").value <= -100;
+            }
+            if (eff.matchName === "ADBE Tint") {
+                var amount = eff.property("Amount to Tint").value;
+                if (amount > 0) {
+                    var c = eff.property("Map Black To").value;
+                    state.tint       = [c[0], c[1], c[2]];
+                    state.tintAmount = Math.round(amount);
+                }
+            }
+        }
+    } catch (e) {}
+    return state;
 }
 
 // Returns [{path: "Contents/Group 1/Contents/Fill 1", color: [r,g,b]}, ...]

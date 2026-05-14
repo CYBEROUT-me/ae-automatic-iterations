@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionManifest Version="7.0"
     ExtensionBundleId="com.aeiter.iteration"
-    ExtensionBundleVersion="1.0.0">
+    ExtensionBundleVersion="1.0.7">
   <ExtensionList>
-    <Extension Id="com.aeiter.iteration.panel" Version="1.0.0"/>
+    <Extension Id="com.aeiter.iteration.panel" Version="1.0.7"/>
   </ExtensionList>
   <ExecutionEnvironment>
     <HostList>

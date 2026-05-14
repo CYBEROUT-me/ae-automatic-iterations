@@ -47,6 +47,7 @@ cat \
     "$SRC/jsx/lib/naming.jsx" \
     "$SRC/jsx/lib/layer-utils.jsx" \
     "$SRC/jsx/lib/apply-change.jsx" \
+    "$SRC/jsx/lib/apply-video.jsx" \
     "$SRC/jsx/lib/render.jsx" \
     "$SRC/jsx/lib/collect.jsx" \
     "$SRC/jsx/lib/project.jsx" \

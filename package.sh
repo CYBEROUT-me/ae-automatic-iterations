@@ -120,8 +120,8 @@ echo "Built → AE-Iterations.zip ($SIZE)"
 # ── 5. Git commit + tag ──────────────────────────────────────────────────────
 
 git add "$VERSION_FILE" .gitignore 2>/dev/null || true
-git commit -m "v$NEW_VERSION"
-git tag "v$NEW_VERSION"
+git diff --cached --quiet || git commit -m "v$NEW_VERSION"
+git tag "v$NEW_VERSION" 2>/dev/null || true
 git push origin main --tags
 echo "Git: pushed v$NEW_VERSION"
 

@@ -1,5 +1,27 @@
 [
   {
+    "version": "1.0.9",
+    "date": "2026-06-02",
+    "changes": [
+      "Emoji layer support: add an animated emoji to all 3 ITR aspect-ratio comps per iteration — each iteration can use a different emoji",
+      "Built-in emoji library of 166 animated GIFs ships with the extension",
+      "Emoji picker: in-panel thumbnail grid, click to select per-iteration emoji",
+      "Emoji loop: time remapping + loopOut(\"cycle\") so the emoji plays for the full comp duration",
+      "Project panel is automatically cleaned and organised before each collect (ITR and VAR)",
+      "Render comps are protected from being moved or deleted during the clean pass"
+    ]
+  },
+  {
+    "version": "1.0.8",
+    "date": "2026-05-26",
+    "changes": [
+      "VAR mode: create 5 named project variants from a single base .aep — each variant gets its own collected folder, 3 PNG renders, and rendered videos",
+      "VAR mode: switch to the VAR tab, name your 5 variants, assign video/color/font values per iteration, and click Run VAR",
+      "VAR mode: project panel is automatically cleaned and organised before each collect (canonical Stuff / 01_Video / 02_Images / … structure)",
+      "VAR mode: detailed run log shows every step — comp renaming, media import, apply, render, collect"
+    ]
+  },
+  {
     "version": "1.0.7",
     "date": "2026-05-14",
     "changes": [

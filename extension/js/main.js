@@ -7,6 +7,7 @@
     var layerInfo       = null;
     var allFonts        = [];
     var activeFontInput = null;
+    var currentMode     = "itr"; // "itr" | "var"
 
     // ── DOM refs ──────────────────────────────────────────────────────────────
     var layerInfoEl        = document.getElementById("layer-info");
@@ -18,10 +19,15 @@
     var colLabel           = document.getElementById("col-value-label");
     var btnRun             = document.getElementById("btn-run");
     var statusEl           = document.getElementById("status");
+    var emojiSection       = document.getElementById("emoji-section");
+    var emojiEnabled       = document.getElementById("emoji-enabled");
+    var emojiConfig        = document.getElementById("emoji-config");
     var debugLog           = document.getElementById("debug-log");
     var sameAllSection     = document.getElementById("same-all-section");
     var sameForAllChk      = document.getElementById("same-for-all");
     var extraLayersSection = document.getElementById("extra-layers-section");
+    var tabItr             = document.getElementById("tab-itr");
+    var tabVar             = document.getElementById("tab-var");
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -78,10 +84,19 @@
         return num;
     }
 
-    function buildColorRow(iter, layerIdx, lInfo) {
+    function buildColorRow(iter, layerIdx, lInfo, showVarName) {
         var row = document.createElement("div");
         row.className = "iter-row";
         row.appendChild(makeIterNum(iter));
+
+        if (showVarName) {
+            var ni = document.createElement("input");
+            ni.type        = "text";
+            ni.className   = "var-name-input";
+            ni.placeholder = "Name " + (iter + 1);
+            ni.dataset.row = iter;
+            row.appendChild(ni);
+        }
 
         var cell = document.createElement("div");
         cell.className = "color-cell";
@@ -124,6 +139,15 @@
             if (lInfo.font) fi.value = lInfo.font;
             attachFontFocus(fi);
             row.appendChild(fi);
+
+            var ci = document.createElement("input");
+            ci.type          = "text";
+            ci.className     = "content-input";
+            ci.placeholder   = "Text content";
+            ci.dataset.layer = layerIdx;
+            ci.dataset.row   = iter;
+            if (lInfo.text) ci.value = lInfo.text;
+            row.appendChild(ci);
         }
 
         var pb = document.createElement("button");
@@ -143,10 +167,19 @@
         return row;
     }
 
-    function buildVideoRow(iter, layerIdx, videoState) {
+    function buildVideoRow(iter, layerIdx, videoState, showVarName) {
         var row = document.createElement("div");
         row.className = "iter-row";
         row.appendChild(makeIterNum(iter));
+
+        if (showVarName) {
+            var ni = document.createElement("input");
+            ni.type        = "text";
+            ni.className   = "var-name-input";
+            ni.placeholder = "Name " + (iter + 1);
+            ni.dataset.row = iter;
+            row.appendChild(ni);
+        }
 
         // Flip toggle
         var flipBtn = document.createElement("button");
@@ -241,10 +274,59 @@
         return row;
     }
 
-    function buildRowForLayer(iter, layerIdx, lInfo) {
-        return lInfo && lInfo.type === "video"
-            ? buildVideoRow(iter, layerIdx, lInfo.videoState)
-            : buildColorRow(iter, layerIdx, lInfo);
+    function buildMediaRow(iter, layerIdx, showVarName) {
+        var row = document.createElement("div");
+        row.className = "iter-row";
+        row.appendChild(makeIterNum(iter));
+
+        if (showVarName) {
+            var ni = document.createElement("input");
+            ni.type        = "text";
+            ni.className   = "var-name-input";
+            ni.placeholder = "Name " + (iter + 1);
+            ni.dataset.row = iter;
+            row.appendChild(ni);
+        }
+
+        var browseBtn = document.createElement("button");
+        browseBtn.className     = "media-browse-btn";
+        browseBtn.textContent   = "Browse…";
+        browseBtn.dataset.layer = layerIdx;
+        browseBtn.dataset.row   = iter;
+
+        var fileLabel = document.createElement("span");
+        fileLabel.className     = "media-file-label";
+        fileLabel.textContent   = "No file";
+        fileLabel.dataset.layer = layerIdx;
+        fileLabel.dataset.row   = iter;
+
+        (function (fl) {
+            browseBtn.addEventListener("click", function () {
+                cs.evalScript("browseForMedia()", function (result) {
+                    try {
+                        var res = JSON.parse(result);
+                        if (res.path) {
+                            fl.dataset.mediaPath = res.path;
+                            fl.textContent = res.path.split("/").pop();
+                        }
+                    } catch (e) {}
+                });
+            });
+        })(fileLabel);
+
+        row.appendChild(browseBtn);
+        row.appendChild(fileLabel);
+        return row;
+    }
+
+    function buildRowForLayer(iter, layerIdx, lInfo, showVarName) {
+        if (lInfo && lInfo.type === "video") {
+            if (showVarName) {
+                return buildMediaRow(iter, layerIdx, showVarName);
+            }
+            return buildVideoRow(iter, layerIdx, lInfo.videoState, showVarName);
+        }
+        return buildColorRow(iter, layerIdx, lInfo, showVarName);
     }
 
     function rebuildMainRows() {
@@ -252,7 +334,7 @@
         mainRows.innerHTML = "";
         var lInfo = layerInfo ? layerInfo.layers[0] : null;
         for (var i = 0; i < 5; i++) {
-            mainRows.appendChild(buildRowForLayer(i, 0, lInfo));
+            mainRows.appendChild(buildRowForLayer(i, 0, lInfo, currentMode === "var"));
         }
         var isVideo = lInfo && lInfo.type === "video";
         if (colLabel) colLabel.textContent = isVideo ? "Effects" : "Color";
@@ -260,6 +342,27 @@
 
     // Build default color rows on load
     rebuildMainRows();
+
+    // Emoji section is visible by default (ITR is default mode)
+    emojiSection.classList.remove("hidden");
+
+    // ── Mode switching ────────────────────────────────────────────────────────
+
+    function switchMode(mode) {
+        currentMode = mode;
+        tabItr.classList.toggle("active", mode === "itr");
+        tabVar.classList.toggle("active", mode === "var");
+        sameAllSection.classList.toggle("hidden", mode === "var" || !layerInfo || layerInfo.layers.length <= 1);
+        document.getElementById("preset-section").classList.toggle("hidden", mode === "var");
+        btnRun.textContent = mode === "var" ? "Run VAR" : "Run Iterations";
+        emojiSection.classList.toggle("hidden", mode !== "itr");
+        applyLayerTypes(layerInfo ? layerInfo.layers : []);
+        rebuildMainRows();
+        rebuildExtraLayers();
+    }
+
+    tabItr.addEventListener("click", function () { switchMode("itr"); });
+    tabVar.addEventListener("click", function () { switchMode("var"); });
 
     // ── Layer-type-aware UI ───────────────────────────────────────────────────
     // Shows/hides font inputs based on whether any selected layer is a text layer.
@@ -320,12 +423,13 @@
         layerInfoEl.classList.add("loaded");
 
         var multi = info.layers.length > 1;
-        sameAllSection.classList.toggle("hidden", !multi);
+        sameAllSection.classList.toggle("hidden", !multi || currentMode === "var");
         if (!multi) sameForAllChk.checked = true;
 
         rebuildMainRows();
         applyLayerTypes(info.layers);
         rebuildExtraLayers();
+
     }
 
     // ── "Same for all" checkbox ───────────────────────────────────────────────
@@ -385,6 +489,15 @@
                 if (lInfo.font) fi.value = lInfo.font;
                 attachFontFocus(fi);
                 row.appendChild(fi);
+
+                var ci = document.createElement("input");
+                ci.type          = "text";
+                ci.className     = "content-input";
+                ci.placeholder   = "Text content";
+                ci.dataset.layer = li;
+                ci.dataset.row   = iter;
+                if (lInfo.text) ci.value = lInfo.text;
+                row.appendChild(ci);
             }
 
             var pb = document.createElement("button");
@@ -470,7 +583,7 @@
             label.textContent = lInfo2.name + " [" + lInfo2.type + "]";
             group.appendChild(label);
 
-            for (var r2 = 0; r2 < 5; r2++) group.appendChild(buildRowForLayer(r2, li2, lInfo2));
+            for (var r2 = 0; r2 < 5; r2++) group.appendChild(buildRowForLayer(r2, li2, lInfo2, false));
 
             extraLayersSection.appendChild(group);
             containers[lInfo2.index] = group;
@@ -560,16 +673,27 @@
         var hex  = hiEl ? normaliseHex(hiEl.value) : null;
         if (!hex) { setStatus("Layer " + (layerIdx + 1) + " row " + (iter + 1) + ": invalid hex.", true); return null; }
         var font = null;
+        var content = null;
         if (lInfo && lInfo.type === "text") {
             var fiEl = document.querySelector('.font-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
             font = fiEl ? fiEl.value.trim() || null : null;
+            var ciEl = document.querySelector('.content-input[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+            content = ciEl ? ciEl.value.trim() || null : null;
         }
-        return { color: hexToRgb(hex), font: font };
+        return { color: hexToRgb(hex), font: font, content: content };
+    }
+
+    function readMediaRowValue(layerIdx, iter) {
+        var fl = document.querySelector('.media-file-label[data-layer="' + layerIdx + '"][data-row="' + iter + '"]');
+        return { mediaPath: fl && fl.dataset.mediaPath ? fl.dataset.mediaPath : null };
     }
 
     function readRowValue(layerIdx, iter) {
         var lInfo = layerInfo.layers[layerIdx];
-        if (lInfo.type === "video") return readVideoRowValue(layerIdx, iter);
+        if (lInfo.type === "video") {
+            if (currentMode === "var") return readMediaRowValue(layerIdx, iter);
+            return readVideoRowValue(layerIdx, iter);
+        }
         return readColorRowValue(layerIdx, iter, lInfo);
     }
 
@@ -585,8 +709,9 @@
             } else if (li.type === "stroke") {
                 fillPath = li.strokePath;
             }
-            // video: fillPath unused
-            cfgLayers.push({ index: li.index, fillPath: fillPath, layerType: li.type });
+            var layerType = li.type;
+            if (li.type === "video" && currentMode === "var") layerType = "media";
+            cfgLayers.push({ index: li.index, fillPath: fillPath, layerType: layerType });
         }
         return cfgLayers;
     }
@@ -668,6 +793,10 @@
                 var fi = q(".font-input");
                 if (fi) fi.value = fresh.font;
             }
+            if (fresh.text !== undefined) {
+                var ci2 = q(".content-input");
+                if (ci2) ci2.value = fresh.text;
+            }
         }
     }
 
@@ -706,44 +835,238 @@
 
     // ── Run iterations ────────────────────────────────────────────────────────
 
+    function readVarNames() {
+        var names = [];
+        for (var i = 0; i < 5; i++) {
+            var inp = document.querySelector('.var-name-input[data-row="' + i + '"]');
+            names.push(inp ? inp.value.trim() || ("VAR" + (i + 1)) : ("VAR" + (i + 1)));
+        }
+        return names;
+    }
+
     btnRun.addEventListener("click", function () {
-        if (!layerInfo) { setStatus("Refresh a layer first.", true); return; }
+        var emojiOnlyMode = currentMode === "itr" && emojiEnabled.checked;
+        if (!layerInfo && !emojiOnlyMode) { setStatus("Refresh a layer first.", true); return; }
+        if (currentMode === "var") {
+            runVar();
+        } else {
+            runItr();
+        }
+    });
 
-        var values = buildValues();
-        if (!values) return;
+    // ── Emoji section — per-iteration pickers ────────────────────────────────
 
-        var cfg = {
-            compName: layerInfo.compName,
-            layers:   buildLayers(),
-            values:   values
+    var _emojiGridLoaded = false;
+    var _activeEmojiIter = null;   // which row's picker is open
+
+    var _layerPanelIds = [
+        "layer-section", "same-all-section", "change-type-section",
+        "font-search-section", "preset-section", "iterations-section", "extra-layers-section"
+    ];
+
+    emojiEnabled.addEventListener("change", function () {
+        var on = this.checked;
+        emojiConfig.classList.toggle("hidden", !on);
+        // Hide/show layer+iteration panels in emoji mode
+        _layerPanelIds.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.toggle("hidden", on);
+        });
+        // Allow running with emoji only (no layer refresh needed)
+        if (on && !layerInfo) btnRun.disabled = false;
+        if (!on && !layerInfo) btnRun.disabled = true;
+    });
+
+    // Load emoji file list once, populate the shared grid
+    function _loadEmojiGrid() {
+        if (_emojiGridLoaded) return;
+        _emojiGridLoaded = true;
+        var grid = document.getElementById("emoji-picker-grid");
+        grid.innerHTML = "";
+        try {
+            var fs      = require("fs");
+            var extPath = cs.getSystemPath(SystemPath.EXTENSION);
+            var dir     = extPath + "/emojis";
+            var files   = fs.readdirSync(dir).sort();
+            var imgExts = [".gif", ".png", ".jpg", ".jpeg", ".webp"];
+            var found   = 0;
+            files.forEach(function (filename) {
+                var ext = filename.toLowerCase().slice(filename.lastIndexOf("."));
+                if (imgExts.indexOf(ext) === -1) return;
+                found++;
+                var fullPath = dir + "/" + filename;
+                var item = document.createElement("div");
+                item.className    = "emoji-grid-item";
+                item.title        = filename.replace(/\.[^.]+$/, "");
+                item.dataset.path = fullPath;
+                item.dataset.name = filename;
+                var img = document.createElement("img");
+                img.src = "file://" + fullPath;
+                item.appendChild(img);
+                item.addEventListener("click", function () {
+                    // Highlight in grid
+                    var prev = grid.querySelector(".emoji-grid-item.selected");
+                    if (prev) prev.classList.remove("selected");
+                    this.classList.add("selected");
+                    // Update the active row
+                    if (_activeEmojiIter !== null) {
+                        _setRowEmoji(_activeEmojiIter, fullPath, filename);
+                    }
+                    grid.classList.add("hidden");
+                    _activeEmojiIter = null;
+                });
+                grid.appendChild(item);
+            });
+            if (!found) {
+                var msg = document.createElement("div");
+                msg.className   = "emoji-empty";
+                msg.textContent = "No emoji files found in extension/emojis/";
+                grid.appendChild(msg);
+            }
+        } catch (e) {
+            var msg2 = document.createElement("div");
+            msg2.className   = "emoji-empty";
+            msg2.textContent = "emojis/ folder not found.";
+            grid.appendChild(msg2);
+        }
+    }
+
+    function _setRowEmoji(iterIdx, path, filename) {
+        var row   = document.querySelector(".emoji-iter-row[data-iter='" + iterIdx + "']");
+        if (!row) return;
+        row.dataset.emojiPath = path;
+        var thumb = row.querySelector(".emoji-iter-thumb");
+        var name  = row.querySelector(".emoji-iter-name");
+        if (thumb) {
+            thumb.innerHTML = "";
+            thumb.classList.add("has-emoji");
+            var img = document.createElement("img");
+            img.src = "file://" + path;
+            thumb.appendChild(img);
+        }
+        if (name) name.textContent = filename.replace(/\.[^.]+$/, "");
+    }
+
+    function _buildEmojiIterRows() {
+        var container = document.getElementById("emoji-iter-rows");
+        if (!container) return;
+        container.innerHTML = "";
+        var grid = document.getElementById("emoji-picker-grid");
+
+        for (var i = 0; i < 5; i++) {
+            var row   = document.createElement("div");
+            row.className    = "emoji-iter-row";
+            row.dataset.iter = i;
+
+            var num = document.createElement("span");
+            num.className   = "emoji-iter-num";
+            num.textContent = i + 1;
+
+            var thumb = document.createElement("div");
+            thumb.className = "emoji-iter-thumb";
+            thumb.innerHTML = "+";
+
+            var nameEl = document.createElement("span");
+            nameEl.className   = "emoji-iter-name";
+            nameEl.textContent = "No emoji";
+
+            (function (rowEl, thumbEl, iterIdx) {
+                thumbEl.addEventListener("click", function () {
+                    _loadEmojiGrid();
+                    var isOpen = !grid.classList.contains("hidden") && _activeEmojiIter === iterIdx;
+                    // Close picker
+                    grid.classList.add("hidden");
+                    if (!isOpen) {
+                        _activeEmojiIter = iterIdx;
+                        // Insert grid right after this row
+                        rowEl.parentNode.insertBefore(grid, rowEl.nextSibling);
+                        // Sync selection state
+                        var curPath = rowEl.dataset.emojiPath || "";
+                        document.querySelectorAll(".emoji-grid-item").forEach(function (el) {
+                            el.classList.toggle("selected", el.dataset.path === curPath);
+                        });
+                        grid.classList.remove("hidden");
+                    } else {
+                        _activeEmojiIter = null;
+                    }
+                });
+            })(row, thumb, i);
+
+            row.appendChild(num);
+            row.appendChild(thumb);
+            row.appendChild(nameEl);
+            container.appendChild(row);
+        }
+    }
+
+    _buildEmojiIterRows();
+
+    function buildEmojiCfg() {
+        if (!emojiEnabled.checked) return { enabled: false };
+        var paths = [];
+        for (var i = 0; i < 5; i++) {
+            var row = document.querySelector(".emoji-iter-row[data-iter='" + i + "']");
+            paths.push(row && row.dataset.emojiPath ? row.dataset.emojiPath : "");
+        }
+        return {
+            enabled:      true,
+            perIteration: paths,
+            x:          parseInt(document.getElementById("emoji-x").value,           10) || 540,
+            y:          parseInt(document.getElementById("emoji-y").value,           10) || 1347,
+            layerIndex: parseInt(document.getElementById("emoji-layer-index").value, 10) || 1
         };
+    }
 
+    function runItr() {
+        // Emoji-only mode: no layer selected, just add emojis
+        var values = layerInfo ? buildValues() : [[], [], [], [], []];
+        if (layerInfo && !values) return;
+        var cfg = {
+            compName: layerInfo ? layerInfo.compName : "",
+            layers:   layerInfo ? buildLayers() : [],
+            values:   values,
+            emoji:    buildEmojiCfg()
+        };
         btnRun.disabled = btnRefresh.disabled = true;
         setStatus("Running…");
         debugLog.classList.add("hidden");
+        cs.evalScript("runIterationsJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")", function (result) {
+            btnRun.disabled = btnRefresh.disabled = false;
+            try {
+                var res = JSON.parse(result);
+                if (res.error) { setStatus(res.error, true); showDebugLog([res.error]); }
+                else if (res.warnings && res.warnings.length) { setStatus("Done with warnings — see log below", false, true); showDebugLog(res.warnings); }
+                else { setStatus("Done — 5 iterations complete.", false, true); }
+            } catch (e) { setStatus("Unexpected response", true); showDebugLog([result]); }
+        });
+    }
 
-        cs.evalScript(
-            "runIterationsJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")",
-            function (result) {
-                btnRun.disabled = btnRefresh.disabled = false;
-                try {
-                    var res = JSON.parse(result);
-                    if (res.error) {
-                        setStatus(res.error, true);
-                        showDebugLog([res.error]);
-                    } else if (res.warnings && res.warnings.length) {
-                        setStatus("Done with warnings — see log below", false, true);
-                        showDebugLog(res.warnings);
-                    } else {
-                        setStatus("Done — 5 iterations complete.", false, true);
-                    }
-                } catch (e) {
-                    setStatus("Unexpected response", true);
-                    showDebugLog([result]);
+    function runVar() {
+        var values = buildValues();
+        if (!values) return;
+        var varNames = readVarNames();
+        var cfg = { compName: layerInfo.compName, layers: buildLayers(), values: values, varNames: varNames };
+        btnRun.disabled = btnRefresh.disabled = true;
+        setStatus("Running VAR…");
+        debugLog.classList.add("hidden");
+        cs.evalScript("runVarIterationsJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")", function (result) {
+            btnRun.disabled = btnRefresh.disabled = false;
+            try {
+                var res = JSON.parse(result);
+                var logLines = res.log || [];
+                if (res.error) {
+                    setStatus(res.error, true);
+                    showDebugLog([res.error].concat(logLines));
+                } else if (res.warnings && res.warnings.length) {
+                    setStatus("Done with warnings — see log below", false, true);
+                    showDebugLog(logLines.concat(["", "--- Warnings ---"].concat(res.warnings)));
+                } else {
+                    setStatus("Done — 5 VAR variants complete.", false, true);
+                    showDebugLog(logLines);
                 }
-            }
-        );
-    });
+            } catch (e) { setStatus("Unexpected response", true); showDebugLog([result]); }
+        });
+    }
 
     // ── Font list (macOS only) ────────────────────────────────────────────────
 

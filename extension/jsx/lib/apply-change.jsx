@@ -1,10 +1,11 @@
 // lib/apply-change.jsx — color and font application
 
 function applyChange(layer, cfg) {
-    if (cfg.changeType === "shapeColor")  return applyShapeColor(layer, cfg.fillPath, cfg.value);
-    if (cfg.changeType === "strokeColor") return applyShapeStrokeColor(layer, cfg.fillPath, cfg.value);
-    if (cfg.changeType === "textColor")   return applyTextColor(layer, cfg.value);
-    if (cfg.changeType === "textFont")    return applyTextFont(layer, cfg.value);
+    if (cfg.changeType === "shapeColor")   return applyShapeColor(layer, cfg.fillPath, cfg.value);
+    if (cfg.changeType === "strokeColor")  return applyShapeStrokeColor(layer, cfg.fillPath, cfg.value);
+    if (cfg.changeType === "textColor")    return applyTextColor(layer, cfg.value);
+    if (cfg.changeType === "textFont")     return applyTextFont(layer, cfg.value);
+    if (cfg.changeType === "textContent")  return applyTextContent(layer, cfg.value);
     return false;
 }
 
@@ -62,6 +63,26 @@ function applyTextColor(layer, colorRGB) {
         }
         return true;
     } catch (e2) { return false; }
+}
+
+function applyTextContent(layer, text) {
+    // Convert \n (typed literally in the panel) to AE's line-break character (\r)
+    text = text.replace(/\\n/g, "\r");
+    var textProp = layer.property("Source Text");
+    try {
+        if (textProp.numKeys > 0) {
+            for (var k = 1; k <= textProp.numKeys; k++) {
+                var kDoc = textProp.keyValue(k);
+                kDoc.text = text;
+                textProp.setValueAtTime(textProp.keyTime(k), kDoc);
+            }
+        } else {
+            var textDoc = textProp.value;
+            textDoc.text = text;
+            textProp.setValue(textDoc);
+        }
+        return true;
+    } catch (e) { return false; }
 }
 
 // Same pattern for font — setFont(postScriptName) on the TextStyle chain.

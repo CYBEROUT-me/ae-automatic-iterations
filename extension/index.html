@@ -13,6 +13,11 @@
   <button id="btn-update">Install</button>
 </div>
 
+<div id="mode-tabs">
+  <button id="tab-itr" class="tab-btn active">ITR</button>
+  <button id="tab-var" class="tab-btn">VAR</button>
+</div>
+
 <div id="layer-section">
   <div id="layer-info">No layer selected</div>
   <button id="btn-refresh">Refresh Layer</button>
@@ -57,13 +62,31 @@
 
 <div id="extra-layers-section"></div>
 
+<div id="emoji-section" class="hidden">
+  <div class="section-divider"></div>
+  <label class="emoji-enable-label">
+    <input type="checkbox" id="emoji-enabled" class="emoji-toggle-input"/>
+    <span class="emoji-toggle-track"></span>
+    <span class="emoji-toggle-text">Add emoji to ITR</span>
+  </label>
+  <div id="emoji-config" class="hidden">
+    <div id="emoji-iter-rows"></div>
+    <div id="emoji-picker-grid" class="hidden"></div>
+    <div class="emoji-pos-row">
+      <label>X<input type="number" id="emoji-x" value="540"/></label>
+      <label>Y<input type="number" id="emoji-y" value="1347"/></label>
+      <label>Layer #<input type="number" id="emoji-layer-index" value="1" min="1"/></label>
+    </div>
+  </div>
+</div>
+
 <div id="changelog-section" class="hidden">
   <div id="changelog-list"></div>
 </div>
 
 <div id="run-section">
   <div id="btn-row">
-<button id="btn-run" disabled>Run Iterations</button>
+    <button id="btn-run" disabled>Run Iterations</button>
     <button id="btn-changelog" title="What's new">ℹ</button>
   </div>
   <div id="status"></div>

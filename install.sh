@@ -29,7 +29,10 @@ cat \
     "$SRC/jsx/lib/layer-utils.jsx" \
     "$SRC/jsx/lib/apply-change.jsx" \
     "$SRC/jsx/lib/apply-video.jsx" \
+    "$SRC/jsx/lib/apply-media.jsx" \
+    "$SRC/jsx/lib/apply-emoji.jsx" \
     "$SRC/jsx/lib/render.jsx" \
+    "$SRC/jsx/lib/clean.jsx" \
     "$SRC/jsx/lib/collect.jsx" \
     "$SRC/jsx/lib/project.jsx" \
     > "$DEST/jsx/host.jsx"

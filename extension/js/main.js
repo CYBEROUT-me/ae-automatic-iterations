@@ -12,7 +12,6 @@
     // ── DOM refs ──────────────────────────────────────────────────────────────
     var layerInfoEl        = document.getElementById("layer-info");
     var btnRefresh         = document.getElementById("btn-refresh");
-    var changeTypeSection  = document.getElementById("change-type-section");
     var fontSection        = document.getElementById("font-search-section");
     var fontSearch         = document.getElementById("font-search");
     var fontDropdown       = document.getElementById("font-dropdown");
@@ -53,6 +52,10 @@
     function setStatus(msg, isError, isOk) {
         statusEl.textContent = msg;
         statusEl.className   = isError ? "error" : isOk ? "ok" : "";
+    }
+
+    function getCount() {
+        return Math.max(1, parseInt(document.getElementById("iter-count").value, 10) || 5);
     }
 
     function showDebugLog(lines) {
@@ -711,7 +714,7 @@
             }
             var layerType = li.type;
             if (li.type === "video" && currentMode === "var") layerType = "media";
-            cfgLayers.push({ index: li.index, fillPath: fillPath, layerType: layerType });
+            cfgLayers.push({ index: li.index, name: li.name, fillPath: fillPath, layerType: layerType });
         }
         return cfgLayers;
     }
@@ -859,20 +862,9 @@
     var _emojiGridLoaded = false;
     var _activeEmojiIter = null;   // which row's picker is open
 
-    var _layerPanelIds = [
-        "layer-section", "same-all-section", "change-type-section",
-        "font-search-section", "preset-section", "iterations-section", "extra-layers-section"
-    ];
-
     emojiEnabled.addEventListener("change", function () {
         var on = this.checked;
         emojiConfig.classList.toggle("hidden", !on);
-        // Hide/show layer+iteration panels in emoji mode
-        _layerPanelIds.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.classList.toggle("hidden", on);
-        });
-        // Allow running with emoji only (no layer refresh needed)
         if (on && !layerInfo) btnRun.disabled = false;
         if (!on && !layerInfo) btnRun.disabled = true;
     });
@@ -1001,6 +993,32 @@
 
     _buildEmojiIterRows();
 
+    document.getElementById("btn-emoji-preview").addEventListener("click", function () {
+        var firstPath = "";
+        for (var i = 0; i < 5; i++) {
+            var row = document.querySelector(".emoji-iter-row[data-iter='" + i + "']");
+            if (row && row.dataset.emojiPath) { firstPath = row.dataset.emojiPath; break; }
+        }
+        if (!firstPath) { setStatus("Select an emoji first.", true); return; }
+        var cfg = {
+            emojiPath:  firstPath,
+            x:          parseInt(document.getElementById("emoji-x").value,           10) || 540,
+            y:          parseInt(document.getElementById("emoji-y").value,           10) || 1347,
+            size:       parseInt(document.getElementById("emoji-size").value,        10) || 100,
+            layerIndex: parseInt(document.getElementById("emoji-layer-index").value, 10) || 1
+        };
+        btnRun.disabled = true;
+        setStatus("Previewing emoji…");
+        cs.evalScript("previewEmojiJSON(" + JSON.stringify(JSON.stringify(cfg)) + ")", function (result) {
+            btnRun.disabled = false;
+            try {
+                var res = JSON.parse(result);
+                if (res.error) { setStatus("Preview failed: " + res.error, true); }
+                else           { setStatus("Emoji previewed in " + res.compName + " — Ctrl+Z to undo", false, true); }
+            } catch (e) { setStatus("Unexpected: " + result, true); }
+        });
+    });
+
     function buildEmojiCfg() {
         if (!emojiEnabled.checked) return { enabled: false };
         var paths = [];
@@ -1013,6 +1031,7 @@
             perIteration: paths,
             x:          parseInt(document.getElementById("emoji-x").value,           10) || 540,
             y:          parseInt(document.getElementById("emoji-y").value,           10) || 1347,
+            size:       parseInt(document.getElementById("emoji-size").value,        10) || 100,
             layerIndex: parseInt(document.getElementById("emoji-layer-index").value, 10) || 1
         };
     }
@@ -1488,8 +1507,24 @@
 
     // ── Init ──────────────────────────────────────────────────────────────────
 
-    // Hide the change-type dropdown — type is now auto-detected per layer
-    if (changeTypeSection) changeTypeSection.classList.add("hidden");
+    document.getElementById("iter-count").addEventListener("change", function () {
+        rebuildMainRows();
+        rebuildExtraLayers();
+        // Preserve existing emoji assignments across the rebuild
+        var savedEmoji = {};
+        document.querySelectorAll(".emoji-iter-row").forEach(function (row) {
+            if (row.dataset.emojiPath) savedEmoji[row.dataset.iter] = {
+                path: row.dataset.emojiPath,
+                name: (row.dataset.emojiPath.split("/").pop() || "").replace(/\.[^.]+$/, "")
+            };
+        });
+        _emojiGridLoaded = false;
+        _buildEmojiIterRows();
+        Object.keys(savedEmoji).forEach(function (idx) {
+            var e = savedEmoji[idx];
+            _setRowEmoji(parseInt(idx, 10), e.path, e.name);
+        });
+    });
 
     applyLayerTypes([]); // default: shape-only view (no font inputs)
     loadFonts();

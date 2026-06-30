@@ -1198,7 +1198,9 @@
         fs.readdirSync(src).forEach(function (entry) {
             var s = path.join(src, entry);
             var d = path.join(dest, entry);
-            if (fs.statSync(s).isDirectory()) copyDirSync(s, d);
+            var stat = fs.lstatSync(s);
+            if (stat.isSymbolicLink()) return;
+            if (stat.isDirectory()) copyDirSync(s, d);
             else fs.copyFileSync(s, d);
         });
     }
@@ -1236,7 +1238,10 @@
 
                 // Extract zip — platform-aware
                 if (process.platform === "win32") {
-                    cp.execSync("powershell -command \"Expand-Archive -Path '" + tmpZip + "' -DestinationPath '" + tmpDir + "' -Force\"");
+                    cp.execFileSync("powershell", [
+                        "-NoProfile", "-NonInteractive", "-Command",
+                        "Expand-Archive -LiteralPath '" + tmpZip.replace(/'/g, "''") + "' -DestinationPath '" + tmpDir.replace(/'/g, "''") + "' -Force"
+                    ]);
                 } else {
                     cp.execSync("unzip -o '" + tmpZip + "' -d '" + tmpDir + "'");
                 }

@@ -1191,6 +1191,18 @@
         if (btnUpdate) btnUpdate.onclick = function () { installUpdate(release); };
     }
 
+    function copyDirSync(src, dest) {
+        var fs   = require("fs");
+        var path = require("path");
+        fs.mkdirSync(dest, { recursive: true });
+        fs.readdirSync(src).forEach(function (entry) {
+            var s = path.join(src, entry);
+            var d = path.join(dest, entry);
+            if (fs.statSync(s).isDirectory()) copyDirSync(s, d);
+            else fs.copyFileSync(s, d);
+        });
+    }
+
     function installUpdate(release) {
         var asset = null;
         for (var i = 0; i < release.assets.length; i++) {
@@ -1201,19 +1213,44 @@
         document.getElementById("update-banner").classList.add("hidden");
         setStatus("Downloading " + release.tag_name + "…");
 
-        var tmpZip = "/tmp/AE-Iterations-update.zip";
-        var tmpDir = "/tmp/ae-iterations-update";
+        var os   = require("os");
+        var path = require("path");
+        var tmpZip = path.join(os.tmpdir(), "AE-Iterations-update.zip");
+        var tmpDir = path.join(os.tmpdir(), "ae-iterations-update");
 
         downloadFile(asset.browser_download_url, tmpZip, function (err) {
             if (err) { setStatus("Download failed: " + err, true); return; }
             setStatus("Installing…");
             try {
                 var cp = require("child_process");
-                cp.execSync("rm -rf '" + tmpDir + "'");
-                cp.execSync("unzip -o '" + tmpZip + "' -d '" + tmpDir + "'");
-                cp.execSync("bash '" + tmpDir + "/install.sh'");
+                var fs = require("fs");
+
+                // Remove previous extraction dir if present
+                if (fs.existsSync(tmpDir)) {
+                    cp.execSync(
+                        process.platform === "win32"
+                            ? "rmdir /s /q \"" + tmpDir + "\""
+                            : "rm -rf '" + tmpDir + "'"
+                    );
+                }
+
+                // Extract zip — platform-aware
+                if (process.platform === "win32") {
+                    cp.execSync("powershell -command \"Expand-Archive -Path '" + tmpZip + "' -DestinationPath '" + tmpDir + "' -Force\"");
+                } else {
+                    cp.execSync("unzip -o '" + tmpZip + "' -d '" + tmpDir + "'");
+                }
+            } catch (e) { setStatus("Extraction failed: " + e.message, true); return; }
+
+            try {
+                var cepDest = process.platform === "win32"
+                    ? path.join(process.env.APPDATA, "Adobe", "CEP", "extensions", "com.aeiter.iteration")
+                    : path.join(os.homedir(), "Library", "Application Support", "Adobe", "CEP", "extensions", "com.aeiter.iteration");
+
+                var srcExtension = path.join(tmpDir, "extension");
+                copyDirSync(srcExtension, cepDest);
                 setStatus("Updated to " + release.tag_name + " — restart After Effects.", false, true);
-            } catch (e) { setStatus("Install failed: " + e.message, true); }
+            } catch (e) { setStatus("Copy failed — restart AE and try again: " + e.message, true); }
         });
     }
 

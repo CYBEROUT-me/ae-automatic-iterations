@@ -336,7 +336,7 @@
         var mainRows = document.getElementById("main-rows");
         mainRows.innerHTML = "";
         var lInfo = layerInfo ? layerInfo.layers[0] : null;
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < getCount(); i++) {
             mainRows.appendChild(buildRowForLayer(i, 0, lInfo, currentMode === "var"));
         }
         var isVideo = lInfo && lInfo.type === "video";
@@ -443,7 +443,7 @@
 
     function buildIterRows(lInfo, li, showFont) {
         var rows = [];
-        for (var iter = 0; iter < 5; iter++) {
+        for (var iter = 0; iter < getCount(); iter++) {
             var row = document.createElement("div");
             row.className = "iter-row";
 
@@ -531,7 +531,7 @@
         sub.textContent = "Stroke";
         sec.appendChild(sub);
 
-        for (var r = 0; r < 5; r++) sec.appendChild(buildRowForLayer(r, li, lInfo));
+        for (var r = 0; r < getCount(); r++) sec.appendChild(buildRowForLayer(r, li, lInfo));
         container.appendChild(sec);
     }
 
@@ -586,7 +586,7 @@
             label.textContent = lInfo2.name + " [" + lInfo2.type + "]";
             group.appendChild(label);
 
-            for (var r2 = 0; r2 < 5; r2++) group.appendChild(buildRowForLayer(r2, li2, lInfo2, false));
+            for (var r2 = 0; r2 < getCount(); r2++) group.appendChild(buildRowForLayer(r2, li2, lInfo2, false));
 
             extraLayersSection.appendChild(group);
             containers[lInfo2.index] = group;
@@ -726,7 +726,7 @@
         var sameForAll = numLayers === 1 || sameForAllChk.checked;
         var result     = [];
 
-        for (var iter = 0; iter < 5; iter++) {
+        for (var iter = 0; iter < getCount(); iter++) {
             var v0 = readRowValue(0, iter);
             if (!v0) return null;
 

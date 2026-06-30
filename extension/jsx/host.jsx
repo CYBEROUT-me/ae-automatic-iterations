@@ -402,7 +402,7 @@ function runIterationsJSON(configJSON) {
 
             try { performCollect(currentFile, collectFolder); } catch (e) { warnings.push("Iter " + (iter + 1) + " collect: " + e.message); }
 
-            if (iter < 4) {
+            if (iter < (cfg.count || 5) - 1) {
                 var copied = copyProject(currentFile);
                 app.open(copied.file);
                 renameComps(copied.oldId, copied.newId);

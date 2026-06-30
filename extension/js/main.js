@@ -840,7 +840,7 @@
 
     function readVarNames() {
         var names = [];
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < getCount(); i++) {
             var inp = document.querySelector('.var-name-input[data-row="' + i + '"]');
             names.push(inp ? inp.value.trim() || ("VAR" + (i + 1)) : ("VAR" + (i + 1)));
         }
@@ -945,7 +945,7 @@
         container.innerHTML = "";
         var grid = document.getElementById("emoji-picker-grid");
 
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < getCount(); i++) {
             var row   = document.createElement("div");
             row.className    = "emoji-iter-row";
             row.dataset.iter = i;
@@ -995,7 +995,7 @@
 
     document.getElementById("btn-emoji-preview").addEventListener("click", function () {
         var firstPath = "";
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < getCount(); i++) {
             var row = document.querySelector(".emoji-iter-row[data-iter='" + i + "']");
             if (row && row.dataset.emojiPath) { firstPath = row.dataset.emojiPath; break; }
         }
@@ -1022,7 +1022,7 @@
     function buildEmojiCfg() {
         if (!emojiEnabled.checked) return { enabled: false };
         var paths = [];
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < getCount(); i++) {
             var row = document.querySelector(".emoji-iter-row[data-iter='" + i + "']");
             paths.push(row && row.dataset.emojiPath ? row.dataset.emojiPath : "");
         }
@@ -1044,7 +1044,8 @@
             compName: layerInfo ? layerInfo.compName : "",
             layers:   layerInfo ? buildLayers() : [],
             values:   values,
-            emoji:    buildEmojiCfg()
+            emoji:    buildEmojiCfg(),
+            count:    getCount()
         };
         btnRun.disabled = btnRefresh.disabled = true;
         setStatus("Running…");
@@ -1055,7 +1056,7 @@
                 var res = JSON.parse(result);
                 if (res.error) { setStatus(res.error, true); showDebugLog([res.error]); }
                 else if (res.warnings && res.warnings.length) { setStatus("Done with warnings — see log below", false, true); showDebugLog(res.warnings); }
-                else { setStatus("Done — 5 iterations complete.", false, true); }
+                else { setStatus("Done — " + getCount() + " iterations complete.", false, true); }
             } catch (e) { setStatus("Unexpected response", true); showDebugLog([result]); }
         });
     }
@@ -1064,7 +1065,7 @@
         var values = buildValues();
         if (!values) return;
         var varNames = readVarNames();
-        var cfg = { compName: layerInfo.compName, layers: buildLayers(), values: values, varNames: varNames };
+        var cfg = { compName: layerInfo.compName, layers: buildLayers(), values: values, varNames: varNames, count: getCount() };
         btnRun.disabled = btnRefresh.disabled = true;
         setStatus("Running VAR…");
         debugLog.classList.add("hidden");
@@ -1080,7 +1081,7 @@
                     setStatus("Done with warnings — see log below", false, true);
                     showDebugLog(logLines.concat(["", "--- Warnings ---"].concat(res.warnings)));
                 } else {
-                    setStatus("Done — 5 VAR variants complete.", false, true);
+                    setStatus("Done — " + getCount() + " VAR variants complete.", false, true);
                     showDebugLog(logLines);
                 }
             } catch (e) { setStatus("Unexpected response", true); showDebugLog([result]); }
@@ -1286,7 +1287,7 @@
     }
 
     function applyColorPreset(colors) {
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < Math.min(getCount(), colors.length); i++) {
             var hex = normaliseHex(colors[i]);
             if (!hex) continue;
             var cp = document.querySelector('.color-pick[data-layer="0"][data-row="' + i + '"]');
@@ -1297,7 +1298,7 @@
     }
 
     function applyVideoPreset(iterations) {
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < Math.min(getCount(), iterations.length); i++) {
             var it  = iterations[i] || {};
             var q   = function (sel, row) { return document.querySelector(sel + '[data-layer="0"][data-row="' + row + '"]'); };
             var fb  = q('.video-toggle[data-prop="flip"]', i);
@@ -1348,13 +1349,13 @@
     function getCurrentPreset() {
         if (isVideoMode()) {
             var iters = [];
-            for (var i = 0; i < 5; i++) iters.push(readVideoRowValue(0, i));
+            for (var i = 0; i < getCount(); i++) iters.push(readVideoRowValue(0, i));
             return { type: "video", iterations: iters.map(function(v) {
                 return { flip: v.flip, bw: v.bw, tint: v.tint ? rgbToHex(v.tint) : null, hue: v.hue };
             })};
         }
         var colors = [];
-        for (var j = 0; j < 5; j++) {
+        for (var j = 0; j < getCount(); j++) {
             var hi = document.querySelector('.hex-input[data-layer="0"][data-row="' + j + '"]');
             colors.push(hi ? hi.value : "#FF0000");
         }

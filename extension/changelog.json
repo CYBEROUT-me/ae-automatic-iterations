@@ -1,5 +1,24 @@
 [
   {
+    "version": "1.0.11",
+    "date": "2026-06-30",
+    "changes": [
+      "Variable iteration count: set any count via the Count input at the top of the panel (no longer fixed at 5) — applies to both ITR and VAR modes",
+      "Windows auto-update support: one-click extension updates now work on Windows using PowerShell and Node.js file operations (previously macOS only)"
+    ]
+  },
+  {
+    "version": "1.0.10",
+    "date": "2026-06-19",
+    "changes": [
+      "Emoji size control: set scale % per-run (X / Y / Size % / Layer # inputs in emoji config)",
+      "Emoji preview: 'Preview in AE' button inserts the selected emoji into the active comp so you can check position and size before running — Ctrl+Z to undo",
+      "Combined iterations: emoji and layer changes (color, font, etc.) now work simultaneously — toggling the emoji section no longer hides the layer panel",
+      "Layer lookup by name: if an emoji preview shifted layer indices, the runner falls back to name-based layer resolution so iterations never target the wrong layer",
+      "Removed the leftover Change type dropdown (it was already hidden but leaked back visible when toggling the emoji switch)"
+    ]
+  },
+  {
     "version": "1.0.9",
     "date": "2026-06-02",
     "changes": [

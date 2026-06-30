@@ -100,6 +100,20 @@ function applyLayerValue(layer, lc, val) {
     return log;
 }
 
+// Look up a layer by its stored index; if that slot holds a different layer (e.g. emoji preview
+// shifted indices), fall back to searching by name so iteration still targets the right layer.
+function resolveLayer(comp, lc) {
+    var layer = null;
+    try { layer = comp.layer(lc.index); } catch (e) {}
+    if (layer && lc.name && layer.name !== lc.name) {
+        // Index is stale — search by name
+        for (var ni = 1; ni <= comp.numLayers; ni++) {
+            try { if (comp.layer(ni).name === lc.name) { layer = comp.layer(ni); break; } } catch (e) {}
+        }
+    }
+    return layer;
+}
+
 // Same as applyLayerValue but returns an error string on failure, or null on success.
 function applyLayerValueStrict(layer, lc, val, iterNum) {
     if (lc.layerType === "shape") {
@@ -167,6 +181,54 @@ function getLayerInfoJSON() {
     }
 }
 
+// ── CEP: preview emoji — inserts emoji into active comp so user can check position/size ──
+// cfg: { emojiPath, x, y, size, layerIndex }
+
+function previewEmojiJSON(configJSON) {
+    try {
+        var cfg  = JSON.parse(configJSON);
+        var comp = null;
+        if (app.project.activeItem instanceof CompItem) {
+            comp = app.project.activeItem;
+        } else {
+            var itrC = findItrComps();
+            comp = itrC["ITR_9x16"] || itrC["ITR_1x1"] || itrC["ITR_16x9"];
+        }
+        if (!comp) return JSON.stringify({ error: "No active comp found. Open a comp first." });
+
+        var file = new File(cfg.emojiPath);
+        if (!file.exists) return JSON.stringify({ error: "Emoji file not found: " + cfg.emojiPath });
+
+        app.beginUndoGroup("Emoji Preview");
+        var footage = app.project.importFile(new ImportOptions(file));
+        if (!footage) { app.endUndoGroup(); return JSON.stringify({ error: "Could not import emoji" }); }
+
+        removeEmojiFromComp(comp);
+
+        var layer = comp.layers.add(footage);
+        layer.name     = EMOJI_LAYER_NAME;
+        layer.inPoint  = 0;
+        layer.outPoint = comp.duration;
+        layer.transform.position.setValue([cfg.x, cfg.y]);
+        var sz = cfg.size || 100;
+        layer.transform.scale.setValue([sz, sz]);
+        layer.timeRemapEnabled = true;
+        layer.timeRemap.expression = 'loopOut("cycle")';
+
+        var li = cfg.layerIndex || 1;
+        if (li > 1) {
+            if (li >= comp.numLayers) layer.moveToEnd();
+            else layer.moveAfter(comp.layer(li));
+        }
+
+        app.endUndoGroup();
+        return JSON.stringify({ success: true, compName: comp.name });
+    } catch (e) {
+        try { app.endUndoGroup(); } catch (e2) {}
+        return JSON.stringify({ error: e.message });
+    }
+}
+
 // ── CEP: debug — apply only, no render/collect ────────────────────────────────
 // cfg: { compName, layers:[{index, fillPath, layerType}], value:[{color,font},...] }
 
@@ -193,9 +255,10 @@ function debugApplyChangeJSON(configJSON) {
 
         app.beginSuppressDialogs();
         app.beginUndoGroup("Debug Apply");
+        removeEmojiFromComp(comp); // restore original layer order if a preview emoji was inserted
         for (var li = 0; li < cfg.layers.length; li++) {
             var lc    = cfg.layers[li];
-            var layer = comp.layer(lc.index);
+            var layer = resolveLayer(comp, lc);
             if (!layer) { log.push("Layer " + lc.index + ": NOT FOUND"); continue; }
             log.push("Layer " + lc.index + ": " + layer.name + "  [" + lc.layerType + "]  fillPath=" + lc.fillPath);
             var val = cfg.value[li]; // { color, font }
@@ -228,7 +291,7 @@ function runIterationsJSON(configJSON) {
 
         app.beginSuppressDialogs();
 
-        for (var iter = 0; iter < 5; iter++) {
+        for (var iter = 0; iter < (cfg.count || 5); iter++) {
 
             // Apply layer changes (skipped when running emoji-only with no layer selected)
             if (currentCompName && cfg.layers && cfg.layers.length > 0) {
@@ -243,9 +306,10 @@ function runIterationsJSON(configJSON) {
                 }
 
                 app.beginUndoGroup("Iteration " + (iter + 1));
+                removeEmojiFromComp(comp); // clear any preview emoji before looking up layer indices
                 for (var li = 0; li < cfg.layers.length; li++) {
                     var lc    = cfg.layers[li];
-                    var layer = comp.layer(lc.index);
+                    var layer = resolveLayer(comp, lc);
                     if (!layer) { warnings.push("Iter " + (iter + 1) + ": layer " + lc.index + " not found"); continue; }
                     var val = cfg.values[iter][li];
                     var err = applyLayerValueStrict(layer, lc, val, iter + 1);
@@ -268,9 +332,10 @@ function runIterationsJSON(configJSON) {
                     ? cfg.emoji.perIteration[iter]
                     : cfg.emoji.path;
                 if (emojiPath) {
-                    var emojiEx = cfg.emoji.x  !== undefined ? cfg.emoji.x  : 540;
-                    var emojiEy = cfg.emoji.y  !== undefined ? cfg.emoji.y  : 1347;
-                    var emojiEi = cfg.emoji.layerIndex || 1;
+                    var emojiEx   = cfg.emoji.x    !== undefined ? cfg.emoji.x    : 540;
+                    var emojiEy   = cfg.emoji.y    !== undefined ? cfg.emoji.y    : 1347;
+                    var emojiSize = cfg.emoji.size !== undefined ? cfg.emoji.size : 100;
+                    var emojiEi   = cfg.emoji.layerIndex || 1;
                     // Import once (suppress must be OFF for importFile to work)
                     app.endSuppressDialogs(false);
                     try {
@@ -294,7 +359,7 @@ function runIterationsJSON(configJSON) {
                                 eLayer.inPoint  = 0;
                                 eLayer.outPoint = emojiComp.duration;
                                 eLayer.transform.position.setValue([emojiEx, emojiEy]);
-                                eLayer.transform.scale.setValue([100, 100]);
+                                eLayer.transform.scale.setValue([emojiSize, emojiSize]);
                                 eLayer.timeRemapEnabled = true;
                                 eLayer.timeRemap.expression = 'loopOut("cycle")';
                                 if (emojiEi > 1) {
@@ -388,7 +453,7 @@ function runVarIterationsJSON(configJSON) {
         // to end with _9x16 / _1x1 / _16x9.
         var originalBase = stripAspectSuffix(projectFile.name.replace(/\.[^.]+$/, ""));
 
-        for (var iter = 0; iter < 5; iter++) {
+        for (var iter = 0; iter < (cfg.count || 5); iter++) {
             var varName = (cfg.varNames[iter] || ("VAR" + (iter + 1))).replace(/\.aep$/i, "");
             var safeName = varName.replace(/[\/\\:*?"<>|]/g, "_");
             var varProjectName = safeName;

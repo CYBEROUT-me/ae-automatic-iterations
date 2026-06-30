@@ -18,6 +18,10 @@
   <button id="tab-var" class="tab-btn">VAR</button>
 </div>
 
+<div id="count-section">
+  <label>Count <input type="number" id="iter-count" value="5" min="1" style="width:48px"/></label>
+</div>
+
 <div id="layer-section">
   <div id="layer-info">No layer selected</div>
   <button id="btn-refresh">Refresh Layer</button>
@@ -27,14 +31,6 @@
   <label><input type="checkbox" id="same-for-all" checked/> Same value for all layers</label>
 </div>
 
-<div id="change-type-section">
-  <label>Change type:</label>
-  <select id="change-type">
-    <option value="shapeColor">Shape Color</option>
-    <option value="textColor">Text Color</option>
-    <option value="textFont">Text Font</option>
-  </select>
-</div>
 
 <div id="font-search-section" class="hidden">
   <input type="text" id="font-search" placeholder="Search font…" autocomplete="off"/>
@@ -75,8 +71,10 @@
     <div class="emoji-pos-row">
       <label>X<input type="number" id="emoji-x" value="540"/></label>
       <label>Y<input type="number" id="emoji-y" value="1347"/></label>
+      <label>Size %<input type="number" id="emoji-size" value="100" min="1" max="500"/></label>
       <label>Layer #<input type="number" id="emoji-layer-index" value="1" min="1"/></label>
     </div>
+    <button id="btn-emoji-preview">Preview in AE</button>
   </div>
 </div>
 

@@ -21,6 +21,15 @@ export const App = () => {
   const [bgColor, setBgColor] = useState("#282c34");
   const [count, setCount] = useState(0);
   const [pingResult, setPingResult] = useState<string>("checking host...");
+  const [layerInfoJson, setLayerInfoJson] = useState<string>("");
+
+  // Temporary manual-verification UI for getLayerInfo (Task 6).
+  // Replaced with real UI in Task 8.
+  const refreshLayerInfo = () => {
+    evalTS("getLayerInfo")
+      .then((r) => setLayerInfoJson(JSON.stringify(r, null, 2)))
+      .catch((e) => setLayerInfoJson("ERROR: " + String(e)));
+  };
 
   //* Demonstration of Traditional string eval-based ExtendScript Interaction
   const jsxTest = () => {
@@ -75,6 +84,8 @@ export const App = () => {
     <div className="app" style={{ backgroundColor: bgColor }}>
       <header className="app-header">
         <div id="ping-status">{pingResult}</div>
+        <button onClick={refreshLayerInfo}>Refresh</button>
+        <pre>{layerInfoJson}</pre>
         <img src={bolt} className="icon" />
         <div className="stack-icons">
           <div>

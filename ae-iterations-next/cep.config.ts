@@ -3,8 +3,8 @@ import { version } from "./package.json";
 
 const config: CEP_Config = {
   version,
-  id: "com.aeiter.iteration.next", 
-  displayName: "AE Iterations", 
+  id: "com.aeiter.iteration.next",
+  displayName: "AE Iterations (Next)",
   symlink: "local",
   port: 3000,
   servePort: 5000,
@@ -12,7 +12,7 @@ const config: CEP_Config = {
   extensionManifestVersion: 6.0,
   requiredRuntimeVersion: 9.0,
   hosts: [
-    { name: "AEFT", version: "[0.0,99.9]" }, 
+    { name: "AEFT", version: "[26.0,99.9]" },
   ],
 
   type: "Panel",
@@ -28,10 +28,12 @@ const config: CEP_Config = {
     {
       mainPath: "./main/index.html",
       name: "main",
-      panelDisplayName: "AE Iterations", 
+      panelDisplayName: "AE Iterations (Next)",
       autoVisible: true,
-      width: 600,
-      height: 650,
+      width: 300,
+      height: 560,
+      minWidth: 260,
+      minHeight: 480,
     },
   ],
   build: {

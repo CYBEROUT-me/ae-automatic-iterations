@@ -1,0 +1,20 @@
+import type { LayerValue } from "../../../shared/types";
+import type { RowLayer } from "./rowLayers";
+
+// Effective value used for rendering/reading a non-first, non-stroke, non-video row
+// when sameForAll is on — mirrors main.js's buildValues() sameForAll branch.
+export function effectiveValue(
+  rowLayers: RowLayer[],
+  values: Record<string, LayerValue[]>,
+  sameForAll: boolean,
+  row: RowLayer,
+  iter: number
+): LayerValue | undefined {
+  const own = values[row.rowKey]?.[iter];
+  if (!sameForAll || row.type === "stroke" || row.type === "video") return own;
+  const first = rowLayers[0];
+  if (!first || row.layerIndex === first.layerIndex) return own;
+  const firstVal = values[first.rowKey]?.[iter];
+  if (!firstVal) return own;
+  return row.type === "text" ? { color: firstVal.color, font: firstVal.font } : { color: firstVal.color };
+}

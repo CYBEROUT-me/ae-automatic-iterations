@@ -2,13 +2,20 @@ import { useAppStore } from "../state/store";
 import { evalTS } from "../../lib/utils/bolt";
 import { IterationRow } from "./IterationRow";
 import { toCfgLayers } from "../state/rowLayers";
+import { RunButton } from "./RunButton";
+import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
+import type { RowLayer } from "../state/rowLayers";
+import type { LayerValue } from "../../../shared/types";
 
 export function LayerInfoPanel() {
-  const { compName, rowLayers, count, values, setLayerInfo } = useAppStore((s) => ({
+  const { compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo } = useAppStore((s) => ({
     compName: s.compName,
     rowLayers: s.rowLayers,
     count: s.count,
+    setCount: s.setCount,
     values: s.values,
+    sameForAll: s.sameForAll,
+    setSameForAll: s.setSameForAll,
     setLayerInfo: s.setLayerInfo,
   }));
 
@@ -18,21 +25,43 @@ export function LayerInfoPanel() {
       .catch((err) => alert("Refresh failed: " + String(err)));
   };
 
+  // Effective value used for rendering/reading a non-first, non-stroke, non-video row
+  // when sameForAll is on — mirrors main.js's buildValues() sameForAll branch.
+  const effectiveValue = (row: RowLayer, iter: number): LayerValue | undefined =>
+    effectiveValueImpl(rowLayers, values, sameForAll, row, iter);
+
   // Applies one iteration's values live to the target comp, so the artist
   // can eyeball a column of values in AE before committing to a full run.
   const previewIteration = (iter: number) => {
     if (!compName) return;
     const layers = toCfgLayers(rowLayers);
-    const iterValues = rowLayers.map((r) => values[r.rowKey]?.[iter] ?? {});
+    const iterValues = rowLayers.map((r) => effectiveValue(r, iter) ?? {});
     evalTS("previewApply", { compName, layers, values: iterValues })
       .then((res) => console.log(res.log.join("\n")))
       .catch((err) => alert("Preview failed: " + String(err)));
   };
 
+  const showSameForAll = new Set(rowLayers.map((r) => r.layerIndex)).size > 1;
+
   return (
     <div id="layer-section">
       <div id="layer-info">{compName ? `${compName} — ${rowLayers.length} row(s)` : "No layer selected"}</div>
       <button onClick={refresh}>Refresh Layer</button>
+      <label id="count-label">
+        Count
+        <input
+          type="number"
+          min={1}
+          value={count}
+          onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 5))}
+        />
+      </label>
+      {showSameForAll && (
+        <label id="same-all-section">
+          <input type="checkbox" checked={sameForAll} onChange={(e) => setSameForAll(e.target.checked)} />
+          Same value for all layers
+        </label>
+      )}
       {rowLayers.length > 0 && (
         <div id="preview-row">
           {Array.from({ length: count }, (_, iter) => (
@@ -50,6 +79,7 @@ export function LayerInfoPanel() {
           ))}
         </div>
       ))}
+      <RunButton effectiveValue={effectiveValue} />
     </div>
   );
 }

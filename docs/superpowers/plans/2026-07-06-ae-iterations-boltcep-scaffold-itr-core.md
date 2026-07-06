@@ -2076,7 +2076,26 @@ export function performCollect(projectFile: File, collectFolder: Folder): void {
 
 - [ ] **Step 2: Verify manually in After Effects**
 
-Add a temporary `debugCollect` command (same disposable pattern as prior tasks). On a real test project with a mix of single files, an image sequence, and at least one proxy, run it into a fresh folder. Confirm:
+Add a temporary command in `aeft.ts` (same disposable pattern as Tasks 10/12, removed in Task 16's Step 3):
+
+```ts
+import { performCollect } from "./lib/collect";
+
+export const debugCollect = (collectPath: string): { collected: boolean } => {
+  const projectFile = app.project.file;
+  if (!projectFile) throw new Error("Project not saved. Save it first.");
+  const collectFolder = new Folder(collectPath);
+  if (!collectFolder.exists) collectFolder.create();
+  performCollect(projectFile, collectFolder);
+  return { collected: true };
+};
+```
+
+```bash
+npm run build
+```
+
+Wire a temporary button calling `evalTS("debugCollect", "/tmp/ae-iter-collect-test")`. On a real test project with a mix of single files, an image sequence, and at least one proxy, run it into a fresh folder. Confirm:
 - A `(Footage)/` folder appears with the same sub-folder structure (mirroring bin names) as the current extension produces on the same project.
 - The collected copy's project file opens standalone with all footage relinked to the copied files.
 - The *original* project file is unchanged (still points at the original footage) after the run — this is the "save, relink, save-to-collect-folder, re-relink-to-original, save" round-trip working correctly.
@@ -2138,7 +2157,29 @@ export function renameComps(oldId: string, newId: string): void {
 
 - [ ] **Step 2: Verify manually in After Effects**
 
-Add a temporary `debugCopyProject` command. On a saved copy of a real test `.aep` (e.g. `LO_10794_..._ITR_9x16.aep`), run it and confirm:
+Add a temporary command in `aeft.ts` (same disposable pattern as Tasks 10/12/14, removed in Task 16's Step 3):
+
+```ts
+import { copyProject, renameComps } from "./lib/project";
+
+export const debugCopyProject = (): { newFileName: string; oldId: string; newId: string } => {
+  const projectFile = app.project.file;
+  if (!projectFile) throw new Error("Project not saved. Save it first.");
+  const copied = copyProject(projectFile);
+  return { newFileName: copied.file.name, oldId: copied.oldId, newId: copied.newId };
+};
+
+export const debugRenameComps = (oldId: string, newId: string): { renamed: boolean } => {
+  renameComps(oldId, newId);
+  return { renamed: true };
+};
+```
+
+```bash
+npm run build
+```
+
+Wire temporary buttons calling `evalTS("debugCopyProject")` then, after opening the new file in AE, `evalTS("debugRenameComps", "10794", "10795")` (substituting the real IDs `debugCopyProject` reported). On a saved copy of a real test `.aep` (e.g. `LO_10794_..._ITR_9x16.aep`), run it and confirm:
 - A new file `LO_10795_..._ITR_9x16.aep` appears alongside it.
 - Opening the new file and calling `renameComps("10794", "10795")` renames every comp whose name contains `10794` to the `10795` equivalent, matching the current extension's behavior.
 

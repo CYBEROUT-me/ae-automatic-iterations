@@ -4,7 +4,7 @@
 // same loop with a different strategy. Emoji handling from the original is
 // out of scope for this plan (per Task 11's previewApply precedent).
 
-import { applyLayerValue } from "../lib/applyLayerValue";
+import { applyLayerValue, applyLayerValueFailures } from "../lib/applyLayerValue";
 import { renderPNGs, renderVideos } from "../lib/render";
 import { cleanProject } from "../lib/clean";
 import { performCollect } from "../lib/collect";
@@ -43,13 +43,21 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
         app.beginUndoGroup("Iteration " + (iter + 1));
         for (let li = 0; li < cfg.layers.length; li++) {
           const lc = cfg.layers[li];
+          // Plain index lookup, no name-fallback: there's no emoji/index-shifting
+          // feature in this plan yet. A future phase that inserts layers into the
+          // comp (e.g. emoji overlay) must reintroduce name-fallback resolution
+          // (like the original extension's `resolveLayer` in extension/jsx/host.jsx)
+          // or index-based layer targeting will silently break.
           const layer = comp.layer(lc.index);
           if (!layer) {
             warnings.push("Iter " + (iter + 1) + ": layer " + lc.index + " not found");
             continue;
           }
           const val = cfg.values[iter][li];
-          applyLayerValue(layer, lc, val);
+          const log = applyLayerValue(layer, lc, val);
+          for (const failure of applyLayerValueFailures(log)) {
+            warnings.push("Iter " + (iter + 1) + " layer " + lc.index + ": " + failure);
+          }
         }
         app.endUndoGroup();
 

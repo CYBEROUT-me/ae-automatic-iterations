@@ -31,3 +31,11 @@ export function applyLayerValue(layer: any, lc: CfgLayer, val: LayerValue): stri
   }
   return log;
 }
+
+// Pure helper: pulls the FAILED lines out of an applyLayerValue log so callers
+// (e.g. runIterationBatch) can surface them as warnings instead of silently
+// discarding the log. Kept separate from applyLayerValue so it's unit-testable
+// without the After Effects object model.
+export function applyLayerValueFailures(log: string[]): string[] {
+  return log.filter((line) => /FAILED/.test(line));
+}

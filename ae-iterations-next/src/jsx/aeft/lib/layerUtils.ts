@@ -7,20 +7,26 @@ export function getLayerType(layer: Layer): LayerType {
   return "unknown";
 }
 
-// Ported from extension/jsx/lib/layer-utils.jsx:12-34. Note: the brief's sample
-// used `layer.Effects`, but the real types-for-adobe/22.0 AVLayer exposes the
-// Effect Parade shortcut as the lowercase `effect: PropertyGroup` (the AE
-// object model's official alias for property("ADBE Effect Parade")) — behaviorally
-// identical, so it's used here in place of `Effects`. Individual effect property
-// access (`.property("Master Hue")` etc.) is still dynamic string-path traversal,
-// hence `any`.
+// Ported from extension/jsx/lib/layer-utils.jsx:12-34. Uses `layer.Effects`
+// (capital), matching the original source and the currently-shipping
+// extension/jsx/lib/apply-video.jsx (lines 4-8, 11-17), which accesses
+// `layer.Effects` with no try/catch at all and has shipped across 6+
+// releases (v1.0.6-v1.0.11) without incident — strong evidence `Effects` is
+// the real live ExtendScript runtime property on AVLayer. types-for-adobe's
+// AVLayer/22.0 ambient types only declare a lowercase `effect: PropertyGroup`
+// shortcut and omit `Effects`, which appears to be an incomplete/incorrect
+// community type definition rather than a documented alternate API — hence
+// the `any` cast here to access it. (This is inferred from shipping-code
+// behavior, not independently confirmed against a live AE runtime in this
+// task.)
 export function readVideoLayerState(layer: AVLayer): VideoState {
   const state: VideoState = { flip: false, bw: false, tint: null, tintAmount: 50, hue: 0 };
   try {
     const sv = layer.transform.scale.value as [number, number];
     state.flip = sv[0] < 0;
-    for (let i = 1; i <= layer.effect.numProperties; i++) {
-      const eff = layer.effect.property(i) as any;
+    const effects = (layer as any).Effects;
+    for (let i = 1; i <= effects.numProperties; i++) {
+      const eff = effects.property(i) as any;
       if (eff.matchName === "ADBE HUE SATURATION") {
         state.hue = Math.round(eff.property("Master Hue").value);
         state.bw = eff.property("Master Saturation").value <= -100;

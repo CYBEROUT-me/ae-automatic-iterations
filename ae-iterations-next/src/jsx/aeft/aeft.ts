@@ -12,6 +12,7 @@ import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from 
 import { findCompByName, findCompsBySuffixes, ITR_SUFFIXES } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
 import { renderPNGs, renderVideos } from "./lib/render";
+import { performCollect } from "./lib/collect";
 import type { LayerInfoResult, LayerInfo, CfgLayer, LayerValue } from "../../shared/types";
 
 export const helloWorld = () => {
@@ -88,4 +89,15 @@ export const debugRender = (outPath: string): { rendered: boolean } => {
   renderPNGs(comps, outFolder);
   renderVideos(comps, outFolder);
   return { rendered: true };
+};
+
+// TEMPORARY — manual verification only for Task 14. Superseded by the real
+// run-iterations engine in Task 16; remove this command and its panel button.
+export const debugCollect = (collectPath: string): { collected: boolean } => {
+  const projectFile = app.project.file;
+  if (!projectFile) throw new Error("Project not saved. Save it first.");
+  const collectFolder = new Folder(collectPath);
+  if (!collectFolder.exists) collectFolder.create();
+  performCollect(projectFile, collectFolder);
+  return { collected: true };
 };

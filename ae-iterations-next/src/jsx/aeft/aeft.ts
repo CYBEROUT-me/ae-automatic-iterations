@@ -8,7 +8,7 @@ import {
 } from "../utils/samples";
 export { helloError, helloStr, helloNum, helloArrayStr, helloObj, helloVoid };
 import { dispatchTS } from "../utils/utils";
-import { getLayerType, collectFills, collectStrokes } from "./lib/layerUtils";
+import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
 import type { LayerInfoResult, LayerInfo } from "../../shared/types";
 
 export const helloWorld = () => {
@@ -39,6 +39,8 @@ export const getLayerInfo = (): LayerInfoResult => {
       info.color = td.fillColor;
       info.font = td.font;
       info.text = td.text;
+    } else if (type === "video") {
+      info.videoState = readVideoLayerState(layer as AVLayer);
     }
     layers.push(info);
   }

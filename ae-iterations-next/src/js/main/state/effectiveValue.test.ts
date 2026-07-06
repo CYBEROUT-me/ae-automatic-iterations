@@ -40,6 +40,22 @@ describe("effectiveValue", () => {
     expect(result).toEqual({ color: [1, 0, 0], font: undefined });
   });
 
+  it("borrows row 0's actual font string for a non-first text row when row 0 is itself a text layer", () => {
+    // row 0 here is a real text layer with a real (non-undefined) font, so this
+    // asserts the borrowing row receives that exact string rather than relying
+    // on `undefined === undefined` by construction.
+    const firstTextRow: RowLayer = { layerIndex: 1, rowKey: "1", type: "text", name: "Headline", fillPath: "" };
+    const secondTextRow: RowLayer = { layerIndex: 2, rowKey: "2", type: "text", name: "Subhead", fillPath: "" };
+    const rows = [firstTextRow, secondTextRow];
+    const values: Record<string, LayerValue[]> = {
+      "1": [{ color: [1, 0, 0], font: "Helvetica-Bold" }],
+      "2": [{ color: [0, 0, 1], font: "Arial-Bold" }], // own value should be ignored
+    };
+    const result = effectiveValue(rows, values, true, secondTextRow, 0);
+    expect(result).toEqual({ color: [1, 0, 0], font: "Helvetica-Bold" });
+    expect(result?.font).toBe("Helvetica-Bold");
+  });
+
   it("never borrows for stroke rows even when sameForAll is true", () => {
     const values: Record<string, LayerValue[]> = {
       "1": [{ color: [1, 0, 0] }],

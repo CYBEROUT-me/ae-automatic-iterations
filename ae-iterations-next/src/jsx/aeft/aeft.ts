@@ -9,6 +9,7 @@ import {
 export { helloError, helloStr, helloNum, helloArrayStr, helloObj, helloVoid };
 import { dispatchTS } from "../utils/utils";
 import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
+import { applyShapeColor } from "./lib/applyChange";
 import type { LayerInfoResult, LayerInfo } from "../../shared/types";
 
 export const helloWorld = () => {
@@ -46,4 +47,15 @@ export const getLayerInfo = (): LayerInfoResult => {
   }
 
   return { compName: comp.name, layers };
+};
+
+// TEMPORARY — manual verification only for Task 10. Superseded by
+// `previewApply` in Task 11; delete this command and its call site then.
+export const debugApplyRed = (): { applied: boolean } => {
+  const comp = app.project.activeItem;
+  if (!(comp instanceof CompItem)) throw new Error("No active composition");
+  const layer = comp.selectedLayers[0] as ShapeLayer;
+  if (!layer) throw new Error("No layer selected");
+  const ok = applyShapeColor(layer, "Contents/Group 1/Contents/Fill 1", [1, 0, 0]);
+  return { applied: ok };
 };

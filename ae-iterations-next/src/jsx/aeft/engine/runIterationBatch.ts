@@ -97,8 +97,10 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
       }
 
       if (iter < cfg.count - 1) {
+        // strategy.nextTarget already makes the copied project the active
+        // document (copyProject -> app.open -> renameComps) before returning,
+        // so no separate app.open is needed here.
         current = strategy.nextTarget(current, iter);
-        app.open(current.file);
       }
     }
   } finally {

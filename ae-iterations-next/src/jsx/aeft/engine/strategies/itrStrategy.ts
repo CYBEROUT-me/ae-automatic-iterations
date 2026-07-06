@@ -10,6 +10,7 @@ import type { IterationStrategy, TargetState } from "../runIterationBatch";
 export const ITR_STRATEGY: IterationStrategy = {
   nextTarget(current: TargetState): TargetState {
     const copied = copyProject(current.file);
+    app.open(copied.file);
     renameComps(copied.oldId, copied.newId);
     const newCompName = incrementProjectId(current.compName);
     return { file: copied.file, compName: newCompName };

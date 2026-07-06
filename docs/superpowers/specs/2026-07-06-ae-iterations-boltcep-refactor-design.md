@@ -188,7 +188,10 @@ extensions folder) — just no longer interleaved with row-building code in one 
 
 `npm run build` (BoltCEP / `vite-cep-plugin`) replaces the manual `cat`-based host.jsx
 assembly duplicated in `install.sh` and `package.sh` — the TS import graph is the one source
-of truth for what's bundled into the host script.
+of truth for what's bundled into the host script. Local dev install (today's `install.sh` /
+`install.ps1`, which copy `extension/` into the CEP extensions folder) is replaced by
+BoltCEP's own dev workflow, which builds and syncs the panel into the CEP extensions folder
+directly — no custom copy script needed for day-to-day development on either platform.
 
 A `package.sh`-equivalent script for this project: bump version → `npm run build` → zip →
 git commit/tag → push → create GitHub release. The existing auto-update mechanism (check

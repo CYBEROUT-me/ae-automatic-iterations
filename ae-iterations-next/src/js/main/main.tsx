@@ -20,6 +20,7 @@ import bolt from "../assets/bolt-cep.svg";
 export const App = () => {
   const [bgColor, setBgColor] = useState("#282c34");
   const [count, setCount] = useState(0);
+  const [pingResult, setPingResult] = useState<string>("checking host...");
 
   //* Demonstration of Traditional string eval-based ExtendScript Interaction
   const jsxTest = () => {
@@ -64,9 +65,16 @@ export const App = () => {
     }
   }, []);
 
+  useEffect(() => {
+    evalTS("ping", "AE Iterations Next")
+      .then((res) => setPingResult(res.message))
+      .catch((err) => setPingResult("ping failed: " + String(err)));
+  }, []);
+
   return (
     <div className="app" style={{ backgroundColor: bgColor }}>
       <header className="app-header">
+        <div id="ping-status">{pingResult}</div>
         <img src={bolt} className="icon" />
         <div className="stack-icons">
           <div>

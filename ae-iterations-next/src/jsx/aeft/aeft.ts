@@ -13,3 +13,7 @@ export const helloWorld = () => {
   alert("Hello from After Effects!");
   app.project.activeItem;
 };
+
+export const ping = (name: string): { message: string } => {
+  return { message: "pong: " + name };
+};

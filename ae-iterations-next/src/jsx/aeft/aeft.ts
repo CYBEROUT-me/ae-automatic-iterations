@@ -9,8 +9,9 @@ import {
 export { helloError, helloStr, helloNum, helloArrayStr, helloObj, helloVoid };
 import { dispatchTS } from "../utils/utils";
 import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
-import { findCompByName } from "./lib/findComp";
+import { findCompByName, findCompsBySuffixes, ITR_SUFFIXES } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
+import { renderPNGs, renderVideos } from "./lib/render";
 import type { LayerInfoResult, LayerInfo, CfgLayer, LayerValue } from "../../shared/types";
 
 export const helloWorld = () => {
@@ -76,4 +77,15 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   app.endSuppressDialogs(false);
 
   return { log };
+};
+
+// TEMPORARY — manual verification only for Task 12. Superseded by the real
+// run-iterations engine in Task 16; remove this command and its panel button.
+export const debugRender = (outPath: string): { rendered: boolean } => {
+  const comps = findCompsBySuffixes(ITR_SUFFIXES);
+  const outFolder = new Folder(outPath);
+  if (!outFolder.exists) outFolder.create();
+  renderPNGs(comps, outFolder);
+  renderVideos(comps, outFolder);
+  return { rendered: true };
 };

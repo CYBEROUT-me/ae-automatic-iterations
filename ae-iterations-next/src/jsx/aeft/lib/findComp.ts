@@ -21,4 +21,4 @@ export function findCompsBySuffixes(suffixes: string[]): Record<string, CompItem
   return found;
 }
 
-export const ITR_SUFFIXES = ["ITR_9x16", "ITR_1x1", "ITR_16x9"];
+export const ITR_SUFFIXES = ["ITR_9x16", "ITR_1x1", "ITR_16x9", "ITR_4x5"];

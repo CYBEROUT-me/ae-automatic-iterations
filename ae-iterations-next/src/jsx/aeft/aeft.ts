@@ -9,12 +9,11 @@ import {
 export { helloError, helloStr, helloNum, helloArrayStr, helloObj, helloVoid };
 import { dispatchTS } from "../utils/utils";
 import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
-import { findCompByName, findCompsBySuffixes, ITR_SUFFIXES } from "./lib/findComp";
+import { findCompByName } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
-import { renderPNGs, renderVideos } from "./lib/render";
-import { performCollect } from "./lib/collect";
-import { copyProject, renameComps } from "./lib/project";
-import type { LayerInfoResult, LayerInfo, CfgLayer, LayerValue } from "../../shared/types";
+import { runIterationBatch } from "./engine/runIterationBatch";
+import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
+import type { LayerInfoResult, LayerInfo, CfgLayer, LayerValue, RunConfig, RunResult } from "../../shared/types";
 
 export const helloWorld = () => {
   alert("Hello from After Effects!");
@@ -81,40 +80,11 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   return { log };
 };
 
-// TEMPORARY — manual verification only for Task 12. Superseded by the real
-// run-iterations engine in Task 16; remove this command and its panel button.
-export const debugRender = (outPath: string): { rendered: boolean } => {
-  const comps = findCompsBySuffixes(ITR_SUFFIXES);
-  const outFolder = new Folder(outPath);
-  if (!outFolder.exists) outFolder.create();
-  renderPNGs(comps, outFolder);
-  renderVideos(comps, outFolder);
-  return { rendered: true };
-};
-
-// TEMPORARY — manual verification only for Task 14. Superseded by the real
-// run-iterations engine in Task 16; remove this command and its panel button.
-export const debugCollect = (collectPath: string): { collected: boolean } => {
-  const projectFile = app.project.file;
-  if (!projectFile) throw new Error("Project not saved. Save it first.");
-  const collectFolder = new Folder(collectPath);
-  if (!collectFolder.exists) collectFolder.create();
-  performCollect(projectFile, collectFolder);
-  return { collected: true };
-};
-
-// TEMPORARY — manual verification only for Task 15. Superseded by the real
-// run-iterations engine in Task 16; remove this command and its panel button.
-export const debugCopyProject = (): { newFileName: string; oldId: string; newId: string } => {
-  const projectFile = app.project.file;
-  if (!projectFile) throw new Error("Project not saved. Save it first.");
-  const copied = copyProject(projectFile);
-  return { newFileName: copied.file.name, oldId: copied.oldId, newId: copied.newId };
-};
-
-// TEMPORARY — manual verification only for Task 15. Superseded by the real
-// run-iterations engine in Task 16; remove this command and its panel button.
-export const debugRenameComps = (oldId: string, newId: string): { renamed: boolean } => {
-  renameComps(oldId, newId);
-  return { renamed: true };
+// Runs the full 5-iteration (or cfg.count-iteration) ITR batch: apply layer
+// values, save/close/reopen, render PNGs+videos, clean project panel,
+// collect to a self-contained folder, then advance to the next copied
+// project via ITR_STRATEGY. Ported from host.jsx's runIterationsJSON
+// (lines 281-424), minus emoji handling (out of scope for this plan).
+export const runIterations = (cfg: RunConfig): RunResult => {
+  return runIterationBatch(cfg, ITR_STRATEGY);
 };

@@ -1,1 +1,270 @@
 @use "../variables.scss" as *;
+
+html,
+body,
+#app {
+  min-height: 100vh;
+  background-color: $darkest;
+  color: $font;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+
+// ── Mode tabs ────────────────────────────────────────────────────────────
+
+#mode-tabs {
+  display: flex;
+  border-bottom: 1px solid $dark;
+}
+
+.tab-btn {
+  flex: 1;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  color: $highlight !important;
+  padding: 0.6rem 0.5rem !important;
+  border-bottom: 2px solid transparent;
+
+  &:hover:not(:disabled) {
+    background-color: $darker !important;
+  }
+
+  &.active {
+    color: white !important;
+    border-bottom-color: $active;
+  }
+
+  &:disabled {
+    color: $dark !important;
+    cursor: not-allowed;
+  }
+}
+
+// ── Layer section ────────────────────────────────────────────────────────
+
+#layer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem;
+}
+
+#layer-info {
+  color: $highlight;
+  font-size: 0.78rem;
+  word-break: break-word;
+}
+
+#count-label,
+#same-all-section {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#count-label input[type="number"] {
+  width: 3.5rem;
+}
+
+// ── Preview row ──────────────────────────────────────────────────────────
+
+#preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.preview-btn {
+  background-color: $secondary !important;
+  font-size: 0.72rem !important;
+  padding: 0.15rem 0.4rem !important;
+
+  &:hover {
+    background-color: $primary !important;
+  }
+}
+
+// ── Layer groups / iteration rows ───────────────────────────────────────
+
+.extra-layer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid $dark;
+}
+
+.layer-group-label {
+  color: $highlight;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.iter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.iter-num {
+  flex: 0 0 auto;
+  width: 1.3rem;
+  height: 1.3rem;
+  line-height: 1.3rem;
+  text-align: center;
+  border-radius: 50%;
+  background-color: $dark;
+  color: $font;
+  font-size: 0.7rem;
+}
+
+.color-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.color-cell input[type="color"] {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+}
+
+.color-cell input[type="text"] {
+  width: 5rem;
+}
+
+.video-fields {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.video-toggle {
+  background-color: $darker !important;
+
+  &.active {
+    background-color: $active !important;
+  }
+}
+
+.tint-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tint-cell input[type="color"] {
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+}
+
+.tint-cell input[type="number"],
+.video-fields > input[type="number"] {
+  width: 3rem;
+}
+
+// ── Form controls ────────────────────────────────────────────────────────
+
+input[type="text"],
+input[type="number"] {
+  background-color: $darker;
+  border: 1px solid $dark;
+  border-radius: 3px;
+  color: $font;
+  padding: 0.15rem 0.35rem;
+
+  &:focus {
+    outline: none;
+    border-color: $active;
+  }
+
+  &::placeholder {
+    color: $dark;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+  }
+}
+
+input[type="color"] {
+  background: none;
+  border: 1px solid $dark;
+  border-radius: 3px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+input[type="checkbox"] {
+  accent-color: $active;
+}
+
+// ── Run section / status ─────────────────────────────────────────────────
+
+#run-section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid $dark;
+  align-self: stretch;
+  width: 100%;
+}
+
+#btn-run {
+  background-color: $active !important;
+  font-size: 0.85rem !important;
+  padding: 0.5rem 0.6rem !important;
+  font-weight: 600;
+
+  &:disabled {
+    background-color: $darker !important;
+    color: $dark !important;
+    cursor: not-allowed;
+  }
+}
+
+#status {
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  word-break: break-word;
+
+  &.status-idle,
+  &.status-running {
+    background-color: $darker;
+    color: $font;
+  }
+
+  &.status-done {
+    background-color: rgba($changed, 0.15);
+    color: $changed;
+  }
+
+  &.status-warning {
+    background-color: rgba($warning, 0.15);
+    color: $warning;
+  }
+
+  &.status-error {
+    background-color: rgba($error, 0.15);
+    color: $error;
+  }
+}

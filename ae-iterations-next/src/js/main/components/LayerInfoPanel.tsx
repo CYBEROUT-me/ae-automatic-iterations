@@ -1,4 +1,5 @@
 import { useAppStore } from "../state/store";
+import { useShallow } from "zustand/react/shallow";
 import { evalTS } from "../../lib/utils/bolt";
 import { IterationRow } from "./IterationRow";
 import { toCfgLayers } from "../state/rowLayers";
@@ -8,16 +9,18 @@ import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
 
 export function LayerInfoPanel() {
-  const { compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo } = useAppStore((s) => ({
-    compName: s.compName,
-    rowLayers: s.rowLayers,
-    count: s.count,
-    setCount: s.setCount,
-    values: s.values,
-    sameForAll: s.sameForAll,
-    setSameForAll: s.setSameForAll,
-    setLayerInfo: s.setLayerInfo,
-  }));
+  const { compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo } = useAppStore(
+    useShallow((s) => ({
+      compName: s.compName,
+      rowLayers: s.rowLayers,
+      count: s.count,
+      setCount: s.setCount,
+      values: s.values,
+      sameForAll: s.sameForAll,
+      setSameForAll: s.setSameForAll,
+      setLayerInfo: s.setLayerInfo,
+    }))
+  );
 
   const refresh = () => {
     evalTS("getLayerInfo")

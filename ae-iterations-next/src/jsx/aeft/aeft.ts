@@ -13,6 +13,7 @@ import { findCompByName, findCompsBySuffixes, ITR_SUFFIXES } from "./lib/findCom
 import { applyLayerValue } from "./lib/applyLayerValue";
 import { renderPNGs, renderVideos } from "./lib/render";
 import { performCollect } from "./lib/collect";
+import { copyProject, renameComps } from "./lib/project";
 import type { LayerInfoResult, LayerInfo, CfgLayer, LayerValue } from "../../shared/types";
 
 export const helloWorld = () => {
@@ -100,4 +101,20 @@ export const debugCollect = (collectPath: string): { collected: boolean } => {
   if (!collectFolder.exists) collectFolder.create();
   performCollect(projectFile, collectFolder);
   return { collected: true };
+};
+
+// TEMPORARY — manual verification only for Task 15. Superseded by the real
+// run-iterations engine in Task 16; remove this command and its panel button.
+export const debugCopyProject = (): { newFileName: string; oldId: string; newId: string } => {
+  const projectFile = app.project.file;
+  if (!projectFile) throw new Error("Project not saved. Save it first.");
+  const copied = copyProject(projectFile);
+  return { newFileName: copied.file.name, oldId: copied.oldId, newId: copied.newId };
+};
+
+// TEMPORARY — manual verification only for Task 15. Superseded by the real
+// run-iterations engine in Task 16; remove this command and its panel button.
+export const debugRenameComps = (oldId: string, newId: string): { renamed: boolean } => {
+  renameComps(oldId, newId);
+  return { renamed: true };
 };

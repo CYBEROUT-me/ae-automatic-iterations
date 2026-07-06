@@ -1,4 +1,4 @@
-import type { LayerInfo, LayerType } from "../../../shared/types";
+import type { CfgLayer, LayerInfo, LayerType } from "../../../shared/types";
 
 export interface RowLayer {
   layerIndex: number;
@@ -31,4 +31,11 @@ export function buildRowLayers(layers: LayerInfo[]): RowLayer[] {
     }
   }
   return rows;
+}
+
+// Builds the CfgLayer[] the host's previewApply/run commands expect, in the
+// same order as `rows` (and thus the same order the caller must zip its
+// per-iteration values array against).
+export function toCfgLayers(rows: RowLayer[]): CfgLayer[] {
+  return rows.map((r) => ({ index: r.layerIndex, name: r.name, fillPath: r.fillPath, layerType: r.type }));
 }

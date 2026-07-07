@@ -78,12 +78,12 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
 
       const itrComps = findCompsBySuffixes(ITR_SUFFIXES);
       try {
-        renderPNGs(itrComps, deliveryFolder);
+        renderPNGs(itrComps, deliveryFolder, ITR_SUFFIXES);
       } catch (e: any) {
         warnings.push("Iter " + (iter + 1) + " PNG: " + e.message);
       }
       try {
-        renderVideos(itrComps, deliveryFolder);
+        renderVideos(itrComps, deliveryFolder, ITR_SUFFIXES);
       } catch (e: any) {
         warnings.push("Iter " + (iter + 1) + " video: " + e.message);
       }

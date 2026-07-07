@@ -7,7 +7,7 @@ describe("buildRowLayers", () => {
     const layers: LayerInfo[] = [
       { name: "Rect", index: 1, type: "shape", fills: [{ path: "Contents/Group 1/Contents/Fill 1", color: [1, 0, 0] }], strokes: [] },
     ];
-    const rows = buildRowLayers(layers);
+    const rows = buildRowLayers(layers, "itr");
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ layerIndex: 1, type: "shape", fillPath: "Contents/Group 1/Contents/Fill 1" });
   });
@@ -20,7 +20,7 @@ describe("buildRowLayers", () => {
         strokes: [{ path: "Contents/Group 1/Contents/Stroke 1", color: [0, 0, 0] }],
       },
     ];
-    const rows = buildRowLayers(layers);
+    const rows = buildRowLayers(layers, "itr");
     expect(rows).toHaveLength(2);
     expect(rows[1]).toMatchObject({ layerIndex: 1, type: "stroke", fillPath: "Contents/Group 1/Contents/Stroke 1" });
     expect(rows[1].rowKey).not.toBe(rows[0].rowKey);
@@ -31,7 +31,7 @@ describe("buildRowLayers", () => {
       { name: "Title", index: 2, type: "text", color: [1, 1, 1], font: "Helvetica", text: "Hi" },
       { name: "BG", index: 3, type: "video", videoState: { flip: false, bw: false, tint: null, tintAmount: 50, hue: 0 } },
     ];
-    const rows = buildRowLayers(layers);
+    const rows = buildRowLayers(layers, "itr");
     expect(rows.map((r) => r.type)).toEqual(["text", "video"]);
     expect(rows[0].fillPath).toBe("");
   });
@@ -47,12 +47,38 @@ describe("toCfgLayers", () => {
       },
       { name: "Title", index: 2, type: "text", color: [1, 1, 1], font: "Helvetica", text: "Hi" },
     ];
-    const rows = buildRowLayers(layers);
+    const rows = buildRowLayers(layers, "itr");
     const cfg = toCfgLayers(rows);
     expect(cfg).toEqual([
       { index: 1, name: "Rect", fillPath: "Contents/Group 1/Contents/Fill 1", layerType: "shape" },
       { index: 1, name: "Stroke — Rect", fillPath: "Contents/Group 1/Contents/Stroke 1", layerType: "stroke" },
       { index: 2, name: "Title", fillPath: "", layerType: "text" },
     ]);
+  });
+});
+
+describe("buildRowLayers mode-awareness", () => {
+  it("relabels video layers to media under VAR mode", () => {
+    const layers: LayerInfo[] = [
+      { name: "BG", index: 3, type: "video", videoState: { flip: false, bw: false, tint: null, tintAmount: 50, hue: 0 } },
+    ];
+    const rows = buildRowLayers(layers, "var");
+    expect(rows[0].type).toBe("media");
+  });
+
+  it("keeps video layers as video under ITR mode", () => {
+    const layers: LayerInfo[] = [
+      { name: "BG", index: 3, type: "video", videoState: { flip: false, bw: false, tint: null, tintAmount: 50, hue: 0 } },
+    ];
+    const rows = buildRowLayers(layers, "itr");
+    expect(rows[0].type).toBe("video");
+  });
+
+  it("does not relabel shape/text/stroke rows under VAR mode", () => {
+    const layers: LayerInfo[] = [
+      { name: "Rect", index: 1, type: "shape", fills: [{ path: "Contents/Fill 1", color: [1, 0, 0] }], strokes: [] },
+    ];
+    const rows = buildRowLayers(layers, "var");
+    expect(rows[0].type).toBe("shape");
   });
 });

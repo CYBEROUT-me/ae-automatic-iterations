@@ -1,4 +1,4 @@
-export type LayerType = "shape" | "text" | "stroke" | "video" | "unknown";
+export type LayerType = "shape" | "text" | "stroke" | "video" | "media" | "unknown";
 
 export interface FillInfo {
   path: string;
@@ -44,6 +44,7 @@ export interface LayerValue {
   tint?: [number, number, number] | null;
   tintAmount?: number;
   hue?: number;
+  mediaPath?: string | null;
 }
 
 export interface CfgLayer {
@@ -62,4 +63,16 @@ export interface RunConfig {
 
 export interface RunResult {
   warnings: string[];
+}
+
+export interface RunVarConfig {
+  compName: string;
+  layers: CfgLayer[];
+  values: LayerValue[][]; // [iter][layer row index], matching `layers` order
+  varNames: string[];
+  count: number;
+}
+
+export interface TestVarCompsResult {
+  log: string[];
 }

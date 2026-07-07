@@ -1,5 +1,7 @@
 import type { CfgLayer, LayerInfo, LayerType } from "../../../shared/types";
 
+export type Mode = "itr" | "var";
+
 export interface RowLayer {
   layerIndex: number;
   rowKey: string;
@@ -11,7 +13,12 @@ export interface RowLayer {
 // Flattens LayerInfo[] into a UI row list, splitting each shape layer's
 // strokes into their own synthetic rows (same AE layer index, different
 // property path) — mirrors main.js's renderLayerInfo virtual-entry injection.
-export function buildRowLayers(layers: LayerInfo[]): RowLayer[] {
+//
+// Under VAR mode, video/footage layers are relabeled "media" (matching the
+// original extension's `if (li.type === "video" && currentMode === "var")
+// layerType = "media"`); getLayerType itself still always reports "video" —
+// this relabeling is purely a buildRowLayers/UI concern.
+export function buildRowLayers(layers: LayerInfo[], mode: Mode): RowLayer[] {
   const rows: RowLayer[] = [];
   for (const layer of layers) {
     if (layer.type === "shape") {
@@ -27,7 +34,8 @@ export function buildRowLayers(layers: LayerInfo[]): RowLayer[] {
         });
       });
     } else {
-      rows.push({ layerIndex: layer.index, rowKey: String(layer.index), type: layer.type, name: layer.name, fillPath: "" });
+      const effectiveType: LayerType = layer.type === "video" && mode === "var" ? "media" : layer.type;
+      rows.push({ layerIndex: layer.index, rowKey: String(layer.index), type: effectiveType, name: layer.name, fillPath: "" });
     }
   }
   return rows;

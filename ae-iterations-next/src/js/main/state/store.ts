@@ -28,7 +28,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   // new rows happen to reuse the same rowKeys (e.g. same AE layer indices).
   // Matches the original extension's clean-slate behavior of wiping and
   // rebuilding its DOM on every Refresh (extension/js/main.js).
-  setLayerInfo: (compName, layers) => set({ compName, layerInfo: layers, rowLayers: buildRowLayers(layers), values: {} }),
+  // TODO(Task 4): pass the real current mode instead of hardcoding "itr" once
+  // the store knows about ITR/VAR mode switching.
+  setLayerInfo: (compName, layers) => set({ compName, layerInfo: layers, rowLayers: buildRowLayers(layers, "itr"), values: {} }),
   setCount: (count) => set({ count }),
   setSameForAll: (v) => set({ sameForAll: v }),
   setValue: (rowKey, iter, value) =>

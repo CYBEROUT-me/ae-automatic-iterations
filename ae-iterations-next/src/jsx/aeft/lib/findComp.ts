@@ -22,3 +22,19 @@ export function findCompsBySuffixes(suffixes: string[]): Record<string, CompItem
 }
 
 export const ITR_SUFFIXES = ["ITR_9x16", "ITR_1x1", "ITR_16x9", "ITR_4x5"];
+
+// Like findCompByName, but also matches a name with a trailing ".aep" — a
+// real AE quirk where comp names can end up carrying the file extension
+// after certain copy/rename operations. VAR mode hits this repeatedly
+// (rename-time lookup, target-comp resolution, post-reload lookup, and the
+// testVarRenderComps diagnostic), so it's a shared helper rather than a
+// loop repeated in every one of those spots.
+export function findVarComp(name: string): CompItem | null {
+  for (let i = 1; i <= app.project.numItems; i++) {
+    const item = app.project.item(i);
+    if (item instanceof CompItem && (item.name === name || item.name === name + ".aep")) {
+      return item;
+    }
+  }
+  return null;
+}

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { evalTS } from "../../lib/utils/bolt";
 import { IterationRow } from "./IterationRow";
 import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
+import { VarNamesRow } from "./VarNamesRow";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
@@ -23,10 +25,18 @@ export function LayerInfoPanel() {
     }))
   );
 
+  const [testLog, setTestLog] = useState<string[] | null>(null);
+
   const refresh = () => {
     evalTS("getLayerInfo")
       .then((res) => setLayerInfo(res.compName, res.layers))
       .catch((err) => alert("Refresh failed: " + String(err)));
+  };
+
+  const testVarComps = () => {
+    evalTS("testVarRenderComps")
+      .then((res) => setTestLog(res.log))
+      .catch((err) => setTestLog(["Test failed: " + String(err)]));
   };
 
   // Effective value used for rendering/reading a non-first, non-stroke, non-video row
@@ -60,13 +70,13 @@ export function LayerInfoPanel() {
           onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 5))}
         />
       </label>
-      {showSameForAll && (
+      {mode === "itr" && showSameForAll && (
         <label id="same-all-section">
           <input type="checkbox" checked={sameForAll} onChange={(e) => setSameForAll(e.target.checked)} />
           Same value for all layers
         </label>
       )}
-      {rowLayers.length > 0 && (
+      {mode === "itr" && rowLayers.length > 0 && (
         <div id="preview-row">
           {Array.from({ length: count }, (_, iter) => (
             <button key={iter} className="preview-btn" onClick={() => previewIteration(iter)}>
@@ -74,6 +84,13 @@ export function LayerInfoPanel() {
             </button>
           ))}
         </div>
+      )}
+      {mode === "var" && (
+        <>
+          <VarNamesRow />
+          <button onClick={testVarComps}>Test</button>
+          {testLog && <pre id="var-test-log">{testLog.join("\n")}</pre>}
+        </>
       )}
       {rowLayers.map((row) => (
         <div key={row.rowKey} className="extra-layer-group">

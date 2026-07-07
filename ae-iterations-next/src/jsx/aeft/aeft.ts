@@ -4,7 +4,19 @@ import { findCompByName } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
-import type { LayerInfoResult, LayerInfo, CfgLayer, LayerValue, RunConfig, RunResult } from "../../shared/types";
+import { runVarIterationBatch } from "./engine/runVarIterationBatch";
+import { stripAspectSuffix, VAR_ASPECT_SUFFIXES } from "./lib/naming";
+import { findVarComp } from "./lib/findComp";
+import type {
+  LayerInfoResult,
+  LayerInfo,
+  CfgLayer,
+  LayerValue,
+  RunConfig,
+  RunResult,
+  RunVarConfig,
+  TestVarCompsResult,
+} from "../../shared/types";
 
 export const ping = (name: string): { message: string } => {
   return { message: "pong: " + name };
@@ -78,4 +90,67 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
 // (lines 281-424), minus emoji handling (out of scope for this plan).
 export const runIterations = (cfg: RunConfig): RunResult => {
   return runIterationBatch(cfg, ITR_STRATEGY);
+};
+
+// Thin wrapper around VAR mode's own orchestration function (see
+// runVarIterationBatch's header for why it isn't built on IterationStrategy).
+export const runVarIterations = (cfg: RunVarConfig): RunResult => {
+  return runVarIterationBatch(cfg);
+};
+
+// Read-only diagnostic scan: reports which of the 4 VAR render comps
+// (9x16/1x1/16x9/4x5) exist in the currently open project, plus a full list
+// of every comp in the project. Ported from host.jsx's testVarRenderCompsJSON
+// (lines 696-760), minus the cfg.varNames echo section (out of scope for
+// this plan — it only affects diagnostic text about names that *would* be
+// used, not the comp-presence check that's this function's actual purpose).
+export const testVarRenderComps = (): TestVarCompsResult => {
+  const projectFile = app.project.file;
+  if (!projectFile) throw new Error("Project not saved. Save it first.");
+
+  const log: string[] = [];
+  const originalBase = stripAspectSuffix(projectFile.name.replace(/\.[^.]+$/, ""));
+  log.push("Project: " + projectFile.name);
+  log.push("Base name: " + originalBase);
+  log.push("");
+  log.push("Scanning for render comps in current project:");
+
+  let foundCount = 0;
+  for (let s = 0; s < VAR_ASPECT_SUFFIXES.length; s++) {
+    const targetName = originalBase + "_" + VAR_ASPECT_SUFFIXES[s];
+    const found = findVarComp(targetName);
+    if (found) {
+      foundCount++;
+      log.push(
+        "  OK  " + found.name +
+          "  (" + found.width + "x" + found.height +
+          "  " + Math.round(found.duration * 100) / 100 + "s" +
+          "  " + found.numLayers + " layers" +
+          "  " + Math.round(found.frameRate * 10) / 10 + " fps)"
+      );
+    } else {
+      log.push("  MISSING  " + targetName);
+    }
+  }
+
+  log.push("");
+  log.push(foundCount + " / " + VAR_ASPECT_SUFFIXES.length + " render comps found.");
+  log.push("");
+  log.push("All compositions in project:");
+  for (let ac = 1; ac <= app.project.numItems; ac++) {
+    const acItem = app.project.item(ac);
+    if (acItem instanceof CompItem) {
+      log.push("  " + acItem.name + "  (" + acItem.width + "x" + acItem.height + ")");
+    }
+  }
+
+  return { log };
+};
+
+// Wraps File.openDialog for the panel's "browse for media" file picker
+// (VAR mode's per-layer media-swap feature).
+export const browseForMedia = (): { path: string | null } => {
+  const f = File.openDialog("Select media file");
+  if (!f) return { path: null };
+  return { path: f.fsName };
 };

@@ -37,7 +37,6 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
 
   const originalBase = stripAspectSuffix(projectFile.name.replace(/\.[^.]+$/, ""));
 
-  app.beginSuppressDialogs();
   try {
     for (let iter = 0; iter < cfg.count; iter++) {
       const rawName = (cfg.varNames[iter] || "VAR" + (iter + 1)).replace(/\.aep$/i, "");
@@ -58,6 +57,7 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
       // Open BETWEEN copy and rename: renaming below operates on app.project
       // (whichever document is currently active), so the copy must be open
       // first.
+      app.beginSuppressDialogs();
       app.open(varFile);
 
       const renderComps: Record<string, CompItem> = {};

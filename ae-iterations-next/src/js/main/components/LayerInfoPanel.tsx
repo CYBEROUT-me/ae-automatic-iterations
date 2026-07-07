@@ -9,7 +9,7 @@ import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
 
 export function LayerInfoPanel() {
-  const { compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo } = useAppStore(
+  const { compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, mode } = useAppStore(
     useShallow((s) => ({
       compName: s.compName,
       rowLayers: s.rowLayers,
@@ -19,6 +19,7 @@ export function LayerInfoPanel() {
       sameForAll: s.sameForAll,
       setSameForAll: s.setSameForAll,
       setLayerInfo: s.setLayerInfo,
+      mode: s.mode,
     }))
   );
 
@@ -31,7 +32,7 @@ export function LayerInfoPanel() {
   // Effective value used for rendering/reading a non-first, non-stroke, non-video row
   // when sameForAll is on — mirrors main.js's buildValues() sameForAll branch.
   const effectiveValue = (row: RowLayer, iter: number): LayerValue | undefined =>
-    effectiveValueImpl(rowLayers, values, sameForAll, row, iter);
+    effectiveValueImpl(rowLayers, values, sameForAll, row, iter, mode);
 
   // Applies one iteration's values live to the target comp, so the artist
   // can eyeball a column of values in AE before committing to a full run.

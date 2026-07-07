@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { LayerInfo, LayerValue } from "../../../shared/types";
-import { buildRowLayers, type RowLayer } from "./rowLayers";
+import { buildRowLayers, type Mode, type RowLayer } from "./rowLayers";
 
 interface AppState {
   compName: string | null;
@@ -9,11 +9,15 @@ interface AppState {
   count: number;
   sameForAll: boolean;
   values: Record<string, LayerValue[]>; // rowKey -> per-iteration value
+  mode: Mode;
+  varNames: string[];
   setLayerInfo(compName: string, layers: LayerInfo[]): void;
   setCount(count: number): void;
   setSameForAll(v: boolean): void;
   setValue(rowKey: string, iter: number, value: LayerValue): void;
   getValue(rowKey: string, iter: number): LayerValue | undefined;
+  setMode(mode: Mode): void;
+  setVarName(index: number, name: string): void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -23,14 +27,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   count: 5,
   sameForAll: true,
   values: {},
+  mode: "itr",
+  varNames: [],
   // Clears `values` on every Refresh so a new layer selection never inherits
   // the previous selection's per-row colors/fonts/video values, even when the
   // new rows happen to reuse the same rowKeys (e.g. same AE layer indices).
   // Matches the original extension's clean-slate behavior of wiping and
   // rebuilding its DOM on every Refresh (extension/js/main.js).
-  // TODO(Task 4): pass the real current mode instead of hardcoding "itr" once
-  // the store knows about ITR/VAR mode switching.
-  setLayerInfo: (compName, layers) => set({ compName, layerInfo: layers, rowLayers: buildRowLayers(layers, "itr"), values: {} }),
+  setLayerInfo: (compName, layers) =>
+    set((s) => ({ compName, layerInfo: layers, rowLayers: buildRowLayers(layers, s.mode), values: {} })),
   setCount: (count) => set({ count }),
   setSameForAll: (v) => set({ sameForAll: v }),
   setValue: (rowKey, iter, value) =>
@@ -40,4 +45,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       return { values: { ...s.values, [rowKey]: arr } };
     }),
   getValue: (rowKey, iter) => get().values[rowKey]?.[iter],
+  // Re-derives rowLayers from the already-stored layerInfo so switching modes
+  // relabels video/footage rows as "media" (VAR mode) without requiring a
+  // fresh Refresh — mirrors the original extension's switchMode() re-render.
+  setMode: (mode) => set((s) => ({ mode, rowLayers: buildRowLayers(s.layerInfo, mode) })),
+  setVarName: (index, name) =>
+    set((s) => {
+      const varNames = [...s.varNames];
+      varNames[index] = name;
+      return { varNames };
+    }),
 }));

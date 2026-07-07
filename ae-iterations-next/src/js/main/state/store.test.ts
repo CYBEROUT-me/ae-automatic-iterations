@@ -35,3 +35,34 @@ describe("useAppStore.setLayerInfo", () => {
     expect(state.rowLayers).toHaveLength(1);
   });
 });
+
+describe("setMode", () => {
+  beforeEach(() => {
+    useAppStore.setState({ compName: null, layerInfo: [], rowLayers: [], count: 5, sameForAll: true, values: {}, mode: "itr", varNames: [] });
+  });
+
+  it("recomputes rowLayers from stored layerInfo when mode changes", () => {
+    const layers = [
+      { name: "BG", index: 1, type: "video" as const, videoState: { flip: false, bw: false, tint: null, tintAmount: 50, hue: 0 } },
+    ];
+    useAppStore.getState().setLayerInfo("Comp A", layers);
+    expect(useAppStore.getState().rowLayers[0].type).toBe("video");
+
+    useAppStore.getState().setMode("var");
+    expect(useAppStore.getState().mode).toBe("var");
+    expect(useAppStore.getState().rowLayers[0].type).toBe("media");
+  });
+});
+
+describe("setVarName", () => {
+  beforeEach(() => {
+    useAppStore.setState({ compName: null, layerInfo: [], rowLayers: [], count: 5, sameForAll: true, values: {}, mode: "itr", varNames: [] });
+  });
+
+  it("sets a name at the given index without disturbing others", () => {
+    useAppStore.getState().setVarName(0, "Red Variant");
+    useAppStore.getState().setVarName(2, "Blue Variant");
+    expect(useAppStore.getState().varNames[0]).toBe("Red Variant");
+    expect(useAppStore.getState().varNames[2]).toBe("Blue Variant");
+  });
+});

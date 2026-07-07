@@ -936,10 +936,11 @@ git commit -m "feat: add applyMediaLayer for VAR-mode media replacement"
 
 **Files:**
 - Create: `ae-iterations-next/src/jsx/aeft/engine/runVarIterationBatch.ts`
+- Modify: `ae-iterations-next/src/jsx/aeft/lib/findComp.ts`
 
 **Interfaces:**
-- Consumes: `applyLayerValue`, `applyLayerValueFailures` (`../lib/applyLayerValue`), `applyMediaLayer` (Task 8), `renderPNGs`/`renderVideos` (Task 7, called with `VAR_ASPECT_SUFFIXES`), `cleanProject` (`../lib/clean`), `performCollect` (`../lib/collect`), `stripAspectSuffix`/`VAR_ASPECT_SUFFIXES` (Task 1), `RunVarConfig`/`RunResult` (Task 2).
-- Produces: `runVarIterationBatch(cfg: RunVarConfig): RunResult`. Consumed by `aeft.ts`'s `runVarIterations` command (Task 10).
+- Consumes: `applyLayerValue`, `applyLayerValueFailures` (`../lib/applyLayerValue`), `applyMediaLayer` (Task 8), `renderPNGs`/`renderVideos` (Task 7, called with `VAR_ASPECT_SUFFIXES`), `cleanProject` (`../lib/clean`), `performCollect` (`../lib/collect`), `stripAspectSuffix`/`VAR_ASPECT_SUFFIXES` (Task 1), `RunVarConfig`/`RunResult` (Task 2), `findCompByName`/`findCompsBySuffixes` (existing, in `lib/findComp.ts`).
+- Produces: `runVarIterationBatch(cfg: RunVarConfig): RunResult`, and a new `findVarComp(name: string): CompItem | null` added to `lib/findComp.ts` (exported so Task 10's `testVarRenderComps` can reuse the same lookup instead of a fourth copy of the loop). Consumed by `aeft.ts`'s `runVarIterations` and `testVarRenderComps` commands (Task 10).
 
 **This is the highest-risk task in this plan** — the exact class of bug Task 16 shipped once already (a scrambled operation order) is easy to reintroduce here, because VAR's real order is genuinely intricate. Read `extension/jsx/host.jsx`'s `runVarIterationsJSON` (lines 429-690) yourself, in full, before writing anything, and trace every step below against it.
 
@@ -948,13 +949,35 @@ git commit -m "feat: add applyMediaLayer for VAR-mode media replacement"
 2. **Video renders BEFORE save** (while `replaceSource` media is still in-memory — the render queue handles that fine). **PNG renders AFTER save → close → reopen** (`saveFrameToPng` silently fails on in-memory `replaceSource` footage, but works once the project has been saved and reloaded from disk).
 3. **Render-comp references must be re-resolved by name AFTER the close/reopen**, not reused from before it. `CompItem` references from before a `close()`+`open()` point at a stale object graph — the PNG-render step needs a **fresh** lookup-by-name, exactly where the original's `pngComp` lookup loop re-scans `app.project` instead of reusing the `renderComps` captured at rename time.
 4. **Target-comp resolution branches on whether `cfg.compName` itself ends in an aspect suffix**: if it does, the actual target (after this iteration's rename) is `varBase + "_" + thatSuffix`; if it doesn't, the target is a nested precomp that was never renamed, so look it up by its original name unchanged.
-5. Comp-name matching allows an optional trailing `.aep` (`item.name === X || item.name === X + ".aep"`) — a real AE quirk (comp names can end up carrying the file extension in certain copy/rename scenarios), preserved from the original throughout every comp lookup in this file.
+5. Comp-name matching allows an optional trailing `.aep` (`item.name === X || item.name === X + ".aep"`) — a real AE quirk (comp names can end up carrying the file extension in certain copy/rename scenarios), preserved from the original. This lookup is needed 4 times across this plan (rename-time, target-comp resolution, and post-reload in this file, plus `testVarRenderComps`'s scan in Task 10) — factor it into one `findVarComp(name)` helper in `lib/findComp.ts` (Step 1 below), exported so Task 10 reuses it too, rather than repeating the loop 4 times across two files.
 
 **Two deliberate deviations from the original**, both already agreed in the design spec — don't "fix" these back:
 - Non-media layer application uses `applyLayerValue`/`applyLayerValueFailures` (warnings on failure), **not** the original's `applyLayerValueStrict` (hard-abort on first failure) — matching the fix already applied to ITR's engine after the Phase 1-2 final review found silently-swallowed failures there. Failures become entries in `RunResult.warnings`, the batch continues.
 - Cleanup (removing the shared temp file, reopening the user's original project) happens in a `finally` block so it **always** runs, even if an iteration throws partway through — the original skips this cleanup entirely on its error path, which is a real (if minor) robustness gap this rewrite closes.
 
-- [ ] **Step 1: Implement**
+- [ ] **Step 1: Add `findVarComp` to `lib/findComp.ts`**
+
+Read the current `src/jsx/aeft/lib/findComp.ts` first (it has `findCompByName`/`findCompsBySuffixes`/`ITR_SUFFIXES` from Phase 1-2). Add, alongside the existing functions:
+
+```ts
+// Like findCompByName, but also matches a name with a trailing ".aep" — a
+// real AE quirk where comp names can end up carrying the file extension
+// after certain copy/rename operations. VAR mode hits this repeatedly
+// (rename-time lookup, target-comp resolution, post-reload lookup, and the
+// testVarRenderComps diagnostic), so it's a shared helper rather than a
+// loop repeated in every one of those spots.
+export function findVarComp(name: string): CompItem | null {
+  for (let i = 1; i <= app.project.numItems; i++) {
+    const item = app.project.item(i);
+    if (item instanceof CompItem && (item.name === name || item.name === name + ".aep")) {
+      return item;
+    }
+  }
+  return null;
+}
+```
+
+- [ ] **Step 2: Implement `runVarIterationBatch.ts`**
 
 ```ts
 // engine/runVarIterationBatch.ts — VAR mode's own orchestration function.
@@ -974,6 +997,7 @@ import { renderPNGs, renderVideos } from "../lib/render";
 import { cleanProject } from "../lib/clean";
 import { performCollect } from "../lib/collect";
 import { stripAspectSuffix, VAR_ASPECT_SUFFIXES } from "../lib/naming";
+import { findVarComp } from "../lib/findComp";
 import type { RunVarConfig, RunResult } from "../../../shared/types";
 
 export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
@@ -1021,13 +1045,10 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
       const renderComps: Record<string, CompItem> = {};
       for (let rs = 0; rs < VAR_ASPECT_SUFFIXES.length; rs++) {
         const origRenderName = originalBase + "_" + VAR_ASPECT_SUFFIXES[rs];
-        for (let ri = 1; ri <= app.project.numItems; ri++) {
-          const ritem = app.project.item(ri);
-          if (ritem instanceof CompItem && (ritem.name === origRenderName || ritem.name === origRenderName + ".aep")) {
-            ritem.name = varBase + "_" + VAR_ASPECT_SUFFIXES[rs];
-            renderComps[VAR_ASPECT_SUFFIXES[rs]] = ritem;
-            break;
-          }
+        const ritem = findVarComp(origRenderName);
+        if (ritem) {
+          ritem.name = varBase + "_" + VAR_ASPECT_SUFFIXES[rs];
+          renderComps[VAR_ASPECT_SUFFIXES[rs]] = ritem;
         }
       }
 
@@ -1075,14 +1096,7 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
         }
       }
       const searchCompName = origAspect ? varBase + "_" + origAspect : cfgCompBase;
-      let comp: CompItem | null = null;
-      for (let ci = 1; ci <= app.project.numItems; ci++) {
-        const it = app.project.item(ci);
-        if (it instanceof CompItem && (it.name === searchCompName || it.name === searchCompName + ".aep")) {
-          comp = it;
-          break;
-        }
-      }
+      const comp = findVarComp(searchCompName);
       if (!comp) {
         throw new Error("VAR " + varName + ": comp not found: " + searchCompName);
       }
@@ -1152,13 +1166,8 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
       const reloadedRenderComps: Record<string, CompItem> = {};
       for (let ps = 0; ps < VAR_ASPECT_SUFFIXES.length; ps++) {
         const pngCompName = varBase + "_" + VAR_ASPECT_SUFFIXES[ps];
-        for (let pci = 1; pci <= app.project.numItems; pci++) {
-          const pIt = app.project.item(pci);
-          if (pIt instanceof CompItem && (pIt.name === pngCompName || pIt.name === pngCompName + ".aep")) {
-            reloadedRenderComps[VAR_ASPECT_SUFFIXES[ps]] = pIt;
-            break;
-          }
-        }
+        const pIt = findVarComp(pngCompName);
+        if (pIt) reloadedRenderComps[VAR_ASPECT_SUFFIXES[ps]] = pIt;
       }
       try {
         renderPNGs(reloadedRenderComps, deliveryFolder, VAR_ASPECT_SUFFIXES);
@@ -1191,7 +1200,7 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
 
 If `app.project.importFile(...)`'s real declared return type doesn't cleanly support the `as FootageItem` cast, check `types-for-adobe/AfterEffects/22.0/index.d.ts` for its actual signature and adjust (this mirrors the exact same kind of check Task 14's `collect.ts` already had to do for footage-related APIs) — don't guess.
 
-- [ ] **Step 2: Verify build**
+- [ ] **Step 3: Verify build**
 
 ```bash
 cd ae-iterations-next
@@ -1199,13 +1208,13 @@ npm run test
 npm run build
 ```
 
-Expected: tests unaffected (no automated test for this file — AE-object-model orchestration code, consistent with `runIterationBatch.ts`'s precedent), build exits 0. Inspect `dist/cep/jsx/index.js` and confirm, in the compiled `runVarIterationBatch` body, that the statement order matches: `copyProject`-equivalent → `app.open` → the rename loop → `endSuppressDialogs` → media import loop → `beginSuppressDialogs` → target-comp resolution → apply loop → `renderVideos` → `app.project.save` → `close` → `open` → `cleanProject` → a **second**, independent comp-lookup loop (not a reuse of the rename-time `renderComps` object) → `renderPNGs` → `performCollect` → `close`. This is the single most important thing to check in this whole task — trace it against the compiled output, not just the source, since compilation is where a subtle statement-order slip would first become invisible to a source-level read.
+Expected: tests unaffected (no automated test for this file — AE-object-model orchestration code, consistent with `runIterationBatch.ts`'s precedent), build exits 0. Inspect `dist/cep/jsx/index.js` and confirm, in the compiled `runVarIterationBatch` body, that the statement order matches: `copyProject`-equivalent → `app.open` → the rename loop (calling `findVarComp`) → `endSuppressDialogs` → media import loop → `beginSuppressDialogs` → target-comp resolution (calling `findVarComp`) → apply loop → `renderVideos` → `app.project.save` → `close` → `open` → `cleanProject` → a **second, independent** call to `findVarComp` per aspect suffix (not a reuse of the rename-time `renderComps` object) → `renderPNGs` → `performCollect` → `close`. This is the single most important thing to check in this whole task — trace it against the compiled output, not just the source, since compilation is where a subtle statement-order slip would first become invisible to a source-level read.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 cd ..
-git add ae-iterations-next/src/jsx/aeft/engine/runVarIterationBatch.ts
+git add ae-iterations-next/src/jsx/aeft/lib/findComp.ts ae-iterations-next/src/jsx/aeft/engine/runVarIterationBatch.ts
 git commit -m "feat: add runVarIterationBatch VAR mode orchestration"
 ```
 
@@ -1217,7 +1226,7 @@ git commit -m "feat: add runVarIterationBatch VAR mode orchestration"
 - Modify: `ae-iterations-next/src/jsx/aeft/aeft.ts`
 
 **Interfaces:**
-- Consumes: `runVarIterationBatch` (Task 9), `stripAspectSuffix`/`VAR_ASPECT_SUFFIXES` (Task 1), `RunVarConfig`/`RunResult`/`TestVarCompsResult` (Task 2).
+- Consumes: `runVarIterationBatch` (Task 9), `stripAspectSuffix`/`VAR_ASPECT_SUFFIXES` (Task 1), `findVarComp` (Task 9, added to `lib/findComp.ts`), `RunVarConfig`/`RunResult`/`TestVarCompsResult` (Task 2).
 - Produces: `runVarIterations(cfg: RunVarConfig): RunResult`, `testVarRenderComps(): TestVarCompsResult`, `browseForMedia(): { path: string | null }` — all three throw `Error` on failure per the host-command convention.
 
 `testVarRenderComps` is a direct, faithful port of the committed `extension/jsx/host.jsx`'s `testVarRenderCompsJSON` (lines 696-760), minus the `cfg.varNames` echo section (it only affects diagnostic text about what names *would* be used, not the comp-presence check that's this function's actual purpose — an intentional, minor scope trim, not an oversight).
@@ -1229,6 +1238,7 @@ Read the current `aeft.ts` first to match its existing import style, then add:
 ```ts
 import { runVarIterationBatch } from "./engine/runVarIterationBatch";
 import { stripAspectSuffix, VAR_ASPECT_SUFFIXES } from "./lib/naming";
+import { findVarComp } from "./lib/findComp";
 import type { RunVarConfig, TestVarCompsResult } from "../shared/types";
 ```
 
@@ -1251,14 +1261,7 @@ export const testVarRenderComps = (): TestVarCompsResult => {
   let foundCount = 0;
   for (let s = 0; s < VAR_ASPECT_SUFFIXES.length; s++) {
     const targetName = originalBase + "_" + VAR_ASPECT_SUFFIXES[s];
-    let found: CompItem | null = null;
-    for (let i = 1; i <= app.project.numItems; i++) {
-      const item = app.project.item(i);
-      if (item instanceof CompItem && (item.name === targetName || item.name === targetName + ".aep")) {
-        found = item;
-        break;
-      }
-    }
+    const found = findVarComp(targetName);
     if (found) {
       foundCount++;
       log.push(

@@ -6,6 +6,7 @@ import { IterationRow } from "./IterationRow";
 import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
+import { EmojiSection } from "./EmojiSection";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
@@ -85,6 +86,7 @@ export function LayerInfoPanel() {
           ))}
         </div>
       )}
+      {mode === "itr" && <EmojiSection />}
       {mode === "var" && (
         <>
           <VarNamesRow />

@@ -9,11 +9,20 @@ import type { LayerValue, RunResult } from "../../../shared/types";
 type StatusKind = "idle" | "running" | "done" | "warning" | "error";
 
 export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, iter: number) => LayerValue | undefined }) {
-  const { compName, rowLayers, count, mode, varNames } = useAppStore(
-    useShallow((s) => ({ compName: s.compName, rowLayers: s.rowLayers, count: s.count, mode: s.mode, varNames: s.varNames }))
+  const {
+    compName, rowLayers, count, mode, varNames,
+    emojiEnabled, emojiPaths, emojiX, emojiY, emojiSize, emojiLayerIndex,
+  } = useAppStore(
+    useShallow((s) => ({
+      compName: s.compName, rowLayers: s.rowLayers, count: s.count, mode: s.mode, varNames: s.varNames,
+      emojiEnabled: s.emojiEnabled, emojiPaths: s.emojiPaths, emojiX: s.emojiX, emojiY: s.emojiY,
+      emojiSize: s.emojiSize, emojiLayerIndex: s.emojiLayerIndex,
+    }))
   );
   const [status, setStatus] = useState("");
   const [statusKind, setStatusKind] = useState<StatusKind>("idle");
+
+  const emojiOnly = mode === "itr" && emojiEnabled;
 
   const handleResult = (res: RunResult, noun: string) => {
     if (res.warnings.length) {
@@ -30,7 +39,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
   };
 
   const run = () => {
-    if (!compName) {
+    if (!compName && !emojiOnly) {
       setStatus("Refresh a layer first.");
       setStatusKind("error");
       return;
@@ -42,13 +51,21 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
       setStatus("Running VAR…");
       setStatusKind("running");
       const names = Array.from({ length: count }, (_, i) => varNames[i] || `VAR${i + 1}`);
-      evalTS("runVarIterations", { compName, layers, values, count, varNames: names })
+      evalTS("runVarIterations", { compName: compName || "", layers, values, count, varNames: names })
         .then((res) => handleResult(res, "variants"))
         .catch(handleError);
     } else {
       setStatus("Running…");
       setStatusKind("running");
-      evalTS("runIterations", { compName, layers, values, count })
+      const emoji = {
+        enabled: emojiEnabled,
+        perIteration: Array.from({ length: count }, (_, i) => emojiPaths[i] ?? null),
+        x: emojiX,
+        y: emojiY,
+        size: emojiSize,
+        layerIndex: emojiLayerIndex,
+      };
+      evalTS("runIterations", { compName: compName || "", layers, values, count, emoji })
         .then((res) => handleResult(res, "iterations"))
         .catch(handleError);
     }
@@ -56,7 +73,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
 
   return (
     <div id="run-section">
-      <button id="btn-run" onClick={run} disabled={!compName}>
+      <button id="btn-run" onClick={run} disabled={!compName && !emojiOnly}>
         {mode === "var" ? "Run VAR" : "Run Iterations"}
       </button>
       {status && <div id="status" className={`status-${statusKind}`}>{status}</div>}

@@ -103,13 +103,13 @@ export const previewEmoji = (cfg: {
   if (!file.exists) throw new Error("Emoji file not found: " + cfg.emojiPath);
 
   app.beginUndoGroup("Emoji Preview");
-  const footage = app.project.importFile(new ImportOptions(file)) as FootageItem;
-  if (!footage) {
+  try {
+    const footage = app.project.importFile(new ImportOptions(file)) as FootageItem;
+    if (!footage) throw new Error("Could not import emoji");
+    addEmojiToComp(comp, footage, cfg.x, cfg.y, cfg.layerIndex, cfg.size);
+  } finally {
     app.endUndoGroup();
-    throw new Error("Could not import emoji");
   }
-  addEmojiToComp(comp, footage, cfg.x, cfg.y, cfg.layerIndex, cfg.size);
-  app.endUndoGroup();
 
   return { compName: comp.name };
 };

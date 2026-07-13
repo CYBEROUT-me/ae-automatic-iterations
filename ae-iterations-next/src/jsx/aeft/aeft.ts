@@ -1,7 +1,8 @@
 import { dispatchTS } from "../utils/utils";
 import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
-import { findCompByName, resolveLayer } from "./lib/findComp";
+import { findCompByName, findCompsBySuffixes, resolveLayer, ITR_SUFFIXES } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
+import { addEmojiToComp } from "./lib/applyEmoji";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
 import { runVarIterationBatch } from "./engine/runVarIterationBatch";
@@ -76,6 +77,41 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   app.endSuppressDialogs(false);
 
   return { log };
+};
+
+// Inserts a temporary, undo-groupable emoji layer into the active comp (or
+// falls back to any found ITR render comp) so the user can check
+// position/size before running a real batch. Ported from host.jsx's
+// previewEmojiJSON.
+export const previewEmoji = (cfg: {
+  emojiPath: string;
+  x: number;
+  y: number;
+  size: number;
+  layerIndex: number;
+}): { compName: string } => {
+  let comp: CompItem | null = null;
+  if (app.project.activeItem instanceof CompItem) {
+    comp = app.project.activeItem;
+  } else {
+    const itrComps = findCompsBySuffixes(ITR_SUFFIXES);
+    comp = itrComps["ITR_9x16"] || itrComps["ITR_1x1"] || itrComps["ITR_16x9"] || itrComps["ITR_4x5"] || null;
+  }
+  if (!comp) throw new Error("No active comp found. Open a comp first.");
+
+  const file = new File(cfg.emojiPath);
+  if (!file.exists) throw new Error("Emoji file not found: " + cfg.emojiPath);
+
+  app.beginUndoGroup("Emoji Preview");
+  const footage = app.project.importFile(new ImportOptions(file)) as FootageItem;
+  if (!footage) {
+    app.endUndoGroup();
+    throw new Error("Could not import emoji");
+  }
+  addEmojiToComp(comp, footage, cfg.x, cfg.y, cfg.layerIndex, cfg.size);
+  app.endUndoGroup();
+
+  return { compName: comp.name };
 };
 
 // Runs the full 5-iteration (or cfg.count-iteration) ITR batch: apply layer

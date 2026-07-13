@@ -8,7 +8,7 @@ import { applyLayerValue, applyLayerValueFailures } from "../lib/applyLayerValue
 import { renderPNGs, renderVideos } from "../lib/render";
 import { cleanProject } from "../lib/clean";
 import { performCollect } from "../lib/collect";
-import { findCompByName, findCompsBySuffixes, ITR_SUFFIXES } from "../lib/findComp";
+import { findCompByName, findCompsBySuffixes, resolveLayer, ITR_SUFFIXES } from "../lib/findComp";
 import type { RunConfig, RunResult } from "../../../shared/types";
 
 export interface TargetState {
@@ -43,12 +43,7 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
         app.beginUndoGroup("Iteration " + (iter + 1));
         for (let li = 0; li < cfg.layers.length; li++) {
           const lc = cfg.layers[li];
-          // Plain index lookup, no name-fallback: there's no emoji/index-shifting
-          // feature in this plan yet. A future phase that inserts layers into the
-          // comp (e.g. emoji overlay) must reintroduce name-fallback resolution
-          // (like the original extension's `resolveLayer` in extension/jsx/host.jsx)
-          // or index-based layer targeting will silently break.
-          const layer = comp.layer(lc.index);
+          const layer = resolveLayer(comp, lc);
           if (!layer) {
             warnings.push("Iter " + (iter + 1) + ": layer " + lc.index + " not found");
             continue;

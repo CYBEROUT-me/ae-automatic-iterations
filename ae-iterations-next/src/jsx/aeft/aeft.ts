@@ -1,6 +1,6 @@
 import { dispatchTS } from "../utils/utils";
 import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
-import { findCompByName } from "./lib/findComp";
+import { findCompByName, resolveLayer } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
@@ -64,12 +64,7 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   app.beginUndoGroup("Preview Apply");
   for (let li = 0; li < cfg.layers.length; li++) {
     const lc = cfg.layers[li];
-    // Plain index lookup, no name-fallback: there's no emoji/index-shifting
-    // feature in this plan yet. A future phase that inserts layers into the
-    // comp (e.g. emoji overlay) must reintroduce name-fallback resolution
-    // (like the original extension's `resolveLayer` in extension/jsx/host.jsx)
-    // or index-based layer targeting will silently break.
-    const layer = comp.layer(lc.index);
+    const layer = resolveLayer(comp, lc);
     if (!layer) {
       log.push("Layer " + lc.index + ": NOT FOUND");
       continue;

@@ -110,10 +110,14 @@ added as its own top-level block in `runIterationBatch`, mirroring the original'
     bundled `emojis/` folder (via `Folder`/`getFiles()`, ExtendScript-side — matching the
     established pattern that filesystem-touching operations go through host commands
     (`browseForMedia`), not panel-side Node `require`) and returns image files, sorted.
-    **Asset bundling:** a new `ae-iterations-next/emojis/` folder (copied from the committed
-    `extension/emojis/`) is added to the project, and `vite.config.ts`'s `publicDir` is set to
-    an absolute path (`path.resolve(__dirname, "emojis")`) so Vite copies it verbatim into
-    `dist/cep/emojis/` regardless of Vite's `root` being `src/js` (not the project root).
+    **Asset bundling:** `extension/emojis/` is 558MB across 166 files — copying it into a new
+    `ae-iterations-next/emojis/` folder would duplicate that into git history for no reason,
+    and a committed symlink is unreliable on Windows (this project explicitly supports it —
+    see `install.ps1`). Instead, `vite.config.ts`'s `publicDir` is pointed directly at the
+    existing folder: `path.resolve(__dirname, "../extension/emojis")` (absolute, so it's
+    independent of Vite's `root` being `src/js`, not the project root). Vite copies it
+    verbatim into `dist/cep/emojis/` at build time from that single source of truth — no
+    duplication, no symlink.
     `listEmojiFiles` locates this folder at runtime via `new File($.fileName).parent.parent`
     (walking up from the running jsx bundle's own install location, e.g.
     `.../com.aeiter.iteration.next/jsx/index.js` → extension root) `.fsName + "/emojis"` —

@@ -47,6 +47,15 @@ export interface LayerValue {
   mediaPath?: string | null;
 }
 
+export interface EmojiConfig {
+  enabled: boolean;
+  perIteration: (string | null)[]; // emoji file path per iteration, count-length
+  x: number;
+  y: number;
+  size: number;
+  layerIndex: number; // 1-based position from top of layer stack
+}
+
 export interface CfgLayer {
   index: number;
   name: string;
@@ -59,6 +68,7 @@ export interface RunConfig {
   layers: CfgLayer[];
   values: LayerValue[][]; // [iter][layer row index], matching `layers` order
   count: number;
+  emoji?: EmojiConfig;
 }
 
 export interface RunResult {

@@ -268,3 +268,141 @@ input[type="checkbox"] {
     color: $error;
   }
 }
+
+// ── Emoji overlay ─────────────────────────────────────────────────────────
+
+#emoji-section {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid $dark;
+}
+
+.emoji-enable-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+#emoji-config {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.emoji-pos-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.7rem;
+    color: $highlight;
+  }
+
+  input[type="number"] {
+    width: 3.2rem;
+  }
+}
+
+#emoji-iter-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.emoji-iter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.emoji-iter-num {
+  width: 1.2rem;
+  color: $highlight;
+  font-size: 0.7rem;
+}
+
+.emoji-iter-thumb {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid $dark;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: $highlight;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: $active;
+  }
+
+  &.has-emoji {
+    border-color: rgba($active, 0.6);
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+  }
+}
+
+.emoji-iter-name {
+  font-size: 0.7rem;
+  color: $font;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#emoji-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.2rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  padding: 0.3rem;
+  background-color: $darker;
+  border-radius: 4px;
+  margin: 0.2rem 0;
+}
+
+.emoji-grid-item {
+  aspect-ratio: 1;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: rgba($active, 0.5);
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+  }
+}
+
+.emoji-empty {
+  font-size: 0.7rem;
+  color: $highlight;
+  padding: 0.3rem;
+}
+
+.emoji-preview-status {
+  font-size: 0.7rem;
+  color: $highlight;
+}

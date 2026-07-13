@@ -5,6 +5,7 @@
 // out of scope for this plan (per Task 11's previewApply precedent).
 
 import { applyLayerValue, applyLayerValueFailures } from "../lib/applyLayerValue";
+import { addEmojiToComp, removeEmojiFromComp } from "../lib/applyEmoji";
 import { renderPNGs, renderVideos } from "../lib/render";
 import { cleanProject } from "../lib/clean";
 import { performCollect } from "../lib/collect";
@@ -41,6 +42,7 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
         if (!comp) throw new Error("Iter " + (iter + 1) + ": comp not found: " + current.compName);
 
         app.beginUndoGroup("Iteration " + (iter + 1));
+        removeEmojiFromComp(comp); // clear any leftover preview emoji before trusting layer indices
         for (let li = 0; li < cfg.layers.length; li++) {
           const lc = cfg.layers[li];
           const layer = resolveLayer(comp, lc);
@@ -57,6 +59,46 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
         app.endUndoGroup();
 
         if (strategy.perIterationExtra) strategy.perIterationExtra(comp, iter);
+      }
+
+      // Emoji is independent of the layer-value gate above — it must run
+      // even in emoji-only mode (no comp/layers selected), and it targets
+      // all 4 render comps, not the single layer-value target comp.
+      let emojiFootageName: string | null = null;
+      if (cfg.emoji && cfg.emoji.enabled) {
+        const emojiPath = cfg.emoji.perIteration[iter];
+        if (emojiPath) {
+          // Import once for this iteration; suppress must be OFF for
+          // importFile to work. Both halves of this pair are inside the
+          // loop body, so there's no cross-iteration suppression gap.
+          app.endSuppressDialogs(false);
+          let emojiFootage: FootageItem | null = null;
+          try {
+            const emojiFile = new File(emojiPath);
+            if (emojiFile.exists) {
+              emojiFootage = app.project.importFile(new ImportOptions(emojiFile)) as FootageItem;
+            } else {
+              warnings.push("Iter " + (iter + 1) + " emoji: file not found");
+            }
+          } catch (e: any) {
+            warnings.push("Iter " + (iter + 1) + " emoji import: " + e.message);
+          }
+          app.beginSuppressDialogs();
+
+          if (emojiFootage) {
+            emojiFootageName = emojiFootage.name; // captured before close invalidates the reference
+            const emojiComps = findCompsBySuffixes(ITR_SUFFIXES);
+            for (let es = 0; es < ITR_SUFFIXES.length; es++) {
+              const emojiComp = emojiComps[ITR_SUFFIXES[es]];
+              if (!emojiComp) continue;
+              try {
+                addEmojiToComp(emojiComp, emojiFootage, cfg.emoji.x, cfg.emoji.y, cfg.emoji.layerIndex, cfg.emoji.size);
+              } catch (e: any) {
+                warnings.push("Iter " + (iter + 1) + " emoji [" + ITR_SUFFIXES[es] + "]: " + e.message);
+              }
+            }
+          }
+        }
       }
 
       app.project.save(current.file);
@@ -88,6 +130,7 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
         const comp = itrComps[ITR_SUFFIXES[s]];
         if (comp) protectedNames.push(comp.name);
       }
+      if (emojiFootageName) protectedNames.push(emojiFootageName);
       try {
         cleanProject(protectedNames);
       } catch (e: any) {

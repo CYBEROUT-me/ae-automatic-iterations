@@ -149,3 +149,35 @@ export const browseForMedia = (): { path: string | null } => {
   if (!f) return { path: null };
   return { path: f.fsName };
 };
+
+// Scans the bundled emojis/ folder (copied verbatim into dist/cep/emojis/ at
+// build time from extension/emojis/ by vite.config.ts's copyEmojisPlugin --
+// plain `publicDir` can't do this, since it flattens directory contents into
+// the root of outDir instead of preserving the emojis/ folder name; see the
+// comment above copyEmojisPlugin in vite.config.ts) and returns image files,
+// sorted by name. There is no ExtendScript equivalent
+// of the panel-side cs.getSystemPath(SystemPath.EXTENSION), so this locates
+// the folder by walking up from the currently-executing jsx bundle's own
+// install path: dist/cep/jsx/index.js -> dist/cep/jsx -> dist/cep (the
+// extension root, sibling to emojis/).
+export const listEmojiFiles = (): { files: { path: string; name: string }[] } => {
+  const scriptFile = new File($.fileName);
+  const extensionRoot = scriptFile.parent.parent;
+  const emojiFolder = new Folder(extensionRoot.fsName + "/emojis");
+  if (!emojiFolder.exists) throw new Error("emojis/ folder not found at " + emojiFolder.fsName);
+
+  const imgExts = [".gif", ".png", ".jpg", ".jpeg", ".webp"];
+  const entries = emojiFolder.getFiles();
+  const files: { path: string; name: string }[] = [];
+  for (let i = 0; i < entries.length; i++) {
+    const f = entries[i];
+    if (!(f instanceof File)) continue;
+    const dot = f.name.lastIndexOf(".");
+    if (dot === -1) continue;
+    const ext = f.name.slice(dot).toLowerCase();
+    if (imgExts.indexOf(ext) === -1) continue;
+    files.push({ path: f.fsName, name: f.name });
+  }
+  files.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  return { files };
+};

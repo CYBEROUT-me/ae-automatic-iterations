@@ -66,3 +66,44 @@ describe("setVarName", () => {
     expect(useAppStore.getState().varNames[2]).toBe("Blue Variant");
   });
 });
+
+describe("emoji state", () => {
+  beforeEach(() => {
+    useAppStore.setState({
+      compName: null, layerInfo: [], rowLayers: [], count: 5, sameForAll: true, values: {},
+      mode: "itr", varNames: [],
+      emojiEnabled: false, emojiPaths: [], emojiX: 540, emojiY: 1347, emojiSize: 100, emojiLayerIndex: 1,
+    });
+  });
+
+  it("defaults match the original extension's shared config", () => {
+    const s = useAppStore.getState();
+    expect(s.emojiEnabled).toBe(false);
+    expect(s.emojiX).toBe(540);
+    expect(s.emojiY).toBe(1347);
+    expect(s.emojiSize).toBe(100);
+    expect(s.emojiLayerIndex).toBe(1);
+  });
+
+  it("setEmojiPath sets a path at the given index without disturbing others", () => {
+    useAppStore.getState().setEmojiPath(0, "/emojis/a.gif");
+    useAppStore.getState().setEmojiPath(2, "/emojis/b.gif");
+    expect(useAppStore.getState().emojiPaths[0]).toBe("/emojis/a.gif");
+    expect(useAppStore.getState().emojiPaths[2]).toBe("/emojis/b.gif");
+    expect(useAppStore.getState().emojiPaths[1]).toBeUndefined();
+  });
+
+  it("setEmojiEnabled/X/Y/Size/LayerIndex update their fields independently", () => {
+    useAppStore.getState().setEmojiEnabled(true);
+    useAppStore.getState().setEmojiX(100);
+    useAppStore.getState().setEmojiY(200);
+    useAppStore.getState().setEmojiSize(50);
+    useAppStore.getState().setEmojiLayerIndex(3);
+    const s = useAppStore.getState();
+    expect(s.emojiEnabled).toBe(true);
+    expect(s.emojiX).toBe(100);
+    expect(s.emojiY).toBe(200);
+    expect(s.emojiSize).toBe(50);
+    expect(s.emojiLayerIndex).toBe(3);
+  });
+});

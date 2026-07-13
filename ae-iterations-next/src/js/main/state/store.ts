@@ -11,6 +11,12 @@ interface AppState {
   values: Record<string, LayerValue[]>; // rowKey -> per-iteration value
   mode: Mode;
   varNames: string[];
+  emojiEnabled: boolean;
+  emojiPaths: (string | null)[];
+  emojiX: number;
+  emojiY: number;
+  emojiSize: number;
+  emojiLayerIndex: number;
   setLayerInfo(compName: string, layers: LayerInfo[]): void;
   setCount(count: number): void;
   setSameForAll(v: boolean): void;
@@ -18,6 +24,12 @@ interface AppState {
   getValue(rowKey: string, iter: number): LayerValue | undefined;
   setMode(mode: Mode): void;
   setVarName(index: number, name: string): void;
+  setEmojiEnabled(v: boolean): void;
+  setEmojiPath(iter: number, path: string | null): void;
+  setEmojiX(v: number): void;
+  setEmojiY(v: number): void;
+  setEmojiSize(v: number): void;
+  setEmojiLayerIndex(v: number): void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -55,4 +67,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       varNames[index] = name;
       return { varNames };
     }),
+  emojiEnabled: false,
+  emojiPaths: [],
+  emojiX: 540,
+  emojiY: 1347,
+  emojiSize: 100,
+  emojiLayerIndex: 1,
+  setEmojiEnabled: (v) => set({ emojiEnabled: v }),
+  setEmojiPath: (iter, path) =>
+    set((s) => {
+      const arr = [...s.emojiPaths];
+      arr[iter] = path;
+      return { emojiPaths: arr };
+    }),
+  setEmojiX: (v) => set({ emojiX: v }),
+  setEmojiY: (v) => set({ emojiY: v }),
+  setEmojiSize: (v) => set({ emojiSize: v }),
+  setEmojiLayerIndex: (v) => set({ emojiLayerIndex: v }),
 }));

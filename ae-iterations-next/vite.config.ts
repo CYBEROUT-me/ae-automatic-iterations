@@ -57,13 +57,22 @@ if (action) runAction(config, action);
 // both the source and destination from the *same* relative asset string
 // rooted at src/, so a "../../extension/emojis" entry would cancel out the
 // dest prefix and copy to the wrong place. Instead, this plugin copies the
-// folder verbatim into `${outDir}/emojis` once the rest of the CEP bundle
-// has been written, so aeft.ts's listEmojiFiles() finds it at a predictable
-// path (dist/cep/emojis/, sibling to dist/cep/jsx/).
+// folder verbatim into `${outDir}/emojis` so aeft.ts's listEmojiFiles() finds
+// it at a predictable path (dist/cep/emojis/, sibling to dist/cep/jsx/).
+//
+// This runs in `generateBundle`, not `closeBundle`. `generateBundle` is a
+// sequential Rollup hook: Rollup guarantees every plugin's `generateBundle`
+// finishes before any plugin's `writeBundle` hook starts. vite-cep-plugin's
+// zxp-signing step runs inside its own `writeBundle` hook, so `generateBundle`
+// is the last point at which we're guaranteed to run before signing reads
+// the output directory. `closeBundle` fires strictly after `writeBundle`
+// (Rollup awaits all `writeBundle` hooks, including signing, before calling
+// any `closeBundle` hook) -- by then the .zxp has already been sealed
+// without the emoji folder, which was the original bug being fixed here.
 const emojiSrcDir = path.resolve(__dirname, "../extension/emojis");
 const copyEmojisPlugin = (): Plugin => ({
   name: "copy-emojis-dir",
-  closeBundle() {
+  generateBundle() {
     if (fs.existsSync(emojiSrcDir)) {
       fs.cpSync(emojiSrcDir, path.join(outDir, "emojis"), { recursive: true });
     }

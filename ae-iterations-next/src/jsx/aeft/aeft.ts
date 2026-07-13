@@ -115,10 +115,10 @@ export const previewEmoji = (cfg: {
 };
 
 // Runs the full 5-iteration (or cfg.count-iteration) ITR batch: apply layer
-// values, save/close/reopen, render PNGs+videos, clean project panel,
-// collect to a self-contained folder, then advance to the next copied
-// project via ITR_STRATEGY. Ported from host.jsx's runIterationsJSON
-// (lines 281-424), minus emoji handling (out of scope for this plan).
+// values, apply the per-iteration emoji overlay, save/close/reopen, render
+// PNGs+videos, clean project panel, collect to a self-contained folder, then
+// advance to the next copied project via ITR_STRATEGY. Ported from host.jsx's
+// runIterationsJSON (lines 281-424).
 export const runIterations = (cfg: RunConfig): RunResult => {
   return runIterationBatch(cfg, ITR_STRATEGY);
 };

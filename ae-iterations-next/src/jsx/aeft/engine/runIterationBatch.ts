@@ -1,8 +1,8 @@
 // Unified iteration engine — replaces extension/jsx/host.jsx's
 // runIterationsJSON body (lines 281–424). Parameterized via IterationStrategy
 // so a future VAR-mode replacement for runVarIterationsJSON can reuse this
-// same loop with a different strategy. Emoji handling from the original is
-// out of scope for this plan (per Task 11's previewApply precedent).
+// same loop with a different strategy. Includes the emoji overlay block
+// (independent of the layer-value gate, so it also drives emoji-only runs).
 
 import { applyLayerValue, applyLayerValueFailures } from "../lib/applyLayerValue";
 import { addEmojiToComp, removeEmojiFromComp } from "../lib/applyEmoji";

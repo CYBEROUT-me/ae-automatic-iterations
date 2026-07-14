@@ -1,0 +1,31 @@
+[
+  {
+    "version": "0.4.0",
+    "date": "2026-07-14",
+    "changes": [
+      "Cross-platform font picker: autocomplete dropdown of real installed PostScript font names for text layers, on both macOS and Windows"
+    ]
+  },
+  {
+    "version": "0.3.0",
+    "date": "2026-07-13",
+    "changes": [
+      "Emoji overlay (ITR mode): per-iteration emoji picker, shared position/size/layer-index config, live preview, emoji-only runs with no layer selection required"
+    ]
+  },
+  {
+    "version": "0.2.0",
+    "date": "2026-07-07",
+    "changes": [
+      "VAR mode: named-variant iterations with per-layer media replacement, 4 aspect ratios (9x16/1x1/16x9/4x5)",
+      "ITR mode gains a 4th aspect ratio, ITR_4x5"
+    ]
+  },
+  {
+    "version": "0.1.0",
+    "date": "2026-07-06",
+    "changes": [
+      "Initial BoltCEP rewrite: ITR core — shape/text/stroke/video color and effect iteration, PNG + video rendering, project collection"
+    ]
+  }
+]

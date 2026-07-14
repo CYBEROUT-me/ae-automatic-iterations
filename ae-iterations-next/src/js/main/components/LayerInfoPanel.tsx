@@ -7,6 +7,7 @@ import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
 import { EmojiSection } from "./EmojiSection";
+import { ChangelogButton } from "./ChangelogButton";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
@@ -112,6 +113,7 @@ export function LayerInfoPanel() {
         </div>
       ))}
       <RunButton effectiveValue={effectiveValue} />
+      <ChangelogButton />
     </div>
   );
 }

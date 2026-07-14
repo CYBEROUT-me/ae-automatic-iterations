@@ -444,3 +444,70 @@ input[type="checkbox"] {
   font-size: 0.7rem;
   color: $highlight;
 }
+
+// ── Changelog ─────────────────────────────────────────────────────────────
+
+#changelog-section {
+  margin-top: 0.4rem;
+}
+
+#btn-changelog {
+  width: 1.8rem !important;
+  height: 1.8rem !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  font-size: 0.85rem !important;
+  background-color: $darker !important;
+  color: $highlight !important;
+
+  &.open,
+  &:hover {
+    background-color: $active !important;
+    color: white !important;
+  }
+}
+
+#changelog-list {
+  margin-top: 0.4rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  padding: 0.4rem;
+  background-color: $darker;
+  border-radius: 4px;
+}
+
+.cl-entry {
+  margin-bottom: 0.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.cl-header {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+
+.cl-version {
+  font-weight: 600;
+  color: $font;
+  font-size: 0.75rem;
+}
+
+.cl-date {
+  font-size: 0.65rem;
+  color: $highlight;
+}
+
+.cl-changes {
+  margin: 0.2rem 0 0 0.9rem;
+  padding: 0;
+  font-size: 0.7rem;
+  color: $font;
+
+  li {
+    margin-bottom: 0.15rem;
+  }
+}

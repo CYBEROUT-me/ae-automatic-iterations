@@ -112,6 +112,22 @@ export default defineConfig({
     // },
     rollupOptions: {
       input,
+      // fontkit does real filesystem font parsing (src/js/main/lib/fonts.ts)
+      // and must run against its real Node-targeted entry point, not the
+      // bundled browser build that its package.json "browser" export
+      // condition resolves to for a default client-side Vite build (which
+      // lacks the fs-dependent openSync API this project needs). Marking it
+      // (and the Node builtins it and fonts.ts depend on) external leaves a
+      // literal `require(...)` in the compiled CJS output instead of
+      // inlining/stubbing them -- resolved for real at panel runtime by
+      // CEP's Node integration (--enable-nodejs, see cep.config.ts). The
+      // vite-cep-plugin `cep()` plugin (see its writeBundle hook) then
+      // copies the real fontkit package (and its own dependencies) from
+      // node_modules into the packaged extension automatically because it
+      // detects the literal `require("fontkit")` call; installModules in
+      // cep.config.ts declares this explicitly as well, as a non-regex-
+      // dependent guarantee.
+      external: ["fs", "os", "path", "fontkit"],
       output: {
         manualChunks: {},
         // esModule: false,

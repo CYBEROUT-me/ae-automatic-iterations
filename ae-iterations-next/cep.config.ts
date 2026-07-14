@@ -53,7 +53,12 @@ const config: CEP_Config = {
     sourceMap: false,
     jsxBin: "off",
   },
-  installModules: [],
+  // fontkit does real filesystem font parsing (src/js/main/lib/fonts.ts) and
+  // is marked external in vite.config.ts so it isn't bundled/browser-stubbed
+  // -- this makes the plugin copy the real package (and its dependencies)
+  // from node_modules into the packaged extension for CEP's Node runtime to
+  // require() for real. See vite.config.ts's rollupOptions.external comment.
+  installModules: ["fontkit"],
   copyAssets: [],
   copyZipAssets: [],
 };

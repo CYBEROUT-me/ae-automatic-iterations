@@ -7,6 +7,7 @@ import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
 import { EmojiSection } from "./EmojiSection";
+import { PresetPanel } from "./PresetPanel";
 import { ChangelogButton } from "./ChangelogButton";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { loadFonts } from "../lib/fonts";
@@ -97,6 +98,7 @@ export function LayerInfoPanel() {
         </div>
       )}
       {mode === "itr" && <EmojiSection />}
+      {mode === "itr" && <PresetPanel />}
       {mode === "var" && (
         <>
           <VarNamesRow />

@@ -1,6 +1,7 @@
 import type { RowLayer } from "../state/rowLayers";
 import { useAppStore } from "../state/store";
 import { hexToRgb, rgbToHex, normaliseHex } from "../lib/color";
+import { FontInput } from "./FontInput";
 
 export function ColorFields({ row, iter }: { row: RowLayer; iter: number }) {
   const value = useAppStore((s) => s.values[row.rowKey]?.[iter]);
@@ -19,11 +20,9 @@ export function ColorFields({ row, iter }: { row: RowLayer; iter: number }) {
       <input type="text" maxLength={7} value={hex} onChange={(e) => onHexChange(e.target.value)} />
       {row.type === "text" && (
         <>
-          <input
-            type="text"
-            placeholder="PostScript name"
+          <FontInput
             value={value?.font ?? ""}
-            onChange={(e) => setValue(row.rowKey, iter, { ...value, font: e.target.value })}
+            onChange={(font) => setValue(row.rowKey, iter, { ...value, font })}
           />
           <input
             type="text"

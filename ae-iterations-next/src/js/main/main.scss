@@ -406,3 +406,41 @@ input[type="checkbox"] {
   font-size: 0.7rem;
   color: $highlight;
 }
+
+// ── Font picker ───────────────────────────────────────────────────────────
+
+.font-input-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.font-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: 8rem;
+  overflow-y: auto;
+  background-color: $darker;
+  border: 1px solid $dark;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+.font-option {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.7rem;
+  color: $font;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba($active, 0.15);
+  }
+}
+
+.font-empty {
+  padding: 0.3rem 0.4rem;
+  font-size: 0.7rem;
+  color: $highlight;
+}

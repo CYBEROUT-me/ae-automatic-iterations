@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { evalTS } from "../../lib/utils/bolt";
@@ -8,6 +8,7 @@ import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
 import { EmojiSection } from "./EmojiSection";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
+import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
 
@@ -27,6 +28,14 @@ export function LayerInfoPanel() {
   );
 
   const [testLog, setTestLog] = useState<string[] | null>(null);
+
+  // Kicks off the font scan as soon as the panel mounts, in the background,
+  // regardless of whether a text layer is currently selected — matching the
+  // original extension's one-time startup loadFonts() call, so the list is
+  // very likely already cached by the time a user focuses a font field.
+  useEffect(() => {
+    loadFonts();
+  }, []);
 
   const refresh = () => {
     evalTS("getLayerInfo")

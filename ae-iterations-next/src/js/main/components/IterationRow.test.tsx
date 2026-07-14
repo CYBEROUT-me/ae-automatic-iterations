@@ -1,8 +1,18 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { IterationRow } from "./IterationRow";
 import { useAppStore } from "../state/store";
 import type { RowLayer } from "../state/rowLayers";
+
+// A text row now renders ColorFields' FontInput, which imports the real
+// fonts.ts. That module breaks under this file's default jsdom environment
+// (see fonts.test.ts's file-level comment: importing Node's "path" under
+// jsdom resolves to a stray legacy npm package instead of the builtin) —
+// mocked here the same way ColorFields.test.tsx and FontInput.test.tsx
+// already do, since this file isn't testing font-loading behavior.
+vi.mock("../lib/fonts", () => ({
+  loadFonts: vi.fn().mockResolvedValue([]),
+}));
 
 describe("IterationRow", () => {
   it("shows font and content inputs for a text row, not for a shape row", () => {

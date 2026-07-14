@@ -46,7 +46,7 @@ function listFontFiles(dir: string): string[] {
   }
 }
 
-// A single font file yields one name; a collection (.ttc/.dfont) yields one
+// A single font file yields one name; a collection (.ttc) yields one
 // per sub-font. Any parse failure yields none — the scan continues with the
 // next file rather than aborting.
 function extractPostscriptNames(filePath: string): string[] {

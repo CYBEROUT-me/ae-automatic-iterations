@@ -36,13 +36,19 @@ export function resolveVersion(current, explicit) {
   return parts.join(".");
 }
 
+let packageJsonUsesCRLF = false;
+
 function readPackageJson() {
-  return JSON.parse(readFileSync(PACKAGE_JSON, "utf8"));
+  const raw = readFileSync(PACKAGE_JSON, "utf8");
+  packageJsonUsesCRLF = raw.includes("\r\n");
+  return JSON.parse(raw);
 }
 
 function writeVersion(pkg, version) {
   pkg.version = version;
-  writeFileSync(PACKAGE_JSON, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  let out = JSON.stringify(pkg, null, 2) + "\n";
+  if (packageJsonUsesCRLF) out = out.replace(/\n/g, "\r\n");
+  writeFileSync(PACKAGE_JSON, out, "utf8");
 }
 
 function findBuiltZip(displayName, version) {

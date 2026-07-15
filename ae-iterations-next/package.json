@@ -12,7 +12,8 @@
     "serve": "cross-env SERVE_PANEL=true vite preview",
     "symlink": "cross-env BOLT_ACTION=symlink vite",
     "delsymlink": "cross-env BOLT_ACTION=delsymlink vite",
-    "test": "vitest run"
+    "test": "vitest run",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "fontkit": "^2.0.4",

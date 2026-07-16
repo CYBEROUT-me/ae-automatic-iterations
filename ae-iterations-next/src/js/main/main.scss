@@ -130,10 +130,32 @@ body,
 
 .video-toggle {
   background-color: $surface !important;
+  color: $text !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: $space-1;
+  transition: background-color $transition-fast;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: $surface-hover !important;
+  }
 
   &.active {
     background-color: $accent !important;
+    color: white !important;
   }
+}
+
+.field-icon {
+  width: 11px;
+  height: 11px;
+  color: $text-dim;
+  flex-shrink: 0;
 }
 
 .tint-cell {

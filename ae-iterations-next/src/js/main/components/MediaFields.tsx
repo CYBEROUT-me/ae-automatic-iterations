@@ -1,6 +1,7 @@
 import type { RowLayer } from "../state/rowLayers";
 import { useAppStore } from "../state/store";
 import { evalTS } from "../../lib/utils/bolt";
+import { FolderOpen } from "lucide-react";
 
 export function MediaFields({ row, iter }: { row: RowLayer; iter: number }) {
   const value = useAppStore((s) => s.values[row.rowKey]?.[iter]);
@@ -17,7 +18,9 @@ export function MediaFields({ row, iter }: { row: RowLayer; iter: number }) {
 
   return (
     <div className="media-fields">
-      <button onClick={browse}>Browse…</button>
+      <button className="video-toggle" onClick={browse}>
+        <FolderOpen /> Browse…
+      </button>
       <span className="media-file-label">{fileName}</span>
     </div>
   );

@@ -2,6 +2,7 @@ import type { RowLayer } from "../state/rowLayers";
 import { useAppStore } from "../state/store";
 import { hexToRgb, rgbToHex } from "../lib/color";
 import type { LayerValue } from "../../../shared/types";
+import { FlipHorizontal2, Contrast, Droplet, SlidersHorizontal } from "lucide-react";
 
 export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
   const value = useAppStore((s) => s.values[row.rowKey]?.[iter]);
@@ -17,16 +18,17 @@ export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
         title="Flip Horizontal"
         onClick={() => update({ flip: !v.flip })}
       >
-        ↔
+        <FlipHorizontal2 />
       </button>
       <button
         className={"video-toggle" + (v.bw ? " active" : "")}
         title="Black & White"
         onClick={() => update({ bw: !v.bw })}
       >
-        B&W
+        <Contrast /> B&amp;W
       </button>
       <div className="tint-cell">
+        <Droplet className="field-icon" />
         <input
           type="checkbox"
           checked={!!v.tint}
@@ -47,6 +49,7 @@ export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
           onChange={(e) => update({ tintAmount: parseInt(e.target.value, 10) || 50 })}
         />
       </div>
+      <SlidersHorizontal className="field-icon" />
       <input
         type="number"
         min={-180}

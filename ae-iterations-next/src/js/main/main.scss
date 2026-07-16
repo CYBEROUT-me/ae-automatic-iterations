@@ -109,7 +109,8 @@ body,
 .iter-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: $space-3;
+  padding: $space-2;
 }
 
 .iter-num {
@@ -129,6 +130,7 @@ body,
   align-items: center;
   gap: 0.3rem;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .color-cell input[type="color"] {
@@ -138,7 +140,8 @@ body,
 }
 
 .color-cell input[type="text"] {
-  width: 5rem;
+  flex: 1;
+  min-width: 3rem;
 }
 
 .video-fields {
@@ -598,4 +601,46 @@ input[type="checkbox"] {
   flex-shrink: 0;
   font-size: 0.65rem !important;
   padding: 0.15rem 0.4rem !important;
+}
+
+// ── Compact hover-row (iteration rows, preset list rows) ──────────────────
+
+.hover-row {
+  border-radius: $radius-sm;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $surface-hover;
+  }
+
+  &:hover .row-action {
+    opacity: 1;
+  }
+}
+
+.row-action {
+  width: 18px;
+  height: 18px;
+  border-radius: $radius-sm;
+  background: transparent;
+  border: none;
+  color: $text-dim;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  flex-shrink: 0;
+  padding: 0;
+  transition: opacity $transition-fast, color $transition-fast, background-color $transition-fast;
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  &:hover {
+    background-color: $surface-hover;
+    color: $text-strong;
+  }
 }

@@ -28,7 +28,6 @@ export function PresetPanel() {
   const { rowLayers, count, values, setValue } = useAppStore(
     useShallow((s) => ({ rowLayers: s.rowLayers, count: s.count, values: s.values, setValue: s.setValue }))
   );
-  const [open, setOpen] = useState(false);
   const [userPresets, setUserPresets] = useState<Preset[]>(() => loadUserPresets());
   const [name, setName] = useState("");
   const [status, setStatus] = useState("");
@@ -129,33 +128,26 @@ export function PresetPanel() {
   );
 
   return (
-    <div id="preset-section">
-      <button id="btn-presets" className={open ? "open" : ""} onClick={() => setOpen(!open)}>
-        Presets
-      </button>
-      {open && (
-        <div id="preset-panel">
-          <div id="preset-save-row">
-            <input
-              id="preset-name-input"
-              type="text"
-              placeholder="Preset name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <button id="btn-save-preset" onClick={savePreset}>
-              Save Preset
-            </button>
-          </div>
-          {status && <div className="preset-status">{status}</div>}
-          <div id="preset-list">
-            {savedForKind.length > 0 && <div className="preset-group-label">Saved</div>}
-            {savedForKind.map((preset) => renderItem(preset, true, userPresets.indexOf(preset)))}
-            <div className="preset-group-label">Library</div>
-            {libraryForKind.map((preset, i) => renderItem(preset, false, i))}
-          </div>
-        </div>
-      )}
+    <div id="preset-panel">
+      <div id="preset-save-row">
+        <input
+          id="preset-name-input"
+          type="text"
+          placeholder="Preset name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <button id="btn-save-preset" onClick={savePreset}>
+          Save Preset
+        </button>
+      </div>
+      {status && <div className="preset-status">{status}</div>}
+      <div id="preset-list">
+        {savedForKind.length > 0 && <div className="preset-group-label">Saved</div>}
+        {savedForKind.map((preset) => renderItem(preset, true, userPresets.indexOf(preset)))}
+        <div className="preset-group-label">Library</div>
+        {libraryForKind.map((preset, i) => renderItem(preset, false, i))}
+      </div>
     </div>
   );
 }

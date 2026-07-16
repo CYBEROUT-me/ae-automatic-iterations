@@ -8,14 +8,18 @@ import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
 import { EmojiSection } from "./EmojiSection";
 import { PresetPanel } from "./PresetPanel";
-import { ChangelogButton } from "./ChangelogButton";
+import { ChangelogList } from "./ChangelogList";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
+import { RefreshCw, ChevronUp, ChevronDown, Smile, Star, Info } from "lucide-react";
 
 export function LayerInfoPanel() {
-  const { compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, mode } = useAppStore(
+  const {
+    compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, mode,
+    emojiEnabled, setEmojiEnabled,
+  } = useAppStore(
     useShallow((s) => ({
       compName: s.compName,
       rowLayers: s.rowLayers,
@@ -26,10 +30,14 @@ export function LayerInfoPanel() {
       setSameForAll: s.setSameForAll,
       setLayerInfo: s.setLayerInfo,
       mode: s.mode,
+      emojiEnabled: s.emojiEnabled,
+      setEmojiEnabled: s.setEmojiEnabled,
     }))
   );
 
   const [testLog, setTestLog] = useState<string[] | null>(null);
+  const [presetsOpen, setPresetsOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   // Kicks off the font scan as soon as the panel mounts, in the background,
   // regardless of whether a text layer is currently selected — matching the
@@ -58,6 +66,9 @@ export function LayerInfoPanel() {
 
   // Applies one iteration's values live to the target comp, so the artist
   // can eyeball a column of values in AE before committing to a full run.
+  // Any row's Play action for iteration N calls this same function — preview
+  // has always applied the whole iteration column across every row at once,
+  // not a single row in isolation.
   const previewIteration = (iter: number) => {
     if (!compName) return;
     const layers = toCfgLayers(rowLayers);
@@ -71,34 +82,66 @@ export function LayerInfoPanel() {
 
   return (
     <div id="layer-section">
-      <div id="layer-info">{compName ? `${compName} — ${rowLayers.length} row(s)` : "No layer selected"}</div>
-      <button onClick={refresh}>Refresh Layer</button>
-      <label id="count-label">
-        Count
-        <input
-          type="number"
-          min={1}
-          value={count}
-          onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 5))}
-        />
-      </label>
+      <div className="icon-toolbar">
+        <button className="icon-btn" title="Refresh layer selection" onClick={refresh}>
+          <RefreshCw />
+        </button>
+        <div className="toolbar-layername">{compName ? `${compName} — ${rowLayers.length} row(s)` : "No layer selected"}</div>
+        <div className="count-field">
+          <span>Count</span>
+          <div className="stepper">
+            <input
+              type="number"
+              min={1}
+              value={count}
+              onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 5))}
+            />
+            <div className="stepper-btns">
+              <button className="stepper-btn" title="Increase count" onClick={() => setCount(count + 1)}>
+                <ChevronUp />
+              </button>
+              <button className="stepper-btn" title="Decrease count" onClick={() => setCount(Math.max(1, count - 1))}>
+                <ChevronDown />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {mode === "itr" && (
+        <div className="icon-toolbar">
+          <button
+            className={"icon-btn" + (emojiEnabled ? " active-state" : "")}
+            title="Emoji overlay"
+            onClick={() => setEmojiEnabled(!emojiEnabled)}
+          >
+            <Smile />
+          </button>
+          <button
+            className={"icon-btn" + (presetsOpen ? " active-state" : "")}
+            title="Presets"
+            onClick={() => setPresetsOpen(!presetsOpen)}
+          >
+            <Star />
+          </button>
+          <div className="toolbar-spacer" />
+          <button
+            className={"icon-btn" + (changelogOpen ? " active-state" : "")}
+            title="What's new"
+            onClick={() => setChangelogOpen(!changelogOpen)}
+          >
+            <Info />
+          </button>
+        </div>
+      )}
       {mode === "itr" && showSameForAll && (
         <label id="same-all-section">
           <input type="checkbox" checked={sameForAll} onChange={(e) => setSameForAll(e.target.checked)} />
           Same value for all layers
         </label>
       )}
-      {mode === "itr" && rowLayers.length > 0 && (
-        <div id="preview-row">
-          {Array.from({ length: count }, (_, iter) => (
-            <button key={iter} className="preview-btn" onClick={() => previewIteration(iter)}>
-              Preview {iter + 1}
-            </button>
-          ))}
-        </div>
-      )}
-      {mode === "itr" && <EmojiSection />}
-      {mode === "itr" && <PresetPanel />}
+      {mode === "itr" && emojiEnabled && <EmojiSection />}
+      {mode === "itr" && presetsOpen && <PresetPanel />}
+      {mode === "itr" && changelogOpen && <ChangelogList />}
       {mode === "var" && (
         <>
           <VarNamesRow />
@@ -110,12 +153,16 @@ export function LayerInfoPanel() {
         <div key={row.rowKey} className="extra-layer-group">
           <div className="layer-group-label">{row.name} [{row.type}]</div>
           {Array.from({ length: count }, (_, iter) => (
-            <IterationRow key={iter} row={row} iter={iter} />
+            <IterationRow
+              key={iter}
+              row={row}
+              iter={iter}
+              onPreview={mode === "itr" ? () => previewIteration(iter) : undefined}
+            />
           ))}
         </div>
       ))}
       <RunButton effectiveValue={effectiveValue} />
-      <ChangelogButton />
     </div>
   );
 }

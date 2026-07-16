@@ -21,16 +21,8 @@ describe("PresetPanel", () => {
     useAppStore.setState({ rowLayers: [colorRow], count: 3, values: {} });
   });
 
-  it("hides the panel until the toggle button is clicked", () => {
-    render(<PresetPanel />);
-    expect(screen.queryByText("Brand Blue")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText("Presets"));
-    expect(screen.getByText("Brand Blue")).toBeInTheDocument();
-  });
-
   it("shows only color presets when row 0 is a color-capable row", () => {
     render(<PresetPanel />);
-    fireEvent.click(screen.getByText("Presets"));
     expect(screen.getByText("Brand Blue")).toBeInTheDocument();
     expect(screen.queryByText("Warm Tints")).not.toBeInTheDocument();
   });
@@ -38,14 +30,12 @@ describe("PresetPanel", () => {
   it("shows only video presets when row 0 is a video row", () => {
     useAppStore.setState({ rowLayers: [videoRow], count: 3, values: {} });
     render(<PresetPanel />);
-    fireEvent.click(screen.getByText("Presets"));
     expect(screen.getByText("Warm Tints")).toBeInTheDocument();
     expect(screen.queryByText("Brand Blue")).not.toBeInTheDocument();
   });
 
   it("applies a color preset's hex values to row 0, clamped to the current count", () => {
     render(<PresetPanel />);
-    fireEvent.click(screen.getByText("Presets"));
     fireEvent.click(screen.getAllByText("Apply")[0]);
     const values = useAppStore.getState().values["1"];
     expect(values).toHaveLength(3);
@@ -57,7 +47,6 @@ describe("PresetPanel", () => {
   it("saves the current row-0 state as a new user preset", () => {
     useAppStore.getState().setValue("1", 0, { color: hexToRgb("#123456") });
     render(<PresetPanel />);
-    fireEvent.click(screen.getByText("Presets"));
     fireEvent.change(screen.getByPlaceholderText("Preset name"), { target: { value: "My Preset" } });
     fireEvent.click(screen.getByText("Save Preset"));
     expect(userPresetsLib.saveUserPresets).toHaveBeenCalledWith([
@@ -68,7 +57,6 @@ describe("PresetPanel", () => {
   it("deletes a user preset", () => {
     vi.mocked(userPresetsLib.loadUserPresets).mockReturnValue([{ name: "Old One", colors: ["#000000"] }]);
     render(<PresetPanel />);
-    fireEvent.click(screen.getByText("Presets"));
     fireEvent.click(screen.getByTitle("Delete preset"));
     expect(userPresetsLib.saveUserPresets).toHaveBeenCalledWith([]);
   });

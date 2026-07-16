@@ -18,19 +18,11 @@ vi.mock("../../lib/utils/bolt", () => ({
 describe("EmojiSection", () => {
   beforeEach(() => {
     useAppStore.setState({
-      count: 3, emojiEnabled: false, emojiPaths: [], emojiX: 540, emojiY: 1347, emojiSize: 100, emojiLayerIndex: 1,
+      count: 3, emojiPaths: [], emojiX: 540, emojiY: 1347, emojiSize: 100, emojiLayerIndex: 1,
     });
   });
 
-  it("hides the config until enabled is checked", () => {
-    render(<EmojiSection />);
-    expect(screen.queryByText("Preview Emoji")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText("Add emoji overlay"));
-    expect(screen.getByText("Preview Emoji")).toBeInTheDocument();
-  });
-
   it("opens the picker grid on thumbnail click and assigns the selected emoji to that row", async () => {
-    useAppStore.setState({ emojiEnabled: true });
     render(<EmojiSection />);
     fireEvent.click(screen.getAllByText("+")[0]); // first row's empty thumbnail
     await new Promise((r) => setTimeout(r, 0));
@@ -40,7 +32,7 @@ describe("EmojiSection", () => {
   });
 
   it("previews using the first row with a path set", async () => {
-    useAppStore.setState({ emojiEnabled: true, emojiPaths: [null, "/emojis/heart.gif"] });
+    useAppStore.setState({ emojiPaths: [null, "/emojis/heart.gif"] });
     render(<EmojiSection />);
     fireEvent.click(screen.getByText("Preview Emoji"));
     await new Promise((r) => setTimeout(r, 0));

@@ -231,9 +231,21 @@ input[type="checkbox"] {
 
 #btn-run {
   background-color: $accent !important;
-  font-size: 0.85rem !important;
-  padding: 0.5rem 0.6rem !important;
+  font-size: $text-md !important;
+  padding: $space-4 0 !important;
   font-weight: 600;
+  border-radius: $radius-md;
+  transition: background-color $transition-fast, box-shadow $transition-fast, transform $transition-press;
+
+  &:hover:not(:disabled) {
+    background-color: $accent-hover !important;
+    box-shadow: 0 2px 10px $accent-glow;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+    box-shadow: none;
+  }
 
   &:disabled {
     background-color: $surface !important;
@@ -243,9 +255,9 @@ input[type="checkbox"] {
 }
 
 #status {
-  padding: 0.35rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: $space-2 $space-3;
+  border-radius: $radius-sm;
+  font-size: $text-sm;
   line-height: 1.35;
   word-break: break-word;
 
@@ -402,6 +414,30 @@ input[type="checkbox"] {
 .font-input-wrap {
   position: relative;
   display: inline-flex;
+  align-items: center;
+
+  input[type="text"] {
+    padding-left: 22px;
+    padding-right: 18px;
+  }
+}
+
+.font-input-icon {
+  position: absolute;
+  left: 6px;
+  width: 11px;
+  height: 11px;
+  color: $text-dim;
+  pointer-events: none;
+}
+
+.font-input-chevron {
+  position: absolute;
+  right: 6px;
+  width: 11px;
+  height: 11px;
+  color: $text-dim;
+  pointer-events: none;
 }
 
 .font-dropdown {
@@ -414,24 +450,20 @@ input[type="checkbox"] {
   overflow-y: auto;
   background-color: $surface;
   border: 1px solid $border;
-  border-radius: 4px;
+  border-radius: $radius-sm;
   margin-top: 2px;
 }
 
 .font-option {
-  padding: 0.25rem 0.4rem;
-  font-size: 0.7rem;
+  padding: $space-3 $space-4;
+  font-size: $text-sm;
   color: $text;
   cursor: pointer;
-
-  &:hover {
-    background-color: rgba($accent, 0.15);
-  }
 }
 
 .font-empty {
-  padding: 0.3rem 0.4rem;
-  font-size: 0.7rem;
+  padding: $space-3 $space-4;
+  font-size: $text-sm;
   color: $text-dim;
 }
 

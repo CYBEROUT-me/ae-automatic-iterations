@@ -107,32 +107,34 @@ export function LayerInfoPanel() {
           </div>
         </div>
       </div>
-      {mode === "itr" && (
-        <div className="icon-toolbar">
-          <button
-            className={"icon-btn" + (emojiEnabled ? " active-state" : "")}
-            title="Emoji overlay"
-            onClick={() => setEmojiEnabled(!emojiEnabled)}
-          >
-            <Smile />
-          </button>
-          <button
-            className={"icon-btn" + (presetsOpen ? " active-state" : "")}
-            title="Presets"
-            onClick={() => setPresetsOpen(!presetsOpen)}
-          >
-            <Star />
-          </button>
-          <div className="toolbar-spacer" />
-          <button
-            className={"icon-btn" + (changelogOpen ? " active-state" : "")}
-            title="What's new"
-            onClick={() => setChangelogOpen(!changelogOpen)}
-          >
-            <Info />
-          </button>
-        </div>
-      )}
+      <div className="icon-toolbar">
+        {mode === "itr" && (
+          <>
+            <button
+              className={"icon-btn" + (emojiEnabled ? " active-state" : "")}
+              title="Emoji overlay"
+              onClick={() => setEmojiEnabled(!emojiEnabled)}
+            >
+              <Smile />
+            </button>
+            <button
+              className={"icon-btn" + (presetsOpen ? " active-state" : "")}
+              title="Presets"
+              onClick={() => setPresetsOpen(!presetsOpen)}
+            >
+              <Star />
+            </button>
+          </>
+        )}
+        <div className="toolbar-spacer" />
+        <button
+          className={"icon-btn" + (changelogOpen ? " active-state" : "")}
+          title="What's new"
+          onClick={() => setChangelogOpen(!changelogOpen)}
+        >
+          <Info />
+        </button>
+      </div>
       {mode === "itr" && showSameForAll && (
         <label id="same-all-section">
           <input type="checkbox" checked={sameForAll} onChange={(e) => setSameForAll(e.target.checked)} />
@@ -141,7 +143,7 @@ export function LayerInfoPanel() {
       )}
       {mode === "itr" && emojiEnabled && <EmojiSection />}
       {mode === "itr" && presetsOpen && <PresetPanel />}
-      {mode === "itr" && changelogOpen && <ChangelogList />}
+      {changelogOpen && <ChangelogList />}
       {mode === "var" && (
         <>
           <VarNamesRow />

@@ -138,7 +138,7 @@ export function PresetPanel() {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <button id="btn-save-preset" title="Save preset" onClick={savePreset}>
+        <button id="btn-save-preset" className="icon-btn" title="Save preset" onClick={savePreset}>
           <Save />
         </button>
       </div>

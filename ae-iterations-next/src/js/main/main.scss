@@ -630,6 +630,7 @@ input[type="checkbox"] {
 .icon-toolbar {
   display: flex;
   align-items: center;
+  align-self: stretch;
   gap: $space-3;
   padding: $space-3 $space-4;
   border-bottom: 1px solid $border;

@@ -11,10 +11,12 @@
 //                                    Release entirely (prints what those
 //                                    steps would do instead)
 //
-// Publishing (git push --tags + creating the GitHub Release) requires
-// GITHUB_TOKEN. Without it, the script stops after the git tag/push step
-// and prints what a real publish would do next — matching the original's
-// exact behavior.
+// Publishing (git push origin <current-branch> --tags + creating the GitHub
+// Release) requires GITHUB_TOKEN. Without it, the script stops after the git
+// commit/tag/push step and prints what a real publish would do next —
+// matching the original's exact behavior. The current branch (whatever it
+// is) is pushed alongside the tag rather than a hardcoded branch name, since
+// this rewrite's work happens on a feature branch, not always main.
 
 import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync, copyFileSync, readdirSync } from "node:fs";
@@ -117,19 +119,47 @@ async function main() {
 
   if (dryRun) {
     console.log("\n--dry-run: stopping here. Would otherwise run:");
-    console.log(`  git add package.json && git commit -m "v${newVersion}"`);
-    console.log(`  git tag v${newVersion}`);
-    console.log(`  git push --tags`);
+    console.log(`  git add package.json && git commit -m "v${newVersion}"  (skipped if nothing staged)`);
+    console.log(`  git tag v${newVersion}  (skipped if the tag already exists)`);
+    console.log(`  git push origin <current-branch> --tags`);
     console.log(`  (if GITHUB_TOKEN set) create a GitHub Release v${newVersion} and upload ${RELEASE_ASSET_NAME}`);
     return;
   }
 
   console.log("Committing and tagging...");
   execSync(`git add "${PACKAGE_JSON}"`, { cwd: ROOT, stdio: "inherit" });
-  execSync(`git commit -m "v${newVersion}"`, { cwd: ROOT, stdio: "inherit" });
-  execSync(`git tag v${newVersion}`, { cwd: ROOT, stdio: "inherit" });
-  execSync(`git push --tags`, { cwd: ROOT, stdio: "inherit" });
-  console.log(`Git: pushed v${newVersion}`);
+
+  const hasStagedChanges = (() => {
+    try {
+      execSync("git diff --cached --quiet", { cwd: ROOT });
+      return false; // exit 0 means no staged changes
+    } catch {
+      return true; // non-zero exit means there IS something staged
+    }
+  })();
+  if (hasStagedChanges) {
+    execSync(`git commit -m "v${newVersion}"`, { cwd: ROOT, stdio: "inherit" });
+  } else {
+    console.log("Nothing staged to commit — skipping git commit.");
+  }
+
+  const tagExists = (() => {
+    try {
+      execSync(`git rev-parse "v${newVersion}"`, { cwd: ROOT, stdio: "ignore" });
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  if (!tagExists) {
+    execSync(`git tag v${newVersion}`, { cwd: ROOT, stdio: "inherit" });
+  } else {
+    console.log(`Tag v${newVersion} already exists — skipping git tag.`);
+  }
+
+  const currentBranch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: ROOT }).toString().trim();
+  execSync(`git push origin ${currentBranch} --tags`, { cwd: ROOT, stdio: "inherit" });
+  console.log(`Git: pushed ${currentBranch} and v${newVersion}`);
 
   const token = process.env.GITHUB_TOKEN;
   if (!token) {

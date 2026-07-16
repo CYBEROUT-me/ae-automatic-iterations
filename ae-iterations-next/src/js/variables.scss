@@ -1,13 +1,45 @@
-$darkest: #222222;
-$darker: #333333;
-$dark: #444444;
-$font: #bbbbbb;
-$highlight: #aaaaaa;
+// Surfaces
+$bg: #1b1a24;
+$surface: #252430;
+$surface-hover: #302f3d;
+$inset: #14131b;
+$border: #2c2b38;
 
-$primary: #88715a;
-$secondary: #4a3928;
+// Text
+$text: #c9c7d4;
+$text-dim: #83809a;
+$text-strong: #f3f2f7;
 
-$active: #20639b;
+// Accent
+$accent: #7b5fd8;
+$accent-hover: #8c72e0;
+$accent-glow: rgba(123, 95, 216, 0.4);
+
+// Status (unchanged — still enough contrast on the new background)
 $changed: #3caea3;
 $warning: #f6d55c;
 $error: #ed553b;
+
+// Retired by Task 3 alongside .preview-btn — the only remaining consumer.
+$primary: #88715a;
+$secondary: #4a3928;
+
+// Type scale
+$text-xs: 10px;
+$text-sm: 11px;
+$text-md: 12.5px;
+
+// Spacing scale
+$space-1: 2px;
+$space-2: 4px;
+$space-3: 6px;
+$space-4: 8px;
+$space-5: 12px;
+
+// Radii
+$radius-sm: 4px;
+$radius-md: 6px;
+
+// Motion
+$transition-fast: 100ms ease;
+$transition-press: 80ms ease;

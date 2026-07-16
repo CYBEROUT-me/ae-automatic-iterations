@@ -4,8 +4,8 @@ html,
 body,
 #app {
   min-height: 100vh;
-  background-color: $darkest;
-  color: $font;
+  background-color: $bg;
+  color: $text;
 }
 
 #app {
@@ -18,28 +18,28 @@ body,
 
 #mode-tabs {
   display: flex;
-  border-bottom: 1px solid $dark;
+  border-bottom: 1px solid $border;
 }
 
 .tab-btn {
   flex: 1;
   border-radius: 0 !important;
   background-color: transparent !important;
-  color: $highlight !important;
+  color: $text-dim !important;
   padding: 0.6rem 0.5rem !important;
   border-bottom: 2px solid transparent;
 
   &:hover:not(:disabled) {
-    background-color: $darker !important;
+    background-color: $surface-hover !important;
   }
 
   &.active {
     color: white !important;
-    border-bottom-color: $active;
+    border-bottom-color: $accent;
   }
 
   &:disabled {
-    color: $dark !important;
+    color: $text-dim !important;
     cursor: not-allowed;
   }
 }
@@ -55,7 +55,7 @@ body,
 }
 
 #layer-info {
-  color: $highlight;
+  color: $text-dim;
   font-size: 0.78rem;
   word-break: break-word;
 }
@@ -96,11 +96,11 @@ body,
   flex-direction: column;
   gap: 0.35rem;
   padding-top: 0.5rem;
-  border-top: 1px solid $dark;
+  border-top: 1px solid $border;
 }
 
 .layer-group-label {
-  color: $highlight;
+  color: $text-dim;
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -119,8 +119,8 @@ body,
   line-height: 1.3rem;
   text-align: center;
   border-radius: 50%;
-  background-color: $dark;
-  color: $font;
+  background-color: $surface;
+  color: $text;
   font-size: 0.7rem;
 }
 
@@ -149,10 +149,10 @@ body,
 }
 
 .video-toggle {
-  background-color: $darker !important;
+  background-color: $surface !important;
 
   &.active {
-    background-color: $active !important;
+    background-color: $accent !important;
   }
 }
 
@@ -177,19 +177,19 @@ body,
 
 input[type="text"],
 input[type="number"] {
-  background-color: $darker;
-  border: 1px solid $dark;
+  background-color: $surface;
+  border: 1px solid $border;
   border-radius: 3px;
-  color: $font;
+  color: $text;
   padding: 0.15rem 0.35rem;
 
   &:focus {
     outline: none;
-    border-color: $active;
+    border-color: $accent;
   }
 
   &::placeholder {
-    color: $dark;
+    color: $text-dim;
   }
 
   &:disabled {
@@ -199,7 +199,7 @@ input[type="number"] {
 
 input[type="color"] {
   background: none;
-  border: 1px solid $dark;
+  border: 1px solid $border;
   border-radius: 3px;
   cursor: pointer;
 
@@ -210,7 +210,7 @@ input[type="color"] {
 }
 
 input[type="checkbox"] {
-  accent-color: $active;
+  accent-color: $accent;
 }
 
 // ── Run section / status ─────────────────────────────────────────────────
@@ -222,20 +222,20 @@ input[type="checkbox"] {
   gap: 0.4rem;
   margin-top: 0.5rem;
   padding-top: 0.6rem;
-  border-top: 1px solid $dark;
+  border-top: 1px solid $border;
   align-self: stretch;
   width: 100%;
 }
 
 #btn-run {
-  background-color: $active !important;
+  background-color: $accent !important;
   font-size: 0.85rem !important;
   padding: 0.5rem 0.6rem !important;
   font-weight: 600;
 
   &:disabled {
-    background-color: $darker !important;
-    color: $dark !important;
+    background-color: $surface !important;
+    color: $text-dim !important;
     cursor: not-allowed;
   }
 }
@@ -249,8 +249,8 @@ input[type="checkbox"] {
 
   &.status-idle,
   &.status-running {
-    background-color: $darker;
-    color: $font;
+    background-color: $surface;
+    color: $text;
   }
 
   &.status-done {
@@ -274,7 +274,7 @@ input[type="checkbox"] {
 #emoji-section {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid $dark;
+  border-top: 1px solid $border;
 }
 
 .emoji-enable-label {
@@ -301,7 +301,7 @@ input[type="checkbox"] {
     align-items: center;
     gap: 0.2rem;
     font-size: 0.7rem;
-    color: $highlight;
+    color: $text-dim;
   }
 
   input[type="number"] {
@@ -323,28 +323,28 @@ input[type="checkbox"] {
 
 .emoji-iter-num {
   width: 1.2rem;
-  color: $highlight;
+  color: $text-dim;
   font-size: 0.7rem;
 }
 
 .emoji-iter-thumb {
   width: 1.8rem;
   height: 1.8rem;
-  border: 1px solid $dark;
+  border: 1px solid $border;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: $highlight;
+  color: $text-dim;
   flex-shrink: 0;
 
   &:hover {
-    border-color: $active;
+    border-color: $accent;
   }
 
   &.has-emoji {
-    border-color: rgba($active, 0.6);
+    border-color: rgba($accent, 0.6);
   }
 
   img {
@@ -357,7 +357,7 @@ input[type="checkbox"] {
 
 .emoji-iter-name {
   font-size: 0.7rem;
-  color: $font;
+  color: $text;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -370,7 +370,7 @@ input[type="checkbox"] {
   max-height: 8rem;
   overflow-y: auto;
   padding: 0.3rem;
-  background-color: $darker;
+  background-color: $surface;
   border-radius: 4px;
   margin: 0.2rem 0;
 }
@@ -385,7 +385,7 @@ input[type="checkbox"] {
   justify-content: center;
 
   &:hover {
-    border-color: rgba($active, 0.5);
+    border-color: rgba($accent, 0.5);
   }
 
   img {
@@ -398,13 +398,13 @@ input[type="checkbox"] {
 
 .emoji-empty {
   font-size: 0.7rem;
-  color: $highlight;
+  color: $text-dim;
   padding: 0.3rem;
 }
 
 .emoji-preview-status {
   font-size: 0.7rem;
-  color: $highlight;
+  color: $text-dim;
 }
 
 // ── Font picker ───────────────────────────────────────────────────────────
@@ -422,8 +422,8 @@ input[type="checkbox"] {
   z-index: 10;
   max-height: 8rem;
   overflow-y: auto;
-  background-color: $darker;
-  border: 1px solid $dark;
+  background-color: $surface;
+  border: 1px solid $border;
   border-radius: 4px;
   margin-top: 2px;
 }
@@ -431,18 +431,18 @@ input[type="checkbox"] {
 .font-option {
   padding: 0.25rem 0.4rem;
   font-size: 0.7rem;
-  color: $font;
+  color: $text;
   cursor: pointer;
 
   &:hover {
-    background-color: rgba($active, 0.15);
+    background-color: rgba($accent, 0.15);
   }
 }
 
 .font-empty {
   padding: 0.3rem 0.4rem;
   font-size: 0.7rem;
-  color: $highlight;
+  color: $text-dim;
 }
 
 // ── Changelog ─────────────────────────────────────────────────────────────
@@ -457,12 +457,12 @@ input[type="checkbox"] {
   padding: 0 !important;
   border-radius: 50% !important;
   font-size: 0.85rem !important;
-  background-color: $darker !important;
-  color: $highlight !important;
+  background-color: $surface !important;
+  color: $text-dim !important;
 
   &.open,
   &:hover {
-    background-color: $active !important;
+    background-color: $accent !important;
     color: white !important;
   }
 }
@@ -472,7 +472,7 @@ input[type="checkbox"] {
   max-height: 12rem;
   overflow-y: auto;
   padding: 0.4rem;
-  background-color: $darker;
+  background-color: $surface;
   border-radius: 4px;
 }
 
@@ -492,20 +492,20 @@ input[type="checkbox"] {
 
 .cl-version {
   font-weight: 600;
-  color: $font;
+  color: $text;
   font-size: 0.75rem;
 }
 
 .cl-date {
   font-size: 0.65rem;
-  color: $highlight;
+  color: $text-dim;
 }
 
 .cl-changes {
   margin: 0.2rem 0 0 0.9rem;
   padding: 0;
   font-size: 0.7rem;
-  color: $font;
+  color: $text;
 
   li {
     margin-bottom: 0.15rem;
@@ -521,7 +521,7 @@ input[type="checkbox"] {
 #btn-presets {
   &.open,
   &:hover {
-    background-color: $active !important;
+    background-color: $accent !important;
     color: white !important;
   }
 }
@@ -550,13 +550,13 @@ input[type="checkbox"] {
   max-height: 12rem;
   overflow-y: auto;
   padding: 0.4rem;
-  background-color: $darker;
+  background-color: $surface;
   border-radius: 4px;
 }
 
 .preset-group-label {
   font-size: 0.65rem;
-  color: $highlight;
+  color: $text-dim;
   text-transform: uppercase;
   margin: 0.4rem 0 0.2rem 0;
 
@@ -587,7 +587,7 @@ input[type="checkbox"] {
 .preset-name {
   flex: 1;
   font-size: 0.7rem;
-  color: $font;
+  color: $text;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

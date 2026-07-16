@@ -35,7 +35,7 @@ code {
 
 button {
   font-size: 0.8rem;
-  background-color: $darker;
+  background-color: $surface;
   padding: 0.2rem 0.5rem;
   text-align: center;
   vertical-align: middle;
@@ -47,15 +47,15 @@ button {
 }
 
 button:hover {
-  background-color: $active;
+  background-color: $accent;
 }
 
 button:active {
-  background-color: $active;
+  background-color: $accent;
 }
 
 label {
-  color: $font;
+  color: $text;
 }
 
 .button-group {
@@ -101,15 +101,15 @@ label {
 }
 
 ::-webkit-scrollbar-track {
-  background: $darkest;
+  background: $bg;
   padding: 2.25em 1.6875em;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: $darker;
+  background: $surface;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: $dark;
+  background: $surface-hover;
 }

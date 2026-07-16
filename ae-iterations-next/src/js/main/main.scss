@@ -60,7 +60,6 @@ body,
   word-break: break-word;
 }
 
-#count-label,
 #same-all-section {
   display: flex;
   align-items: center;
@@ -346,14 +345,15 @@ input[type="checkbox"] {
 .emoji-grid-item {
   aspect-ratio: 1;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: $radius-sm;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: border-color $transition-fast;
 
   &:hover {
-    border-color: rgba($accent, 0.5);
+    border-color: $accent;
   }
 
   img {
@@ -504,8 +504,8 @@ input[type="checkbox"] {
 .preset-item {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.3rem;
+  gap: $space-3;
+  padding: $space-2;
 }
 
 .preset-swatches {
@@ -527,13 +527,6 @@ input[type="checkbox"] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.preset-apply,
-.preset-delete {
-  flex-shrink: 0;
-  font-size: 0.65rem !important;
-  padding: 0.15rem 0.4rem !important;
 }
 
 // ── Compact hover-row (iteration rows, preset list rows) ──────────────────

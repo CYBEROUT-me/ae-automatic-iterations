@@ -36,7 +36,7 @@ describe("PresetPanel", () => {
 
   it("applies a color preset's hex values to row 0, clamped to the current count", () => {
     render(<PresetPanel />);
-    fireEvent.click(screen.getAllByText("Apply")[0]);
+    fireEvent.click(screen.getAllByTitle("Apply preset")[0]);
     const values = useAppStore.getState().values["1"];
     expect(values).toHaveLength(3);
     expect(values[0].color).toEqual(hexToRgb("#0057B7"));
@@ -48,7 +48,7 @@ describe("PresetPanel", () => {
     useAppStore.getState().setValue("1", 0, { color: hexToRgb("#123456") });
     render(<PresetPanel />);
     fireEvent.change(screen.getByPlaceholderText("Preset name"), { target: { value: "My Preset" } });
-    fireEvent.click(screen.getByText("Save Preset"));
+    fireEvent.click(screen.getByTitle("Save preset"));
     expect(userPresetsLib.saveUserPresets).toHaveBeenCalledWith([
       expect.objectContaining({ name: "My Preset", colors: ["#123456", "#FF0000", "#FF0000"] }),
     ]);

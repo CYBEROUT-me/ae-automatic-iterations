@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Save, Play, Trash2 } from "lucide-react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { hexToRgb, rgbToHex } from "../lib/color";
@@ -109,19 +110,19 @@ export function PresetPanel() {
   };
 
   const renderItem = (preset: Preset, isUser: boolean, index: number) => (
-    <div key={(isUser ? "user-" : "lib-") + preset.name + index} className="preset-item">
+    <div key={(isUser ? "user-" : "lib-") + preset.name + index} className="preset-item hover-row">
       <div className="preset-swatches">
         {Array.from({ length: swatchCount(preset) }, (_, i) => (
           <div key={i} className="preset-swatch" style={{ background: swatchColor(preset, i) }} />
         ))}
       </div>
       <span className="preset-name">{preset.name}</span>
-      <button className="preset-apply" onClick={() => applyPreset(preset)}>
-        Apply
+      <button className="row-action" title="Apply preset" onClick={() => applyPreset(preset)}>
+        <Play />
       </button>
       {isUser && (
-        <button className="preset-delete" title="Delete preset" onClick={() => deletePreset(index)}>
-          ×
+        <button className="row-action" title="Delete preset" onClick={() => deletePreset(index)}>
+          <Trash2 />
         </button>
       )}
     </div>
@@ -137,8 +138,8 @@ export function PresetPanel() {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <button id="btn-save-preset" onClick={savePreset}>
-          Save Preset
+        <button id="btn-save-preset" title="Save preset" onClick={savePreset}>
+          <Save />
         </button>
       </div>
       {status && <div className="preset-status">{status}</div>}

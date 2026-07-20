@@ -110,21 +110,23 @@ export function PresetPanel() {
   };
 
   const renderItem = (preset: Preset, isUser: boolean, index: number) => (
-    <div key={(isUser ? "user-" : "lib-") + preset.name + index} className="preset-item hover-row">
-      <div className="preset-swatches">
+    <div key={(isUser ? "user-" : "lib-") + preset.name + index} className="preset-card">
+      <div className="preset-card-swatches">
         {Array.from({ length: swatchCount(preset) }, (_, i) => (
           <div key={i} className="preset-swatch" style={{ background: swatchColor(preset, i) }} />
         ))}
       </div>
-      <span className="preset-name">{preset.name}</span>
-      <button className="row-action" title="Apply preset" onClick={() => applyPreset(preset)}>
-        <Play />
-      </button>
-      {isUser && (
-        <button className="row-action" title="Delete preset" onClick={() => deletePreset(index)}>
-          <Trash2 />
+      <div className="preset-card-name">{preset.name}</div>
+      <div className="preset-card-actions">
+        <button className="row-action" title="Apply preset" onClick={() => applyPreset(preset)}>
+          <Play />
         </button>
-      )}
+        {isUser && (
+          <button className="row-action" title="Delete preset" onClick={() => deletePreset(index)}>
+            <Trash2 />
+          </button>
+        )}
+      </div>
     </div>
   );
 
@@ -144,10 +146,18 @@ export function PresetPanel() {
       </div>
       {status && <div className="preset-status">{status}</div>}
       <div id="preset-list">
-        {savedForKind.length > 0 && <div className="preset-group-label">Saved</div>}
-        {savedForKind.map((preset) => renderItem(preset, true, userPresets.indexOf(preset)))}
+        {savedForKind.length > 0 && (
+          <>
+            <div className="preset-group-label">Saved</div>
+            <div className="preset-grid">
+              {savedForKind.map((preset) => renderItem(preset, true, userPresets.indexOf(preset)))}
+            </div>
+          </>
+        )}
         <div className="preset-group-label">Library</div>
-        {libraryForKind.map((preset, i) => renderItem(preset, false, i))}
+        <div className="preset-grid">
+          {libraryForKind.map((preset, i) => renderItem(preset, false, i))}
+        </div>
       </div>
     </div>
   );

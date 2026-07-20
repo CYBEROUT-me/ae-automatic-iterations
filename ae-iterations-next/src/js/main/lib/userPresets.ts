@@ -25,20 +25,32 @@ export interface VideoPreset {
 
 export type Preset = ColorPreset | VideoPreset;
 
+// Guarded the same way fonts.ts's fontDirectories() is: outside CEP's real
+// Node integration (e.g. Vite's dev server, which has no Node runtime
+// backing it), `path`/`os` resolve to inert stubs whose namespaces/methods
+// aren't implemented, so calling into them throws. loadUserPresets()'s
+// default parameter calls this function directly (unguarded) from
+// PresetPanel's initial state -- an uncaught throw there previously
+// unmounted the entire panel the moment the Presets toggle was opened.
 export function userPresetsPath(
   platform: NodeJS.Platform = process.platform,
   env: NodeJS.ProcessEnv = process.env,
-  homedir: string = os.homedir()
+  homedir: string = ""
 ): string {
-  if (platform === "win32") {
-    return path.win32.join(env.APPDATA || homedir, "AE Iterations", "user-presets.json");
+  try {
+    const resolvedHomedir = homedir || os.homedir();
+    if (platform === "win32") {
+      return path.win32.join(env.APPDATA || resolvedHomedir, "AE Iterations", "user-presets.json");
+    }
+    return path.posix.join(resolvedHomedir, "Library", "Application Support", "AE Iterations", "user-presets.json");
+  } catch (e) {
+    return "";
   }
-  return path.posix.join(homedir, "Library", "Application Support", "AE Iterations", "user-presets.json");
 }
 
 export function loadUserPresets(filePath: string = userPresetsPath()): Preset[] {
   try {
-    if (!fs.existsSync(filePath)) return [];
+    if (!filePath || !fs.existsSync(filePath)) return [];
     return JSON.parse(fs.readFileSync(filePath, "utf8"));
   } catch (e) {
     return [];
@@ -46,6 +58,7 @@ export function loadUserPresets(filePath: string = userPresetsPath()): Preset[] 
 }
 
 export function saveUserPresets(presets: Preset[], filePath: string = userPresetsPath()): void {
+  if (!filePath) return;
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(presets, null, 2), "utf8");

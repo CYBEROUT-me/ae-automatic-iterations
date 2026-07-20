@@ -16,23 +16,34 @@ export function fontDirectories(
   platform: NodeJS.Platform = process.platform,
   env: NodeJS.ProcessEnv = process.env
 ): string[] {
-  // Use path.win32/path.posix explicitly (not the bare path.join, which
-  // aliases to whichever style matches the *host* OS actually running this
-  // code) so the joined separators match the requested `platform` even when
-  // it differs from the real host platform -- e.g. a test on macOS calling
-  // fontDirectories("win32", ...) must still get backslash-joined paths.
-  if (platform === "darwin") {
-    return ["/System/Library/Fonts", "/Library/Fonts", path.posix.join(os.homedir(), "Library", "Fonts")];
-  }
-  if (platform === "win32") {
-    const windir = env.WINDIR || "C:\\Windows";
-    const dirs = [path.win32.join(windir, "Fonts")];
-    if (env.LOCALAPPDATA) {
-      dirs.push(path.win32.join(env.LOCALAPPDATA, "Microsoft", "Windows", "Fonts"));
+  // Guards the same way listFontFiles()/extractPostscriptNames() below
+  // already do: outside CEP's real Node integration (e.g. Vite's dev
+  // server, which has no Node runtime backing it), `path`/`os` resolve to
+  // inert stubs whose namespaces/methods aren't implemented, so calling
+  // into them throws. loadFonts()'s default parameter calls this function
+  // directly (unguarded) from a React effect with no error boundary above
+  // it -- an uncaught throw there previously unmounted the entire panel.
+  try {
+    // Use path.win32/path.posix explicitly (not the bare path.join, which
+    // aliases to whichever style matches the *host* OS actually running this
+    // code) so the joined separators match the requested `platform` even when
+    // it differs from the real host platform -- e.g. a test on macOS calling
+    // fontDirectories("win32", ...) must still get backslash-joined paths.
+    if (platform === "darwin") {
+      return ["/System/Library/Fonts", "/Library/Fonts", path.posix.join(os.homedir(), "Library", "Fonts")];
     }
-    return dirs;
+    if (platform === "win32") {
+      const windir = env.WINDIR || "C:\\Windows";
+      const dirs = [path.win32.join(windir, "Fonts")];
+      if (env.LOCALAPPDATA) {
+        dirs.push(path.win32.join(env.LOCALAPPDATA, "Microsoft", "Windows", "Fonts"));
+      }
+      return dirs;
+    }
+    return [];
+  } catch (e) {
+    return [];
   }
-  return [];
 }
 
 function listFontFiles(dir: string): string[] {

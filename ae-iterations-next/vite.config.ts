@@ -80,14 +80,68 @@ const copyEmojisPlugin = (): Plugin => ({
 });
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     cep(config),
     copyEmojisPlugin(),
   ],
+  // Dev-server only. userPresets.ts and fonts.ts read `process.platform`/
+  // `process.env` as default-parameter values (so callers can override them
+  // in tests) so they resolve correctly per-OS when this project's code
+  // actually runs inside CEP's real Node integration (--enable-nodejs). Vite's
+  // dev server has no Node runtime backing it at all, so the bare identifier
+  // `process` doesn't exist there -- calling fontDirectories()/
+  // userPresetsPath() with no args (their real call sites: LayerInfoPanel's
+  // mount effect calls loadFonts() -> fontDirectories() unconditionally, and
+  // PresetPanel's initial state calls loadUserPresets() -> userPresetsPath())
+  // throws `process is not defined`. loadFonts() throws from inside a
+  // useEffect with no error boundary above it, and React 19's default
+  // recovery for an uncaught passive-effect error with no boundary is to
+  // unmount the whole tree -- which is why the panel painted nothing at all,
+  // even though the initial render before the effect ran had actually
+  // succeeded (confirmed by manually re-rendering LayerInfoPanel in isolation
+  // with an onUncaughtError hook wired up, which caught this exact error).
+  // `define` performs literal text substitution at transform time, so these
+  // two expressions never reach the browser as the bare identifier `process`
+  // -- scoped to `command === "serve"` because the production build must
+  // keep detecting the real OS dynamically via the genuine Node `process`
+  // global CEP's Node integration provides; baking in the *build machine's*
+  // platform would silently break Windows users.
+  define:
+    command === "serve"
+      ? { "process.env": {}, "process.platform": JSON.stringify(process.platform) }
+      : {},
   resolve: {
-    alias: [{ find: "@esTypes", replacement: path.resolve(__dirname, "src") }],
+    alias: [
+      { find: "@esTypes", replacement: path.resolve(__dirname, "src") },
+      // Dev-server only. `node_modules/path` is a real, installed npm
+      // package (a transitive dep of babel-plugin-transform-scss, unrelated
+      // to Node's builtin `path` module) that shadows the bare `"path"`
+      // specifier during Vite's dev-time dependency resolution -- so instead
+      // of falling through to Vite's automatic Node-builtin browser-external
+      // stub (the same one `fs`/`os` already get, since no `node_modules/fs`
+      // or `node_modules/os` package exists to shadow them), Vite finds and
+      // pre-bundles that literal package. Its own code references the Node
+      // global `process` unconditionally, which doesn't exist in the panel's
+      // plain browser-style dev-server context, so evaluating it throws
+      // `ReferenceError: process is not defined` -- and since userPresets.ts
+      // imports `path` at module scope, that one throw aborts the entire
+      // module graph before React ever renders (confirmed via the panel
+      // going completely blank in both a plain browser and inside AE
+      // itself, with zero console output, and reproduced directly by
+      // manually importing index-react.tsx from a fresh script tag).
+      // Aliasing to the `node:` protocol form is unambiguous -- an npm
+      // package can never claim that specifier -- so it forces the same
+      // automatic external-stub treatment `fs`/`os` already get. Scoped to
+      // `command === "serve"` only: the production build already handles
+      // `path` correctly via `rollupOptions.external` below (a real,
+      // working require("path") resolved by CEP's Node integration at
+      // runtime), and aliasing the bare specifier globally would make that
+      // external list's `"path"` entry stop matching the (now-aliased)
+      // import specifier during the build.
+      ...(command === "serve" ? [{ find: /^path$/, replacement: "node:path" }] : []),
+    ],
   },
   root,
   // No default `public/` dir exists under `root` (src/js), so leaving this
@@ -140,7 +194,7 @@ export default defineConfig({
     target: "chrome74",
     outDir,
   },
-});
+}));
 
 // rollup es3 build
 const outPathExtendscript = path.join("dist", cepDist, "jsx", "index.js");

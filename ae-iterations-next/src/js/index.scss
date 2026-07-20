@@ -35,15 +35,17 @@ code {
 
 button {
   font-size: 0.8rem;
-  background-color: $surface;
-  padding: 0.2rem 0.5rem;
+  background-color: $surface-raised;
+  padding: 0.3rem 0.6rem;
   text-align: center;
   vertical-align: middle;
-  border-radius: 5px;
-  color: white;
-  border: none;
+  border-radius: $radius-sm;
+  color: $text;
+  border: 1px solid $border-strong;
+  box-shadow: $shadow-sm;
   outline: none;
   user-select: none;
+  cursor: pointer;
 }
 
 button:hover {

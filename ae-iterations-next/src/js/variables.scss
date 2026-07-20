@@ -1,41 +1,50 @@
-// Surfaces
-$bg: #1b1a24;
-$surface: #252430;
-$surface-hover: #302f3d;
-$inset: #14131b;
-$border: #2c2b38;
+// Surfaces — neutral gray, not violet-tinted (v1's mistake)
+$bg: #18181b;
+$surface: #232326;
+$surface-hover: #2a2a2e;
+$surface-raised: #2e2e33;   // icon-button resting background — lighter than $surface, reads as "raised"
+$inset: #14141a;            // input/well background — darker than $surface, reads as "recessed"
+$border: #34343a;
+$border-strong: #3f3f46;    // icon-button border — more visible, buttons need to read as raised
 
 // Text
-$text: #c9c7d4;
-$text-dim: #83809a;
-$text-strong: #f3f2f7;
+$text: #d4d4d8;
+$text-dim: #a1a1aa;
+$text-faint: #71717a;       // field labels, group labels, meta text
+$text-strong: #fafafa;
 
-// Accent
-$accent: #7b5fd8;
-$accent-hover: #8c72e0;
-$accent-glow: rgba(123, 95, 216, 0.4);
+// Accent — same hue as v1, color was never the complaint
+$accent: #6d3fe0;
+$accent-hover: #7c5cf0;
+$accent-glow: rgba(109, 63, 224, 0.5);
 
-// Status (unchanged — still enough contrast on the new background)
+// Semantic
+$switch-on: #34c759;        // iOS system green — the one real on/off switch
 $changed: #3caea3;
 $warning: #f6d55c;
 $error: #ed553b;
 
-// Type scale
+// Elevation — new. v1 had zero shadows; this is the core fix for "no visibility that it can be pressed"
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);   // icon buttons, inputs
+$shadow-md: 0 1px 3px rgba(0, 0, 0, 0.35);   // cards/sections
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);   // dropdowns, floating elements
+
+// Type scale — unchanged
 $text-xs: 10px;
 $text-sm: 11px;
 $text-md: 12.5px;
 
-// Spacing scale
+// Spacing — unchanged
 $space-1: 2px;
 $space-2: 4px;
 $space-3: 6px;
 $space-4: 8px;
 $space-5: 12px;
 
-// Radii
-$radius-sm: 4px;
-$radius-md: 6px;
+// Radii — grow slightly (references favor rounder corners)
+$radius-sm: 6px;
+$radius-md: 8px;
 
-// Motion
+// Motion — unchanged
 $transition-fast: 100ms ease;
 $transition-press: 80ms ease;

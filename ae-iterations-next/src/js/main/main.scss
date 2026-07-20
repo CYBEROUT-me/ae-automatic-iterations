@@ -18,24 +18,26 @@ body,
 
 #mode-tabs {
   display: flex;
-  border-bottom: 1px solid $border;
+  gap: 3px;
+  padding: $space-3 $space-4;
 }
 
 .tab-btn {
   flex: 1;
-  border-radius: 0 !important;
+  border-radius: $radius-sm !important;
   background-color: transparent !important;
   color: $text-dim !important;
-  padding: 0.6rem 0.5rem !important;
-  border-bottom: 2px solid transparent;
+  padding: 0.4rem 0.5rem !important;
+  font-weight: 500;
 
   &:hover:not(:disabled) {
     background-color: $surface-hover !important;
   }
 
   &.active {
+    background-color: $surface-raised !important;
     color: white !important;
-    border-bottom-color: $accent;
+    box-shadow: $shadow-sm;
   }
 
   &:disabled {
@@ -129,12 +131,14 @@ body,
 }
 
 .video-toggle {
-  background-color: $surface !important;
+  background-color: $surface-raised !important;
   color: $text !important;
+  border: 1px solid $border-strong !important;
+  box-shadow: $shadow-sm;
   display: inline-flex !important;
   align-items: center;
   gap: $space-1;
-  transition: background-color $transition-fast;
+  transition: background-color $transition-fast, box-shadow $transition-fast;
 
   svg {
     width: 12px;
@@ -143,10 +147,12 @@ body,
 
   &:hover:not(:disabled) {
     background-color: $surface-hover !important;
+    box-shadow: $shadow-md;
   }
 
   &.active {
     background-color: $accent !important;
+    border-color: $accent-hover !important;
     color: white !important;
   }
 }
@@ -179,9 +185,9 @@ body,
 
 input[type="text"],
 input[type="number"] {
-  background-color: $surface;
+  background-color: $inset;
   border: 1px solid $border;
-  border-radius: 3px;
+  border-radius: $radius-sm;
   color: $text;
   padding: 0.15rem 0.35rem;
 
@@ -202,7 +208,7 @@ input[type="number"] {
 input[type="color"] {
   background: none;
   border: 1px solid $border;
-  border-radius: 3px;
+  border-radius: $radius-sm;
   cursor: pointer;
 
   &:disabled {
@@ -451,6 +457,7 @@ input[type="checkbox"] {
   background-color: $surface;
   border: 1px solid $border;
   border-radius: $radius-sm;
+  box-shadow: $shadow-lg;
   margin-top: 2px;
 }
 
@@ -640,9 +647,10 @@ input[type="checkbox"] {
   width: 22px;
   height: 22px;
   border-radius: $radius-sm;
-  background-color: $surface;
+  background-color: $surface-raised;
   color: $text-dim;
-  border: none;
+  border: 1px solid $border-strong;
+  box-shadow: $shadow-sm;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -650,7 +658,7 @@ input[type="checkbox"] {
   flex-shrink: 0;
   padding: 0;
   position: relative;
-  transition: background-color $transition-fast, color $transition-fast, transform $transition-press;
+  transition: background-color $transition-fast, color $transition-fast, transform $transition-press, box-shadow $transition-fast;
 
   svg {
     width: 13px;
@@ -660,14 +668,17 @@ input[type="checkbox"] {
   &:hover:not(:disabled) {
     background-color: $surface-hover;
     color: $text-strong;
+    box-shadow: $shadow-md;
   }
 
   &:active:not(:disabled) {
     transform: scale(0.92);
+    box-shadow: none;
   }
 
   &.active-state {
     background-color: $accent;
+    border-color: $accent-hover;
     color: white;
   }
 

@@ -153,7 +153,7 @@ export function LayerInfoPanel() {
       {mode === "var" && (
         <>
           <VarNamesRow />
-          <button onClick={testVarComps}>Test</button>
+          <button className="var-test-btn" onClick={testVarComps}>Test</button>
           {testLog && <pre id="var-test-log">{testLog.join("\n")}</pre>}
         </>
       )}

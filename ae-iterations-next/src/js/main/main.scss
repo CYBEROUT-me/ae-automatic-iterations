@@ -242,6 +242,11 @@ input[type="checkbox"] {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: $space-3;
+  align-self: stretch;
+}
+
+.var-test-btn {
+  align-self: stretch;
 }
 
 .var-field-label {

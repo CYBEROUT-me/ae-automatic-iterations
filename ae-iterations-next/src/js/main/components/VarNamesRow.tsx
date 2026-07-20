@@ -9,13 +9,18 @@ export function VarNamesRow() {
   return (
     <div id="var-names-row">
       {Array.from({ length: count }, (_, i) => (
-        <input
-          key={i}
-          type="text"
-          placeholder={`Name ${i + 1}`}
-          value={varNames[i] ?? ""}
-          onChange={(e) => setVarName(i, e.target.value)}
-        />
+        <div key={i} className="var-field">
+          <div className="var-field-label">
+            <span className="var-field-num">{i + 1}</span>
+            Variant name
+          </div>
+          <input
+            type="text"
+            placeholder={`Name ${i + 1}`}
+            value={varNames[i] ?? ""}
+            onChange={(e) => setVarName(i, e.target.value)}
+          />
+        </div>
       ))}
     </div>
   );

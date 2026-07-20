@@ -229,6 +229,41 @@ input[type="checkbox"] {
   accent-color: $accent;
 }
 
+// ── VAR name inputs ─────────────────────────────────────────────────────
+
+#var-names-row {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.var-field-label {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $text-xs;
+  color: $text-faint;
+  margin-bottom: $space-1;
+}
+
+.var-field-num {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: $surface-raised;
+  color: $text-dim;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.var-field input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 // ── Run section / status ─────────────────────────────────────────────────
 
 #run-section {

@@ -86,32 +86,31 @@ export default defineConfig(({ command }) => ({
     cep(config),
     copyEmojisPlugin(),
   ],
-  // Dev-server only. userPresets.ts and fonts.ts read `process.platform`/
-  // `process.env` as default-parameter values (so callers can override them
-  // in tests) so they resolve correctly per-OS when this project's code
-  // actually runs inside CEP's real Node integration (--enable-nodejs). Vite's
-  // dev server has no Node runtime backing it at all, so the bare identifier
-  // `process` doesn't exist there -- calling fontDirectories()/
-  // userPresetsPath() with no args (their real call sites: LayerInfoPanel's
-  // mount effect calls loadFonts() -> fontDirectories() unconditionally, and
-  // PresetPanel's initial state calls loadUserPresets() -> userPresetsPath())
-  // throws `process is not defined`. loadFonts() throws from inside a
-  // useEffect with no error boundary above it, and React 19's default
-  // recovery for an uncaught passive-effect error with no boundary is to
-  // unmount the whole tree -- which is why the panel painted nothing at all,
-  // even though the initial render before the effect ran had actually
-  // succeeded (confirmed by manually re-rendering LayerInfoPanel in isolation
-  // with an onUncaughtError hook wired up, which caught this exact error).
-  // `define` performs literal text substitution at transform time, so these
-  // two expressions never reach the browser as the bare identifier `process`
-  // -- scoped to `command === "serve"` because the production build must
-  // keep detecting the real OS dynamically via the genuine Node `process`
-  // global CEP's Node integration provides; baking in the *build machine's*
-  // platform would silently break Windows users.
-  define:
-    command === "serve"
-      ? { "process.env": {}, "process.platform": JSON.stringify(process.platform) }
-      : {},
+  // NOTE: deliberately no top-level `define` for `process.env`/`process.platform`
+  // here. A first attempt added one (scoped to `command === "serve"`) to stop
+  // `fontDirectories()`/`userPresetsPath()` from throwing `process is not
+  // defined` in a plain desktop browser, where no `process` global exists at
+  // all. That worked in a plain browser -- but broke the real target
+  // environment: CEP's `--enable-nodejs`/`--mixed-context` webview genuinely
+  // provides a real, non-configurable Node `process` object, and Vite's own
+  // dev-client bootstrap (`node_modules/vite/dist/client/env.mjs`, generated
+  // straight from this `define` config) does `globalThis.process.platform =
+  // <value>` to install it -- which throws `TypeError: Cannot assign to read
+  // only property 'platform' of object '#<process>'` against a REAL Node
+  // `process`, since `process.platform` is non-writable there. That uncaught
+  // exception fired before React ever mounted, which is why the panel was
+  // still fully blank inside actual After Effects even after the `path` alias
+  // fix below and the try/catch guards in fonts.ts/userPresets.ts were both
+  // in place (confirmed directly: connected Chrome DevTools to the real AE
+  // panel via its CEP remote-debug port -- `.debug` file already declares
+  // port 8860 -- reloaded it, and captured this exact exception firing 4
+  // times during that one load). Removed entirely: inside CEP, `process`
+  // already works natively, so fontDirectories()/userPresetsPath() need no
+  // shim there at all; outside CEP (a plain browser), the try/catch guards
+  // already added to both functions catch the resulting `ReferenceError` and
+  // return a safe empty default instead of crashing -- sufficient for a
+  // convenience preview, and the only environment that actually matters
+  // (real CEP) was never broken by that `ReferenceError` in the first place.
   resolve: {
     alias: [
       { find: "@esTypes", replacement: path.resolve(__dirname, "src") },

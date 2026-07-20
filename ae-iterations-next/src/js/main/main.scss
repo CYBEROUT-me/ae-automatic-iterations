@@ -89,7 +89,15 @@ body,
   display: flex;
   align-items: center;
   gap: $space-3;
-  padding: $space-2;
+  padding: $space-2 $space-3;
+  background-color: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  margin-bottom: $space-2;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .iter-num {
@@ -599,10 +607,6 @@ input[type="checkbox"] {
   &:hover {
     background-color: $surface-hover;
   }
-
-  &:hover .row-action {
-    opacity: 1;
-  }
 }
 
 .row-action {
@@ -616,10 +620,9 @@ input[type="checkbox"] {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0;
   flex-shrink: 0;
   padding: 0;
-  transition: opacity $transition-fast, color $transition-fast, background-color $transition-fast;
+  transition: color $transition-fast, background-color $transition-fast;
 
   svg {
     width: 10px;

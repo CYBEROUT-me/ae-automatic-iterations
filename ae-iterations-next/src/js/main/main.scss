@@ -688,6 +688,101 @@ input[type="checkbox"] {
   }
 }
 
+// ── Settings card (Emoji switch, Presets disclosure) ──────────────────────
+
+.settings-card {
+  background-color: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  padding: $space-4;
+  margin: 0 $space-4 $space-4;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-2 0;
+}
+
+.settings-row-label {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  color: $text;
+  font-size: $text-sm;
+  font-weight: 500;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    color: $text-dim;
+  }
+}
+
+.settings-divider {
+  border-top: 1px solid $border;
+  margin: $space-2 0;
+}
+
+.settings-switch {
+  width: 36px;
+  height: 21px;
+  border-radius: 11px;
+  background-color: $border-strong;
+  border: none;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color $transition-fast;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: $shadow-sm;
+    transition: left $transition-fast;
+  }
+
+  &.on {
+    background-color: $switch-on;
+
+    &::after {
+      left: 17px;
+    }
+  }
+}
+
+.settings-disclosure {
+  cursor: pointer;
+  border-radius: $radius-sm;
+  margin: 0 (-$space-2);
+  padding: $space-2;
+
+  &:hover {
+    background-color: $surface-hover;
+  }
+}
+
+.settings-chevron {
+  width: 14px;
+  height: 14px;
+  color: $text-dim;
+  transition: transform $transition-fast;
+  flex-shrink: 0;
+}
+
+.settings-disclosure.open .settings-chevron {
+  transform: rotate(90deg);
+}
+
 .toolbar-layername {
   flex: 1;
   color: $text-dim;
@@ -695,10 +790,6 @@ input[type="checkbox"] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.toolbar-spacer {
-  flex: 1;
 }
 
 .count-field {

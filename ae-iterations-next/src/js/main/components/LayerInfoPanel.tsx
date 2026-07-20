@@ -13,7 +13,7 @@ import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
-import { RefreshCw, ChevronUp, ChevronDown, Smile, Star, Info } from "lucide-react";
+import { RefreshCw, ChevronUp, ChevronDown, Smile, Star, ChevronRight, Info } from "lucide-react";
 
 export function LayerInfoPanel() {
   const {
@@ -107,34 +107,40 @@ export function LayerInfoPanel() {
           </div>
         </div>
       </div>
-      <div className="icon-toolbar">
-        {mode === "itr" && (
-          <>
+      {mode === "itr" && (
+        <div className="settings-card">
+          <div className="settings-row">
+            <div className="settings-row-label">
+              <Smile />
+              Emoji overlay
+            </div>
             <button
-              className={"icon-btn" + (emojiEnabled ? " active-state" : "")}
+              className={"settings-switch" + (emojiEnabled ? " on" : "")}
+              role="switch"
+              aria-checked={emojiEnabled}
               title="Emoji overlay"
               onClick={() => setEmojiEnabled(!emojiEnabled)}
-            >
-              <Smile />
-            </button>
-            <button
-              className={"icon-btn" + (presetsOpen ? " active-state" : "")}
-              title="Presets"
-              onClick={() => setPresetsOpen(!presetsOpen)}
-            >
+            />
+          </div>
+          <div className="settings-divider" />
+          <div
+            className={"settings-row settings-disclosure" + (presetsOpen ? " open" : "")}
+            role="button"
+            tabIndex={0}
+            title="Presets"
+            onClick={() => setPresetsOpen(!presetsOpen)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setPresetsOpen(!presetsOpen);
+            }}
+          >
+            <div className="settings-row-label">
               <Star />
-            </button>
-          </>
-        )}
-        <div className="toolbar-spacer" />
-        <button
-          className={"icon-btn" + (changelogOpen ? " active-state" : "")}
-          title="What's new"
-          onClick={() => setChangelogOpen(!changelogOpen)}
-        >
-          <Info />
-        </button>
-      </div>
+              Presets
+            </div>
+            <ChevronRight className="settings-chevron" />
+          </div>
+        </div>
+      )}
       {mode === "itr" && showSameForAll && (
         <label id="same-all-section">
           <input type="checkbox" checked={sameForAll} onChange={(e) => setSameForAll(e.target.checked)} />
@@ -165,6 +171,13 @@ export function LayerInfoPanel() {
         </div>
       ))}
       <RunButton effectiveValue={effectiveValue} />
+      <button
+        className={"icon-btn" + (changelogOpen ? " active-state" : "")}
+        title="What's new"
+        onClick={() => setChangelogOpen(!changelogOpen)}
+      >
+        <Info />
+      </button>
     </div>
   );
 }

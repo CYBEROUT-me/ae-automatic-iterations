@@ -28,4 +28,18 @@ describe("EmojiPickerGrid", () => {
     fireEvent.click(screen.getByTitle("fire.gif"));
     expect(onSelect).toHaveBeenCalledWith("/emojis/fire.gif", "fire.gif");
   });
+
+  it("highlights the item matching selectedPath, not the others", async () => {
+    render(<EmojiPickerGrid onSelect={() => {}} selectedPath="/emojis/heart.gif" />);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.getByTitle("heart.gif").className).toContain("selected");
+    expect(screen.getByTitle("fire.gif").className).not.toContain("selected");
+  });
+
+  it("highlights nothing when selectedPath is not passed", async () => {
+    render(<EmojiPickerGrid onSelect={() => {}} />);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.getByTitle("fire.gif").className).not.toContain("selected");
+    expect(screen.getByTitle("heart.gif").className).not.toContain("selected");
+  });
 });

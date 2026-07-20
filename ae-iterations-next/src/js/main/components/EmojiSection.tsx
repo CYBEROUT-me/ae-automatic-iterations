@@ -40,27 +40,30 @@ export function EmojiSection() {
 
   return (
     <div id="emoji-config">
-      <div className="emoji-pos-row">
-        <label>
-          X
-          <input type="number" value={emojiX} onChange={(e) => setEmojiX(parseInt(e.target.value, 10) || 0)} />
-        </label>
-        <label>
-          Y
-          <input type="number" value={emojiY} onChange={(e) => setEmojiY(parseInt(e.target.value, 10) || 0)} />
-        </label>
-        <label>
-          Size
+      <div className="emoji-fields-row">
+        <div className="emoji-field emoji-field-position">
+          <label className="emoji-field-label">Position</label>
+          <div className="emoji-position-group">
+            <span className="emoji-axis">X</span>
+            <input type="number" value={emojiX} onChange={(e) => setEmojiX(parseInt(e.target.value, 10) || 0)} />
+            <span className="emoji-position-sep" />
+            <span className="emoji-axis">Y</span>
+            <input type="number" value={emojiY} onChange={(e) => setEmojiY(parseInt(e.target.value, 10) || 0)} />
+          </div>
+        </div>
+        <div className="emoji-field emoji-field-size">
+          <label className="emoji-field-label">Size</label>
           <input type="number" value={emojiSize} onChange={(e) => setEmojiSize(parseInt(e.target.value, 10) || 100)} />
-        </label>
-        <label>
-          Layer
-          <input
-            type="number"
-            value={emojiLayerIndex}
-            onChange={(e) => setEmojiLayerIndex(parseInt(e.target.value, 10) || 1)}
-          />
-        </label>
+        </div>
+      </div>
+      <div className="emoji-layer-row">
+        <span className="emoji-layer-label">Attach to layer</span>
+        <input
+          className="emoji-layer-input"
+          type="number"
+          value={emojiLayerIndex}
+          onChange={(e) => setEmojiLayerIndex(parseInt(e.target.value, 10) || 1)}
+        />
       </div>
       <div id="emoji-iter-rows">
         {Array.from({ length: count }, (_, iter) => {
@@ -73,7 +76,9 @@ export function EmojiSection() {
                 {path ? <img src={"file://" + path} alt={name} /> : "+"}
               </div>
               <span className="emoji-iter-name">{name}</span>
-              {openRow === iter && <EmojiPickerGrid onSelect={(p) => selectEmoji(iter, p)} />}
+              {openRow === iter && (
+                <EmojiPickerGrid onSelect={(p) => selectEmoji(iter, p)} selectedPath={path ?? undefined} />
+              )}
             </div>
           );
         })}

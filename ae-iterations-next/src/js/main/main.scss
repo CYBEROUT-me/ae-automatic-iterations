@@ -341,22 +341,84 @@ input[type="checkbox"] {
   margin-top: 0.4rem;
 }
 
-.emoji-pos-row {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+// ── Emoji position/size/layer fields ────────────────────────────────────
 
-  label {
-    display: flex;
-    align-items: center;
-    gap: 0.2rem;
-    font-size: 0.7rem;
-    color: $text-dim;
-  }
+.emoji-fields-row {
+  display: flex;
+  gap: $space-3;
+  margin-bottom: $space-3;
+}
+
+.emoji-field-label {
+  display: block;
+  font-size: $text-xs;
+  color: $text-faint;
+  margin-bottom: $space-1;
+}
+
+.emoji-field-position {
+  flex: 1.4;
+}
+
+.emoji-field-size {
+  flex: 0.8;
+}
+
+.emoji-field-size input[type="number"] {
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.emoji-position-group {
+  display: flex;
+  align-items: center;
+  background-color: $inset;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  overflow: hidden;
 
   input[type="number"] {
-    width: 3.2rem;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: center;
+    padding: 0.15rem 0.2rem;
   }
+}
+
+.emoji-axis {
+  color: $text-faint;
+  font-size: $text-xs;
+  padding-left: $space-2;
+  flex-shrink: 0;
+}
+
+.emoji-position-sep {
+  width: 1px;
+  height: 14px;
+  background-color: $border;
+  flex-shrink: 0;
+}
+
+.emoji-layer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid $border;
+  padding-top: $space-3;
+  margin-bottom: $space-3;
+}
+
+.emoji-layer-label {
+  font-size: $text-sm;
+  color: $text-dim;
+}
+
+.emoji-layer-input {
+  width: 46px;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 #emoji-iter-rows {
@@ -368,7 +430,14 @@ input[type="checkbox"] {
 .emoji-iter-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: $space-3;
+  padding: $space-2;
+  border-radius: $radius-sm;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $surface-hover;
+  }
 }
 
 .emoji-iter-num {
@@ -378,10 +447,11 @@ input[type="checkbox"] {
 }
 
 .emoji-iter-thumb {
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 34px;
+  height: 34px;
   border: 1px solid $border;
-  border-radius: 4px;
+  border-radius: $radius-sm;
+  background-color: $inset;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -389,12 +459,9 @@ input[type="checkbox"] {
   color: $text-dim;
   flex-shrink: 0;
 
-  &:hover {
-    border-color: $accent;
-  }
-
   &.has-emoji {
-    border-color: rgba($accent, 0.6);
+    border-color: $accent;
+    box-shadow: 0 0 0 1px $accent;
   }
 
   img {
@@ -437,6 +504,11 @@ input[type="checkbox"] {
 
   &:hover {
     border-color: $accent;
+  }
+
+  &.selected {
+    border: 2px solid $accent;
+    box-shadow: 0 0 0 1px $accent;
   }
 
   img {

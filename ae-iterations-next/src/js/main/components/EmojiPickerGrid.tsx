@@ -6,7 +6,13 @@ interface EmojiFile {
   name: string;
 }
 
-export function EmojiPickerGrid({ onSelect }: { onSelect: (path: string, name: string) => void }) {
+export function EmojiPickerGrid({
+  onSelect,
+  selectedPath,
+}: {
+  onSelect: (path: string, name: string) => void;
+  selectedPath?: string;
+}) {
   const [files, setFiles] = useState<EmojiFile[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +29,12 @@ export function EmojiPickerGrid({ onSelect }: { onSelect: (path: string, name: s
   return (
     <div id="emoji-picker-grid">
       {files.map((f) => (
-        <div key={f.path} className="emoji-grid-item" title={f.name} onClick={() => onSelect(f.path, f.name)}>
+        <div
+          key={f.path}
+          className={"emoji-grid-item" + (f.path === selectedPath ? " selected" : "")}
+          title={f.name}
+          onClick={() => onSelect(f.path, f.name)}
+        >
           <img src={"file://" + f.path} alt={f.name} />
         </div>
       ))}

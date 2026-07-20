@@ -855,11 +855,18 @@ input[type="checkbox"] {
   border-radius: 11px;
   background-color: $border-strong;
   border: none;
+  box-shadow: none;
   position: relative;
   flex-shrink: 0;
   cursor: pointer;
   padding: 0;
   transition: background-color $transition-fast;
+
+  &:hover:not(.on),
+  &:active:not(.on) {
+    background-color: $border-strong;
+    box-shadow: none;
+  }
 
   &::after {
     content: "";
@@ -876,10 +883,17 @@ input[type="checkbox"] {
 
   &.on {
     background-color: $switch-on;
+    box-shadow: none;
 
     &::after {
       left: 17px;
     }
+  }
+
+  &.on:hover,
+  &.on:active {
+    background-color: $switch-on;
+    box-shadow: none;
   }
 }
 

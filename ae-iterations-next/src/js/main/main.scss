@@ -6,6 +6,10 @@ body,
   min-height: 100vh;
   background-color: $bg;
   color: $text;
+  // Native form controls (checkbox, number spinner) default to a light
+  // theme regardless of page background, which is why an unchecked
+  // checkbox renders as a stark white square against this dark UI.
+  color-scheme: dark;
 }
 
 #app {
@@ -55,7 +59,15 @@ body,
 #layer-section {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  // stretch, not flex-start: direct children fill the row's width by
+  // default. flex-start made every new section (.extra-layer-group here,
+  // .settings-card/#var-names-row/#run-section previously) start out
+  // shrink-to-fit and need its own explicit align-self:stretch opt-in —
+  // the same layout bug recurring section by section. Stretch flips the
+  // default to the safe direction; .icon-btn (fixed 22px) is the one child
+  // that must NOT grow, and it already has an explicit width that wins
+  // over stretch sizing regardless of this change.
+  align-items: stretch;
   gap: 0.6rem;
   padding: 0.75rem;
   width: 100%;
@@ -96,7 +108,7 @@ body,
   display: flex;
   align-items: center;
   gap: $space-3;
-  padding: $space-2 $space-3;
+  padding: $space-3 $space-4;
   background-color: $surface;
   border: 1px solid $border;
   border-radius: $radius-sm;
@@ -138,11 +150,18 @@ body,
   min-width: 3rem;
 }
 
+// Grid, not flex-wrap: every column but the hue group is content-sized: the
+// hue group takes 1fr, so it's the one piece that grows to fill whatever
+// width the row has, instead of everything bunching up on the left with a
+// dead gap on the right (the "empty place" complaint at any panel width
+// wider than the row's minimum content).
 .video-fields {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
   align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  column-gap: $space-4;
+  flex: 1;
+  min-width: 0;
 }
 
 .video-toggle {
@@ -150,9 +169,12 @@ body,
   color: $text !important;
   border: 1px solid $border-strong !important;
   box-shadow: $shadow-sm;
+  height: 26px;
   display: inline-flex !important;
   align-items: center;
+  justify-content: center;
   gap: $space-1;
+  padding: 0 $space-4 !important;
   transition: background-color $transition-fast, box-shadow $transition-fast;
 
   svg {
@@ -179,21 +201,109 @@ body,
   flex-shrink: 0;
 }
 
+// Grouped pill (checkbox + swatch + amount), matching the visual weight of
+// the flip/B&W toggle pills instead of floating as three loose controls.
 .tint-cell {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: $space-2;
+  height: 26px;
+  background-color: $inset;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 0 $space-3;
+  box-sizing: border-box;
+}
+
+.tint-cell input[type="checkbox"] {
+  flex-shrink: 0;
 }
 
 .tint-cell input[type="color"] {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
   padding: 0;
+  flex-shrink: 0;
 }
 
-.tint-cell input[type="number"],
-.video-fields > input[type="number"] {
-  width: 3rem;
+.tint-cell input[type="number"] {
+  width: 22px;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: right;
+  // Native number spinner arrows otherwise eat width the digits need —
+  // this field is a plain "0-100" readout, not somewhere anyone drags a
+  // stepper, so drop the arrows and give that width back to the text.
+  -moz-appearance: textfield;
+  appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Hue: a real slider (comfortable to drag) plus a number readout (precise
+// to type), sharing the row's one flexible column so the slider is the part
+// that actually absorbs extra width instead of a lone tiny spinner.
+.hue-group {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  min-width: 0;
+}
+
+.hue-slider {
+  flex: 1;
+  min-width: 40px;
+  height: 4px;
+  accent-color: $accent;
+  cursor: pointer;
+}
+
+.hue-value {
+  width: 40px;
+  flex-shrink: 0;
+  text-align: center;
+  padding: 0.15rem 0 !important;
+  -moz-appearance: textfield;
+  appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+// ── VAR media rows ───────────────────────────────────────────────────────
+
+.media-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: $space-4;
+  flex: 1;
+  min-width: 0;
+}
+
+.media-file-label {
+  color: $text-faint;
+  font-size: $text-sm;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.has-file {
+    color: $text;
+  }
 }
 
 // ── Form controls ────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ import type { RowLayer } from "../state/rowLayers";
 import { useAppStore } from "../state/store";
 import { hexToRgb, rgbToHex } from "../lib/color";
 import type { LayerValue } from "../../../shared/types";
-import { FlipHorizontal2, Contrast, Droplet, SlidersHorizontal } from "lucide-react";
+import { FlipHorizontal2, Contrast } from "lucide-react";
 
 export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
   const value = useAppStore((s) => s.values[row.rowKey]?.[iter]);
@@ -18,7 +18,7 @@ export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
         title="Flip Horizontal"
         onClick={() => update({ flip: !v.flip })}
       >
-        <FlipHorizontal2 />
+        <FlipHorizontal2 /> Flip
       </button>
       <button
         className={"video-toggle" + (v.bw ? " active" : "")}
@@ -28,7 +28,6 @@ export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
         <Contrast /> B&amp;W
       </button>
       <div className="tint-cell">
-        <Droplet className="field-icon" />
         <input
           type="checkbox"
           checked={!!v.tint}
@@ -49,15 +48,26 @@ export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
           onChange={(e) => update({ tintAmount: parseInt(e.target.value, 10) || 50 })}
         />
       </div>
-      <SlidersHorizontal className="field-icon" />
-      <input
-        type="number"
-        min={-180}
-        max={180}
-        title="Hue shift (degrees)"
-        value={v.hue ?? 0}
-        onChange={(e) => update({ hue: parseInt(e.target.value, 10) || 0 })}
-      />
+      <div className="hue-group">
+        <input
+          type="range"
+          min={-180}
+          max={180}
+          className="hue-slider"
+          title="Hue shift (degrees)"
+          value={v.hue ?? 0}
+          onChange={(e) => update({ hue: parseInt(e.target.value, 10) || 0 })}
+        />
+        <input
+          type="number"
+          min={-180}
+          max={180}
+          className="hue-value"
+          title="Hue shift (degrees)"
+          value={v.hue ?? 0}
+          onChange={(e) => update({ hue: parseInt(e.target.value, 10) || 0 })}
+        />
+      </div>
     </div>
   );
 }

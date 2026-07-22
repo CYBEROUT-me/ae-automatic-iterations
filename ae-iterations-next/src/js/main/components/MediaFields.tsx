@@ -21,7 +21,7 @@ export function MediaFields({ row, iter }: { row: RowLayer; iter: number }) {
       <button className="video-toggle" onClick={browse}>
         <FolderOpen /> Browse…
       </button>
-      <span className="media-file-label">{fileName}</span>
+      <span className={"media-file-label" + (value?.mediaPath ? " has-file" : "")}>{fileName}</span>
     </div>
   );
 }

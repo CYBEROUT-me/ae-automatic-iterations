@@ -18,6 +18,7 @@ interface AppState {
   emojiSize: number;
   emojiLayerIndex: number;
   setLayerInfo(compName: string, layers: LayerInfo[]): void;
+  addLayerInfo(compName: string, layers: LayerInfo[]): void;
   setCount(count: number): void;
   setSameForAll(v: boolean): void;
   setValue(rowKey: string, iter: number, value: LayerValue): void;
@@ -48,6 +49,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   // rebuilding its DOM on every Refresh (extension/js/main.js).
   setLayerInfo: (compName, layers) =>
     set((s) => ({ compName, layerInfo: layers, rowLayers: buildRowLayers(layers, s.mode), values: {} })),
+  // Appends the newly selected layer(s) to the existing set instead of
+  // replacing it, so a second/third "Add Layer" click can build up a
+  // multi-layer set one selection at a time without losing what's already
+  // been configured on the earlier ones. Layers already present (by AE
+  // layer index) are skipped rather than duplicated — clicking Add Layer
+  // again on the same selection is a no-op, not a duplicate row. Callers
+  // are responsible for rejecting a selection from a different comp before
+  // calling this (previewApply/runIterations only ever target one comp).
+  addLayerInfo: (compName, layers) =>
+    set((s) => {
+      const existingIndices = new Set(s.layerInfo.map((l) => l.index));
+      const merged = [...s.layerInfo, ...layers.filter((l) => !existingIndices.has(l.index))];
+      return { compName, layerInfo: merged, rowLayers: buildRowLayers(merged, s.mode) };
+    }),
   setCount: (count) => set({ count }),
   setSameForAll: (v) => set({ sameForAll: v }),
   setValue: (rowKey, iter, value) =>

@@ -36,6 +36,42 @@ describe("useAppStore.setLayerInfo", () => {
   });
 });
 
+describe("useAppStore.addLayerInfo", () => {
+  beforeEach(() => {
+    useAppStore.setState({ compName: null, layerInfo: [], rowLayers: [], count: 5, sameForAll: true, values: {} });
+  });
+
+  it("appends a new layer to the existing set without touching prior values", () => {
+    useAppStore.getState().setLayerInfo("Comp A", initialLayers);
+    useAppStore.getState().setValue("1", 0, { color: [1, 0, 0] });
+
+    const secondLayer: LayerInfo[] = [
+      { name: "Circle", index: 2, type: "shape", fills: [{ path: "Contents/Fill 1", color: [0, 0, 1] }], strokes: [] },
+    ];
+    useAppStore.getState().addLayerInfo("Comp A", secondLayer);
+
+    const state = useAppStore.getState();
+    expect(state.layerInfo).toHaveLength(2);
+    expect(state.rowLayers).toHaveLength(2);
+    expect(state.values).toEqual({ "1": [{ color: [1, 0, 0] }] });
+  });
+
+  it("skips a layer already present (by AE layer index) instead of duplicating its row", () => {
+    useAppStore.getState().setLayerInfo("Comp A", initialLayers);
+    useAppStore.getState().addLayerInfo("Comp A", initialLayers);
+
+    expect(useAppStore.getState().layerInfo).toHaveLength(1);
+    expect(useAppStore.getState().rowLayers).toHaveLength(1);
+  });
+
+  it("behaves like setLayerInfo when nothing has been selected yet", () => {
+    useAppStore.getState().addLayerInfo("Comp A", initialLayers);
+    const state = useAppStore.getState();
+    expect(state.compName).toBe("Comp A");
+    expect(state.layerInfo).toEqual(initialLayers);
+  });
+});
+
 describe("setMode", () => {
   beforeEach(() => {
     useAppStore.setState({ compName: null, layerInfo: [], rowLayers: [], count: 5, sameForAll: true, values: {}, mode: "itr", varNames: [] });

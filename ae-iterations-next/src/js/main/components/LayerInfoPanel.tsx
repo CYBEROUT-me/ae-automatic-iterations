@@ -13,11 +13,11 @@ import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
-import { RefreshCw, ChevronUp, ChevronDown, Smile, Star, ChevronRight, Info } from "lucide-react";
+import { RefreshCw, Plus, ChevronUp, ChevronDown, Smile, Star, ChevronRight, Info } from "lucide-react";
 
 export function LayerInfoPanel() {
   const {
-    compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, mode,
+    compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, addLayerInfo, mode,
     emojiEnabled, setEmojiEnabled,
   } = useAppStore(
     useShallow((s) => ({
@@ -29,6 +29,7 @@ export function LayerInfoPanel() {
       sameForAll: s.sameForAll,
       setSameForAll: s.setSameForAll,
       setLayerInfo: s.setLayerInfo,
+      addLayerInfo: s.addLayerInfo,
       mode: s.mode,
       emojiEnabled: s.emojiEnabled,
       setEmojiEnabled: s.setEmojiEnabled,
@@ -51,6 +52,22 @@ export function LayerInfoPanel() {
     evalTS("getLayerInfo")
       .then((res) => setLayerInfo(res.compName, res.layers))
       .catch((err) => alert("Refresh failed: " + String(err)));
+  };
+
+  // Appends the currently selected AE layer(s) to the existing set instead
+  // of replacing it, so building a multi-layer iteration set is: select a
+  // layer, Add Layer, select the next one, Add Layer again — without
+  // losing the per-iteration values already entered for the earlier ones.
+  const addLayer = () => {
+    evalTS("getLayerInfo")
+      .then((res) => {
+        if (compName && res.compName !== compName) {
+          alert(`Selected layer is in "${res.compName}", but the current set is from "${compName}". Refresh instead to switch comps.`);
+          return;
+        }
+        addLayerInfo(res.compName, res.layers);
+      })
+      .catch((err) => alert("Add layer failed: " + String(err)));
   };
 
   const testVarComps = () => {
@@ -85,6 +102,9 @@ export function LayerInfoPanel() {
       <div className="icon-toolbar">
         <button className="icon-btn" title="Refresh layer selection" onClick={refresh}>
           <RefreshCw />
+        </button>
+        <button className="icon-btn" title="Add layer to current set" onClick={addLayer}>
+          <Plus />
         </button>
         <div className="toolbar-layername">{compName ? `${compName} — ${rowLayers.length} row(s)` : "No layer selected"}</div>
         <div className="count-field">

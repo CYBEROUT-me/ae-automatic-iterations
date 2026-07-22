@@ -61,7 +61,7 @@ export function LayerInfoPanel() {
 
   // Effective value used for rendering/reading a non-first, non-stroke, non-video row
   // when sameForAll is on — mirrors main.js's buildValues() sameForAll branch.
-  const effectiveValue = (row: RowLayer, iter: number): LayerValue | undefined =>
+  const effectiveValue = (row: RowLayer, iter: number): LayerValue =>
     effectiveValueImpl(rowLayers, values, sameForAll, row, iter, mode);
 
   // Applies one iteration's values live to the target comp, so the artist
@@ -72,7 +72,7 @@ export function LayerInfoPanel() {
   const previewIteration = (iter: number) => {
     if (!compName) return;
     const layers = toCfgLayers(rowLayers);
-    const iterValues = rowLayers.map((r) => effectiveValue(r, iter) ?? {});
+    const iterValues = rowLayers.map((r) => effectiveValue(r, iter));
     evalTS("previewApply", { compName, layers, values: iterValues })
       .then((res) => console.log(res.log.join("\n")))
       .catch((err) => alert("Preview failed: " + String(err)));

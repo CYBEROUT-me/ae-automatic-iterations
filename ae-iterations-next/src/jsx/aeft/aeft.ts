@@ -2,7 +2,7 @@ import { dispatchTS } from "../utils/utils";
 import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
 import { findCompByName, findCompsBySuffixes, resolveLayer, ITR_SUFFIXES } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
-import { addEmojiToComp } from "./lib/applyEmoji";
+import { addEmojiToComp, removeEmojiFromComp } from "./lib/applyEmoji";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
 import { runVarIterationBatch } from "./engine/runVarIterationBatch";
@@ -54,8 +54,11 @@ export const getLayerInfo = (): LayerInfoResult => {
 // Applies one iteration's values to the target comp's layers in place, for
 // live in-AE preview. Wrapped in a single undo group so the panel's Preview
 // button is one Ctrl+Z away from a no-op. Ported from host.jsx's
-// debugApplyChangeJSON (lines 235-276), minus the ITR-comp listing and emoji
-// removal (both out of scope for this plan).
+// debugApplyChangeJSON (lines 235-276), minus the ITR-comp listing (out of
+// scope for this plan). The emoji-removal step IS ported: without it, a
+// leftover emoji-preview layer shifts every subsequent layer's index by one,
+// and stroke rows (whose CfgLayer.name is a synthetic label no real AE layer
+// has) have no by-name fallback to recover from a stale index.
 export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values: LayerValue[] }): { log: string[] } => {
   const comp = findCompByName(cfg.compName);
   if (!comp) throw new Error("Comp not found: " + cfg.compName);
@@ -63,6 +66,7 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   const log: string[] = [];
   app.beginSuppressDialogs();
   app.beginUndoGroup("Preview Apply");
+  removeEmojiFromComp(comp);
   for (let li = 0; li < cfg.layers.length; li++) {
     const lc = cfg.layers[li];
     const layer = resolveLayer(comp, lc);

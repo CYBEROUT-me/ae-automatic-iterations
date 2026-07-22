@@ -8,7 +8,7 @@ import type { LayerValue, RunResult } from "../../../shared/types";
 
 type StatusKind = "idle" | "running" | "done" | "warning" | "error";
 
-export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, iter: number) => LayerValue | undefined }) {
+export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, iter: number) => LayerValue }) {
   const {
     compName, rowLayers, count, mode, varNames,
     emojiEnabled, emojiPaths, emojiX, emojiY, emojiSize, emojiLayerIndex,
@@ -45,7 +45,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
       return;
     }
     const layers = toCfgLayers(rowLayers);
-    const values = Array.from({ length: count }, (_, iter) => rowLayers.map((r) => effectiveValue(r, iter) ?? {}));
+    const values = Array.from({ length: count }, (_, iter) => rowLayers.map((r) => effectiveValue(r, iter)));
 
     if (mode === "var") {
       setStatus("Running VAR…");

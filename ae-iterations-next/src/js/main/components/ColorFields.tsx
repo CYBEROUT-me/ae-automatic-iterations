@@ -6,12 +6,17 @@ import { FontInput } from "./FontInput";
 export function ColorFields({ row, iter }: { row: RowLayer; iter: number }) {
   const value = useAppStore((s) => s.values[row.rowKey]?.[iter]);
   const setValue = useAppStore((s) => s.setValue);
-  const hex = value?.color ? rgbToHex(value.color).toUpperCase() : "#FF0000";
+  // Merge the layer's live AE state under any stored edit, so a field the
+  // user hasn't touched still shows (and, once any sibling field on this row
+  // is edited, still writes through) the real current color/font/content
+  // instead of a placeholder.
+  const display = { ...row.liveValue, ...value };
+  const hex = display.color ? rgbToHex(display.color).toUpperCase() : "#FF0000";
 
   const onHexChange = (raw: string) => {
     const normalised = normaliseHex(raw);
     if (!normalised) return;
-    setValue(row.rowKey, iter, { ...value, color: hexToRgb(normalised) });
+    setValue(row.rowKey, iter, { ...display, color: hexToRgb(normalised) });
   };
 
   return (
@@ -21,14 +26,14 @@ export function ColorFields({ row, iter }: { row: RowLayer; iter: number }) {
       {row.type === "text" && (
         <>
           <FontInput
-            value={value?.font ?? ""}
-            onChange={(font) => setValue(row.rowKey, iter, { ...value, font })}
+            value={display.font ?? ""}
+            onChange={(font) => setValue(row.rowKey, iter, { ...display, font })}
           />
           <input
             type="text"
             placeholder="Text content"
-            value={value?.content ?? ""}
-            onChange={(e) => setValue(row.rowKey, iter, { ...value, content: e.target.value })}
+            value={display.content ?? ""}
+            onChange={(e) => setValue(row.rowKey, iter, { ...display, content: e.target.value })}
           />
         </>
       )}

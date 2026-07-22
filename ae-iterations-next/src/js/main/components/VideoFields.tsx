@@ -7,7 +7,7 @@ import { FlipHorizontal2, Contrast, Droplet, SlidersHorizontal } from "lucide-re
 export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
   const value = useAppStore((s) => s.values[row.rowKey]?.[iter]);
   const setValue = useAppStore((s) => s.setValue);
-  const v: LayerValue = value ?? { flip: false, bw: false, tint: null, tintAmount: 50, hue: 0 };
+  const v: LayerValue = { flip: false, bw: false, tint: null, tintAmount: 50, hue: 0, ...row.liveValue, ...value };
 
   const update = (patch: Partial<LayerValue>) => setValue(row.rowKey, iter, { ...v, ...patch });
 

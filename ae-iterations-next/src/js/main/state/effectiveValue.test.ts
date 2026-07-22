@@ -101,6 +101,6 @@ describe("effectiveValue", () => {
     };
     const nonFirstRow = varRowLayers[1];
     const result = effectiveValue(varRowLayers, values, /* sameForAll */ true, nonFirstRow, 0, "var");
-    expect(result).toBeUndefined();
+    expect(result).toEqual({});
   });
 });

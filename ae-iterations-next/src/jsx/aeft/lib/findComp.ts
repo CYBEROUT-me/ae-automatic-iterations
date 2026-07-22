@@ -41,17 +41,22 @@ export function findVarComp(name: string): CompItem | null {
   return null;
 }
 
-// Look up a layer by its stored index; if that slot holds a different layer
-// (e.g. an emoji-preview insertion shifted indices), fall back to searching
-// by name so iteration still targets the right layer. Ported from
-// extension/jsx/host.jsx's resolveLayer. Degrades to a plain index lookup
-// whenever there's no name mismatch.
+// Look up a layer by its stored index; if that slot holds a different layer,
+// OR the index itself is now out of range (e.g. an emoji-preview insertion
+// or removal shifted indices), fall back to searching by name so iteration
+// still targets the right layer. Ported from extension/jsx/host.jsx's
+// resolveLayer, with one deliberate fix: the original only ran the by-name
+// fallback when the index lookup returned a mismatched layer, not when it
+// threw outright — so a stale index (e.g. previewApply's own
+// removeEmojiFromComp() call shrinking the comp mid-lookup) skipped the
+// fallback entirely and reported a real, still-present layer as NOT FOUND.
+// Degrades to a plain index lookup whenever there's no name mismatch.
 export function resolveLayer(comp: CompItem, lc: CfgLayer): Layer | null {
   let layer: Layer | null = null;
   try {
     layer = comp.layer(lc.index);
   } catch (e) {}
-  if (layer && layer.name !== lc.name) {
+  if (!layer || layer.name !== lc.name) {
     for (let i = 1; i <= comp.numLayers; i++) {
       try {
         if (comp.layer(i).name === lc.name) {

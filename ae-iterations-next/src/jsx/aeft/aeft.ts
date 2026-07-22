@@ -75,7 +75,17 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
       continue;
     }
     log.push("Layer " + lc.index + ": " + layer.name + "  [" + lc.layerType + "]");
-    log.push(...applyLayerValue(layer, lc, cfg.values[li]).map((l) => "  " + l));
+    // Plain for-loop, not .map(...): confirmed live in real After Effects
+    // that Array.prototype.map is simply missing from this ExtendScript
+    // engine — a standalone in-engine probe of map/filter/forEach/for-of/
+    // spread/indexOf/Object.keys/slice showed every one of those working
+    // EXCEPT .map, which threw "Function X.map is undefined" even on a
+    // plain local array with no cross-function boundary involved. vitest
+    // can't catch this — it runs this code in Node, where .map is normal.
+    const results = applyLayerValue(layer, lc, cfg.values[li]);
+    for (let ri = 0; ri < results.length; ri++) {
+      log.push("  " + results[ri]);
+    }
   }
   app.endUndoGroup();
   app.endSuppressDialogs(false);

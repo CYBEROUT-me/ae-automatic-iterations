@@ -3,6 +3,7 @@ import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { toCfgLayers } from "../state/rowLayers";
 import { evalTS } from "../../lib/utils/bolt";
+import { Play } from "lucide-react";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue, RunResult } from "../../../shared/types";
 
@@ -74,6 +75,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
   return (
     <div id="run-section">
       <button id="btn-run" onClick={run} disabled={!compName && !emojiOnly}>
+        <Play />
         {mode === "var" ? "Run VAR" : "Run Iterations"}
       </button>
       {status && <div id="status" className={`status-${statusKind}`}>{status}</div>}

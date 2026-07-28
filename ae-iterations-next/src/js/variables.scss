@@ -1,36 +1,41 @@
-// Surfaces — neutral gray, not violet-tinted (v1's mistake)
-$bg: #18181b;
-// Raised tones bumped lighter relative to $bg/$inset (unchanged below): on a
-// dark theme, elevation reads through surface *lightness*, not box-shadow —
-// shadows barely register against a near-black background, which is why the
-// v2 "add real elevation" pass still looked flat. Widening this gap is the
-// fix; $highlight-border below is the other half (a hairline lit top edge).
-$surface: #29292e;
-$surface-hover: #303036;
-$surface-raised: #333339;   // icon-button resting background — lighter than $surface, reads as "raised"
-$inset: #14141a;            // input/well background — darker than $surface, reads as "recessed"
-$border: #3a3a41;
-$border-strong: #45454d;    // icon-button border — more visible, buttons need to read as raised
-$highlight-border: rgba(255, 255, 255, 0.06); // top-edge hairline that stands in for shadow on dark surfaces
+// Surfaces — warm charcoal, not cold blue-gray. Violet-on-neutral-gray was
+// flagged as "AI generic" (it's the de facto default accent on most
+// AI-adjacent SaaS products right now) — this is the deliberate pivot away
+// from it, not just a hue swap. See docs/superpowers/specs/2026-07-22-*
+// for the full before/after reasoning.
+$bg: #1c1a16;
+$surface: #26221b;
+$surface-hover: #2e2a22;
+$surface-raised: #322c22;   // icon-button hover / stronger raised background
+$inset: #14120e;            // input/well background — darker than $surface, reads as "recessed"
+$border: #2c2820;           // hairline dividers between rows/sections
+$border-strong: #423c30;    // stronger borders — segmented controls, swatch rings
+$highlight-border: rgba(255, 255, 255, 0.05); // top-edge hairline that stands in for shadow on dark surfaces
 
 // Text
-$text: #d4d4d8;
-$text-dim: #a1a1aa;
-$text-faint: #71717a;       // field labels, group labels, meta text
-$text-strong: #fafafa;
+$text: #e4ddd0;
+$text-dim: #a89a85;
+$text-faint: #8a7d68;       // field labels, group labels, meta text
+$text-strong: #f2ead9;
 
-// Accent — same hue as v1, color was never the complaint
-$accent: #6d3fe0;
-$accent-hover: #7c5cf0;
-$accent-glow: rgba(109, 63, 224, 0.5);
+// Accent — warm amber, replacing violet. Reserved for the primary action
+// (Run) and selected/active state; not spent on decorative chrome.
+$accent: #f2c14e;
+$accent-hover: #f5ca5e;     // gradient top / hover
+$accent-dark: #eeb32e;      // gradient bottom
+$accent-text: #241a04;      // text/icon color ON a filled accent surface
+$accent-glow: rgba(242, 193, 78, 0.28);
+$accent-dim: #cba054;       // muted amber for things that are structure, not another button (row numbers, monospace readouts)
+$mono-font: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
 
 // Semantic
-$switch-on: #34c759;        // iOS system green — the one real on/off switch
+$switch-on: #3fae5c;        // the one true on/off toggle (Emoji overlay) — kept distinct from $accent on purpose
 $changed: #3caea3;
-$warning: #f6d55c;
+$warning: #e8823c;          // shifted off #f6d55c — that was close enough to the new amber $accent to blur "warning" with "primary action"
 $error: #ed553b;
 
-// Elevation — new. v1 had zero shadows; this is the core fix for "no visibility that it can be pressed"
+// Elevation. Dark-theme elevation reads through surface *lightness*, not
+// shadow — shadow barely registers against a near-black background.
 $shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);   // icon buttons, inputs
 $shadow-md: 0 1px 3px rgba(0, 0, 0, 0.35);   // cards/sections
 $shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);   // dropdowns, floating elements
@@ -47,7 +52,7 @@ $space-3: 6px;
 $space-4: 8px;
 $space-5: 12px;
 
-// Radii — grow slightly (references favor rounder corners)
+// Radii — unchanged
 $radius-sm: 6px;
 $radius-md: 8px;
 

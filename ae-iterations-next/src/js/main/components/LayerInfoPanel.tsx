@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { evalTS } from "../../lib/utils/bolt";
@@ -39,6 +39,7 @@ export function LayerInfoPanel() {
   const [testLog, setTestLog] = useState<string[] | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const changelogRef = useRef<HTMLDivElement>(null);
 
   // Kicks off the font scan as soon as the panel mounts, in the background,
   // regardless of whether a text layer is currently selected — matching the
@@ -47,6 +48,21 @@ export function LayerInfoPanel() {
   useEffect(() => {
     loadFonts();
   }, []);
+
+  // Changelog is a popover anchored to its toolbar icon (see .changelog-anchor
+  // in main.scss), not an inline block — it used to render between the
+  // settings card and the rows, shoving everything below it down the page
+  // every time it opened. A real popup also closes on an outside click.
+  useEffect(() => {
+    if (!changelogOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (changelogRef.current && !changelogRef.current.contains(e.target as Node)) {
+        setChangelogOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [changelogOpen]);
 
   const refresh = () => {
     evalTS("getLayerInfo")
@@ -126,13 +142,16 @@ export function LayerInfoPanel() {
             </div>
           </div>
         </div>
-        <button
-          className={"icon-btn" + (changelogOpen ? " active-state" : "")}
-          title="What's new"
-          onClick={() => setChangelogOpen(!changelogOpen)}
-        >
-          <Info />
-        </button>
+        <div className="changelog-anchor" ref={changelogRef}>
+          <button
+            className={"icon-btn" + (changelogOpen ? " active-state" : "")}
+            title="What's new"
+            onClick={() => setChangelogOpen(!changelogOpen)}
+          >
+            <Info />
+          </button>
+          {changelogOpen && <ChangelogList />}
+        </div>
       </div>
       {mode === "itr" && (
         <div className="settings-card">
@@ -185,7 +204,6 @@ export function LayerInfoPanel() {
           Same value for all layers
         </label>
       )}
-      {changelogOpen && <ChangelogList />}
       {mode === "var" && (
         <>
           <VarNamesRow />

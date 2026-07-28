@@ -15,8 +15,8 @@ export function IterationRow({
   if (!handler) return <div className="iter-row">Unsupported layer type: {row.type}</div>;
   const Fields = handler.RowFields;
   return (
-    <div className="iter-row hover-row">
-      <span className="iter-num">{iter + 1}</span>
+    <div className="iter-row">
+      <span className="iter-num">{String(iter + 1).padStart(2, "0")}</span>
       <Fields row={row} iter={iter} />
       {onPreview && (
         <button className="row-action" title={`Preview iteration ${iter + 1}`} onClick={onPreview}>

@@ -13,20 +13,22 @@ export function VideoFields({ row, iter }: { row: RowLayer; iter: number }) {
 
   return (
     <div className="video-fields">
-      <button
-        className={"video-toggle" + (v.flip ? " active" : "")}
-        title="Flip Horizontal"
-        onClick={() => update({ flip: !v.flip })}
-      >
-        <FlipHorizontal2 /> Flip
-      </button>
-      <button
-        className={"video-toggle" + (v.bw ? " active" : "")}
-        title="Black & White"
-        onClick={() => update({ bw: !v.bw })}
-      >
-        <Contrast /> B&amp;W
-      </button>
+      <div className="seg-group">
+        <button
+          className={"seg" + (v.flip ? " active" : "")}
+          title="Flip Horizontal"
+          onClick={() => update({ flip: !v.flip })}
+        >
+          <FlipHorizontal2 /> Flip
+        </button>
+        <button
+          className={"seg" + (v.bw ? " active" : "")}
+          title="Black & White"
+          onClick={() => update({ bw: !v.bw })}
+        >
+          <Contrast /> B&amp;W
+        </button>
+      </div>
       <div className="tint-cell">
         <input
           type="checkbox"

@@ -43,9 +43,9 @@ body,
   }
 
   &.active {
-    background-color: $surface-raised !important;
-    color: white !important;
-    box-shadow: $shadow-sm;
+    background-color: $surface-hover !important;
+    color: $accent !important;
+    box-shadow: inset 0 0 0 1px $border-strong;
   }
 
   &:disabled {
@@ -112,37 +112,61 @@ body,
   letter-spacing: 0.03em;
 }
 
+// No box: a bordered/filled rectangle per row, repeated five times, was
+// exactly the "every element is the same box" problem — five identical
+// boxes read as generic no matter what color they're painted. A hairline
+// divider (faded at the edges, not a hard-edged rule) separates rows
+// instead, and the "which row is this" question is answered by the
+// left-edge accent bar + tint on hover rather than a filled background.
 .iter-row {
   display: flex;
   align-items: center;
   gap: $space-3;
-  padding: $space-3 $space-4;
-  background-color: $surface;
-  border: 1px solid $border;
-  border-top: 1px solid $highlight-border;
+  padding: $space-3 $space-2 $space-3 $space-4;
+  position: relative;
   border-radius: $radius-sm;
-  margin-bottom: $space-2;
 
-  &:last-child {
-    margin-bottom: 0;
+  &::after {
+    content: "";
+    position: absolute;
+    left: $space-2;
+    right: $space-2;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $border 10%, $border 90%, transparent);
+  }
+
+  &:last-child::after {
+    display: none;
+  }
+
+  &:hover {
+    background: linear-gradient(90deg, rgba($accent, 0.08), transparent 45%);
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: $space-2;
+      bottom: $space-2;
+      width: 2.5px;
+      border-radius: 2px;
+      background-color: $accent;
+    }
   }
 }
 
-// Real contrast, not a same-tone circle — scanning "which row is this"
-// shouldn't require reading five identical low-contrast digits.
+// Zero-padded and monospaced, tinted toward the accent but dimmer than the
+// accent itself — reads as structure (like a line number), not another
+// button, and a column of "01/02/03" lines up instead of "1/2/3" drifting.
 .iter-num {
   flex: 0 0 auto;
-  box-sizing: border-box;
-  width: 1.3rem;
-  height: 1.3rem;
-  line-height: 1.15rem;
-  text-align: center;
-  border-radius: 50%;
-  background-color: $surface-raised;
-  border: 1px solid $border-strong;
-  color: $text-strong;
-  font-size: 0.7rem;
-  font-weight: 600;
+  width: 1.5rem;
+  font-family: $mono-font;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: $accent-dim;
 }
 
 .color-cell {
@@ -171,13 +195,16 @@ body,
 // wider than the row's minimum content).
 .video-fields {
   display: grid;
-  grid-template-columns: auto auto auto 1fr;
+  grid-template-columns: auto auto 1fr;
   align-items: center;
   column-gap: $space-4;
   flex: 1;
   min-width: 0;
 }
 
+// Standalone action pill — used by MediaFields' "Browse…" button, which is
+// a real action (not a boolean state), so it keeps a visible border unlike
+// the "ghost until hovered" toolbar icons.
 .video-toggle {
   background-color: $surface-raised !important;
   color: $text !important;
@@ -200,15 +227,52 @@ body,
     background-color: $surface-hover !important;
     box-shadow: $shadow-md;
   }
+}
 
-  // Green, not violet: violet was doing double duty as both "this is on"
-  // and "this is the primary action" (Run Iterations), which meant nothing
-  // stood out as *the* important button. Green matches the Emoji switch's
-  // existing "on" language, so violet is free to mean one thing.
+// Flip + B&W as one segmented control (one shared border) instead of two
+// separate bordered pills — fewer boxes for the same two booleans.
+.seg-group {
+  display: flex;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  border: 1px solid $border-strong;
+  flex-shrink: 0;
+}
+
+.seg {
+  background-color: transparent !important;
+  color: $text-dim !important;
+  border: none !important;
+  border-right: 1px solid $border-strong !important;
+  box-shadow: none !important;
+  height: 26px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: $space-1;
+  padding: 0 $space-4 !important;
+  border-radius: 0 !important;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:last-child {
+    border-right: none !important;
+  }
+
+  &:hover:not(:disabled):not(.active) {
+    background-color: $surface-raised !important;
+    color: $text !important;
+  }
+
   &.active {
-    background-color: $switch-on !important;
-    border-color: $switch-on !important;
-    color: #06210f !important;
+    background-color: $accent !important;
+    color: $accent-text !important;
+    font-weight: 600;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
   }
 }
 
@@ -219,18 +283,14 @@ body,
   flex-shrink: 0;
 }
 
-// Grouped pill (checkbox + swatch + amount), matching the visual weight of
-// the flip/B&W toggle pills instead of floating as three loose controls.
+// No box: checkbox + swatch + amount sit inline, ungrouped — a swatch that
+// already shows a real color doesn't need a container to prove it's there.
 .tint-cell {
   display: flex;
   align-items: center;
   gap: $space-2;
   height: 26px;
-  background-color: $inset;
-  border: 1px solid $border;
-  border-radius: $radius-sm;
-  padding: 0 $space-3;
-  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .tint-cell input[type="checkbox"] {
@@ -242,15 +302,20 @@ body,
   height: 15px;
   border-radius: 4px;
   padding: 0;
+  border: none;
+  box-shadow: 0 0 0 1px $border-strong;
   flex-shrink: 0;
 }
 
 .tint-cell input[type="number"] {
-  width: 22px;
+  width: 24px;
   background: none;
   border: none;
   padding: 0;
   text-align: right;
+  color: $text-faint;
+  font-family: $mono-font;
+  font-variant-numeric: tabular-nums;
   // Native number spinner arrows otherwise eat width the digits need —
   // this field is a plain "0-100" readout, not somewhere anyone drags a
   // stepper, so drop the arrows and give that width back to the text.
@@ -265,6 +330,7 @@ body,
 
   &:focus {
     outline: none;
+    color: $text;
   }
 }
 
@@ -284,13 +350,24 @@ body,
   height: 4px;
   accent-color: $accent;
   cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba($accent, 0.18);
+  }
 }
 
+// No box: matches the tint amount readout right above it — a plain
+// monospace number, not another filled input well.
 .hue-value {
-  width: 40px;
+  width: 30px;
   flex-shrink: 0;
-  text-align: center;
-  padding: 0.15rem 0 !important;
+  text-align: right;
+  background: none !important;
+  border: none !important;
+  color: $text-faint;
+  font-family: $mono-font;
+  font-variant-numeric: tabular-nums;
+  padding: 0 !important;
   -moz-appearance: textfield;
   appearance: textfield;
 
@@ -298,6 +375,11 @@ body,
   &::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
+  }
+
+  &:focus {
+    outline: none;
+    color: $text;
   }
 }
 
@@ -418,27 +500,42 @@ input[type="checkbox"] {
   width: 100%;
 }
 
+// The one element in the panel that's meant to look "loud" — a gradient
+// fill, a glow, and now an icon, so it reads as "go" rather than just being
+// the button that happens to be a certain color.
 #btn-run {
-  background-color: $accent !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  background: linear-gradient(180deg, $accent-hover, $accent-dark) !important;
+  color: $accent-text !important;
   font-size: $text-md !important;
   padding: $space-4 0 !important;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   border-radius: $radius-md;
-  transition: background-color $transition-fast, box-shadow $transition-fast, transform $transition-press;
+  box-shadow: 0 6px 18px $accent-glow;
+  transition: box-shadow $transition-fast, transform $transition-press;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
 
   &:hover:not(:disabled) {
-    background-color: $accent-hover !important;
-    box-shadow: 0 2px 10px $accent-glow;
+    box-shadow: 0 8px 22px $accent-glow;
   }
 
   &:active:not(:disabled) {
     transform: scale(0.98);
-    box-shadow: none;
+    box-shadow: 0 2px 8px $accent-glow;
   }
 
   &:disabled {
-    background-color: $surface !important;
+    background: $surface !important;
     color: $text-dim !important;
+    box-shadow: none;
     cursor: not-allowed;
   }
 }
@@ -731,13 +828,26 @@ input[type="checkbox"] {
 
 // ── Changelog ─────────────────────────────────────────────────────────────
 
+// Anchors the changelog as a real popover instead of an inline block that
+// used to shove every section below it down the page each time it opened.
+.changelog-anchor {
+  position: relative;
+}
+
 #changelog-list {
-  margin-top: 0.4rem;
-  max-height: 12rem;
+  position: absolute;
+  top: calc(100% + #{$space-2});
+  right: 0;
+  z-index: 20;
+  width: 240px;
+  box-sizing: border-box;
+  max-height: 16rem;
   overflow-y: auto;
-  padding: 0.4rem;
-  background-color: $surface;
-  border-radius: 4px;
+  padding: $space-4;
+  background-color: $surface-raised;
+  border: 1px solid $border-strong;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
 }
 
 .cl-entry {
@@ -906,15 +1016,18 @@ input[type="checkbox"] {
   border-bottom: 1px solid $border;
 }
 
+// Ghost by default — ungrouped, low-stakes toolbar actions (Refresh,
+// What's new) don't need a bordered box to prove they're buttons; a
+// background on hover is enough. Add Layer is the deliberate exception
+// (below): it's new, easy to confuse with the destructive Refresh right
+// next to it, and gets called out instead of blending in.
 .icon-btn {
   width: 22px;
   height: 22px;
   border-radius: $radius-sm;
-  background-color: $surface-raised;
+  background-color: transparent;
   color: $text-dim;
-  border: 1px solid $border-strong;
-  border-top: 1px solid $highlight-border;
-  box-shadow: $shadow-sm;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -922,7 +1035,7 @@ input[type="checkbox"] {
   flex-shrink: 0;
   padding: 0;
   position: relative;
-  transition: background-color $transition-fast, color $transition-fast, transform $transition-press, box-shadow $transition-fast;
+  transition: background-color $transition-fast, color $transition-fast, transform $transition-press;
 
   svg {
     width: 13px;
@@ -932,36 +1045,40 @@ input[type="checkbox"] {
   // Add Layer's variant: a bare "+" glyph doesn't say what it does, and
   // sitting right next to Refresh — which discards every value you've
   // entered, where Add Layer keeps them — two identical unlabeled squares
-  // is a real misclick risk. A text label breaks the icon-only pattern on
-  // purpose for this one button.
+  // is a real misclick risk. A text label plus a permanent amber tint (not
+  // just on hover) breaks the ghost-icon pattern on purpose for this one.
   &.labeled {
     width: auto;
     gap: $space-1;
     padding: 0 $space-3;
     font-size: $text-sm;
-    font-weight: 600;
+    font-weight: 700;
+    color: $accent;
+    background-color: rgba($accent, 0.12);
 
     svg {
       width: 12px;
       height: 12px;
     }
+
+    &:hover:not(:disabled) {
+      background-color: rgba($accent, 0.18);
+      color: $accent;
+    }
   }
 
   &:hover:not(:disabled) {
-    background-color: $surface-hover;
+    background-color: $surface-raised;
     color: $text-strong;
-    box-shadow: $shadow-md;
   }
 
   &:active:not(:disabled) {
     transform: scale(0.92);
-    box-shadow: none;
   }
 
   &.active-state {
     background-color: $accent;
-    border-color: $accent-hover;
-    color: white;
+    color: $accent-text;
   }
 
   &:disabled {
@@ -972,16 +1089,13 @@ input[type="checkbox"] {
 
 // ── Settings card (Emoji switch, Presets disclosure) ──────────────────────
 
-// Quiet outline, not an elevated card: Emoji/Presets are two optional
-// settings, not the primary task — a full shadow+border+padding treatment
-// gave them the same visual weight as the iteration rows they sit above,
-// competing with the actual content for attention. No shadow, no filled
-// background, tighter padding.
+// No box at all now: Emoji/Presets are two optional settings, not the
+// primary task. A border (even a quiet one, per the last pass) still drew a
+// rectangle that competed with the rows below it for attention. The
+// surrounding gap (#layer-section) plus .extra-layer-group's own top
+// border already separate this block from what comes next.
 .settings-card {
-  background-color: transparent;
-  border: 1px solid $border;
-  border-radius: $radius-md;
-  padding: $space-2 $space-5;
+  padding: $space-2 $space-4;
   margin: 0 $space-4 $space-4;
   align-self: stretch;
 }
@@ -1009,8 +1123,9 @@ input[type="checkbox"] {
 }
 
 .settings-divider {
-  border-top: 1px solid $border;
+  height: 1px;
   margin: $space-2 0;
+  background: linear-gradient(90deg, transparent, $border 15%, $border 85%, transparent);
 }
 
 .settings-switch {

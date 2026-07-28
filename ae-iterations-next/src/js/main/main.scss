@@ -350,10 +350,14 @@ body,
   height: 4px;
   accent-color: $accent;
   cursor: pointer;
-
-  &::-webkit-slider-thumb {
-    box-shadow: 0 0 0 3px rgba($accent, 0.18);
-  }
+  // A glow via ::-webkit-slider-thumb's box-shadow was tried here and
+  // reverted: without also taking over the thumb's shape with
+  // -webkit-appearance:none, Chromium draws the shadow around the thumb's
+  // square hit-box, not the circle it renders — a square ring around a
+  // circle. Doing this correctly means fully custom track+thumb styling
+  // (losing accent-color's automatic value-fill in the track, which would
+  // then need to be reimplemented with a JS-computed fill percentage) —
+  // more risk than this detail is worth right now.
 }
 
 // No box: matches the tint amount readout right above it — a plain

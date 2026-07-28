@@ -149,23 +149,34 @@ export function LayerInfoPanel() {
               onClick={() => setEmojiEnabled(!emojiEnabled)}
             />
           </div>
-          <div className="settings-divider" />
-          <div
-            className={"settings-row settings-disclosure" + (presetsOpen ? " open" : "")}
-            role="button"
-            tabIndex={0}
-            title="Presets"
-            onClick={() => setPresetsOpen(!presetsOpen)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") setPresetsOpen(!presetsOpen);
-            }}
-          >
-            <div className="settings-row-label">
-              <Star />
-              Presets
-            </div>
-            <ChevronRight className="settings-chevron" />
-          </div>
+          {emojiEnabled && <EmojiSection />}
+          {/* Presets applies to rowLayers[0] — with nothing refreshed yet
+              there's no row to apply it to, and Apply/Save were silently
+              no-op-ing with zero feedback. Hiding the row until there's a
+              row to target beats a preset gallery that looks interactive
+              but does nothing. */}
+          {rowLayers.length > 0 && (
+            <>
+              <div className="settings-divider" />
+              <div
+                className={"settings-row settings-disclosure" + (presetsOpen ? " open" : "")}
+                role="button"
+                tabIndex={0}
+                title="Presets"
+                onClick={() => setPresetsOpen(!presetsOpen)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setPresetsOpen(!presetsOpen);
+                }}
+              >
+                <div className="settings-row-label">
+                  <Star />
+                  Presets
+                </div>
+                <ChevronRight className="settings-chevron" />
+              </div>
+              {presetsOpen && <PresetPanel />}
+            </>
+          )}
         </div>
       )}
       {mode === "itr" && showSameForAll && (
@@ -174,8 +185,6 @@ export function LayerInfoPanel() {
           Same value for all layers
         </label>
       )}
-      {mode === "itr" && emojiEnabled && <EmojiSection />}
-      {mode === "itr" && presetsOpen && <PresetPanel />}
       {changelogOpen && <ChangelogList />}
       {mode === "var" && (
         <>

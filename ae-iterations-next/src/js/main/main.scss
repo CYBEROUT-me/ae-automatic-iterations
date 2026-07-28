@@ -81,10 +81,18 @@ body,
   word-break: break-word;
 }
 
+// Chip treatment, not bare text — every other setting in the panel gets a
+// card or pill; this checkbox meaningfully changes how every row behaves
+// and shouldn't be the one thing with zero visual weight.
 #same-all-section {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  background-color: $surface;
+  border: 1px solid $border;
+  border-top: 1px solid $highlight-border;
+  border-radius: $radius-sm;
+  padding: $space-2 $space-4;
 }
 
 // ── Layer groups / iteration rows ───────────────────────────────────────
@@ -111,6 +119,7 @@ body,
   padding: $space-3 $space-4;
   background-color: $surface;
   border: 1px solid $border;
+  border-top: 1px solid $highlight-border;
   border-radius: $radius-sm;
   margin-bottom: $space-2;
 
@@ -119,16 +128,21 @@ body,
   }
 }
 
+// Real contrast, not a same-tone circle — scanning "which row is this"
+// shouldn't require reading five identical low-contrast digits.
 .iter-num {
   flex: 0 0 auto;
+  box-sizing: border-box;
   width: 1.3rem;
   height: 1.3rem;
-  line-height: 1.3rem;
+  line-height: 1.15rem;
   text-align: center;
   border-radius: 50%;
-  background-color: $surface;
-  color: $text;
+  background-color: $surface-raised;
+  border: 1px solid $border-strong;
+  color: $text-strong;
   font-size: 0.7rem;
+  font-weight: 600;
 }
 
 .color-cell {
@@ -187,10 +201,14 @@ body,
     box-shadow: $shadow-md;
   }
 
+  // Green, not violet: violet was doing double duty as both "this is on"
+  // and "this is the primary action" (Run Iterations), which meant nothing
+  // stood out as *the* important button. Green matches the Emoji switch's
+  // existing "on" language, so violet is free to mean one thing.
   &.active {
-    background-color: $accent !important;
-    border-color: $accent-hover !important;
-    color: white !important;
+    background-color: $switch-on !important;
+    border-color: $switch-on !important;
+    color: #06210f !important;
   }
 }
 
@@ -895,6 +913,7 @@ input[type="checkbox"] {
   background-color: $surface-raised;
   color: $text-dim;
   border: 1px solid $border-strong;
+  border-top: 1px solid $highlight-border;
   box-shadow: $shadow-sm;
   display: flex;
   align-items: center;
@@ -908,6 +927,24 @@ input[type="checkbox"] {
   svg {
     width: 13px;
     height: 13px;
+  }
+
+  // Add Layer's variant: a bare "+" glyph doesn't say what it does, and
+  // sitting right next to Refresh — which discards every value you've
+  // entered, where Add Layer keeps them — two identical unlabeled squares
+  // is a real misclick risk. A text label breaks the icon-only pattern on
+  // purpose for this one button.
+  &.labeled {
+    width: auto;
+    gap: $space-1;
+    padding: 0 $space-3;
+    font-size: $text-sm;
+    font-weight: 600;
+
+    svg {
+      width: 12px;
+      height: 12px;
+    }
   }
 
   &:hover:not(:disabled) {
@@ -935,12 +972,16 @@ input[type="checkbox"] {
 
 // ── Settings card (Emoji switch, Presets disclosure) ──────────────────────
 
+// Quiet outline, not an elevated card: Emoji/Presets are two optional
+// settings, not the primary task — a full shadow+border+padding treatment
+// gave them the same visual weight as the iteration rows they sit above,
+// competing with the actual content for attention. No shadow, no filled
+// background, tighter padding.
 .settings-card {
-  background-color: $surface;
+  background-color: transparent;
   border: 1px solid $border;
   border-radius: $radius-md;
-  box-shadow: $shadow-md;
-  padding: $space-5;
+  padding: $space-2 $space-5;
   margin: 0 $space-4 $space-4;
   align-self: stretch;
 }
@@ -949,21 +990,21 @@ input[type="checkbox"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $space-2 0;
+  padding: $space-3 0;
 }
 
 .settings-row-label {
   display: flex;
   align-items: center;
   gap: $space-3;
-  color: $text;
+  color: $text-dim;
   font-size: $text-sm;
   font-weight: 500;
 
   svg {
-    width: 14px;
-    height: 14px;
-    color: $text-dim;
+    width: 12px;
+    height: 12px;
+    color: $text-faint;
   }
 }
 
@@ -1020,11 +1061,16 @@ input[type="checkbox"] {
   }
 }
 
+// A resting background, not hover-only: a chevron next to plain text reads
+// as a label until proven otherwise by hovering. A subtle at-rest tint
+// signals "this is a control" before the user has to find out by trying it —
+// the same lesson v1's flat buttons taught, applied here to a disclosure row.
 .settings-disclosure {
   cursor: pointer;
   border-radius: $radius-sm;
   margin: 0 (-$space-2);
   padding: $space-2;
+  background-color: rgba(255, 255, 255, 0.02);
 
   &:hover {
     background-color: $surface-hover;

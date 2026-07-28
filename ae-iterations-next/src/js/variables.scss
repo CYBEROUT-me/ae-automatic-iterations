@@ -1,11 +1,17 @@
 // Surfaces — neutral gray, not violet-tinted (v1's mistake)
 $bg: #18181b;
-$surface: #232326;
-$surface-hover: #2a2a2e;
-$surface-raised: #2e2e33;   // icon-button resting background — lighter than $surface, reads as "raised"
+// Raised tones bumped lighter relative to $bg/$inset (unchanged below): on a
+// dark theme, elevation reads through surface *lightness*, not box-shadow —
+// shadows barely register against a near-black background, which is why the
+// v2 "add real elevation" pass still looked flat. Widening this gap is the
+// fix; $highlight-border below is the other half (a hairline lit top edge).
+$surface: #29292e;
+$surface-hover: #303036;
+$surface-raised: #333339;   // icon-button resting background — lighter than $surface, reads as "raised"
 $inset: #14141a;            // input/well background — darker than $surface, reads as "recessed"
-$border: #34343a;
-$border-strong: #3f3f46;    // icon-button border — more visible, buttons need to read as raised
+$border: #3a3a41;
+$border-strong: #45454d;    // icon-button border — more visible, buttons need to read as raised
+$highlight-border: rgba(255, 255, 255, 0.06); // top-edge hairline that stands in for shadow on dark surfaces
 
 // Text
 $text: #d4d4d8;

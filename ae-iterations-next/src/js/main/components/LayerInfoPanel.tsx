@@ -103,8 +103,8 @@ export function LayerInfoPanel() {
         <button className="icon-btn" title="Refresh layer selection" onClick={refresh}>
           <RefreshCw />
         </button>
-        <button className="icon-btn" title="Add layer to current set" onClick={addLayer}>
-          <Plus />
+        <button className="icon-btn labeled" title="Add layer to current set" onClick={addLayer}>
+          <Plus /> Add Layer
         </button>
         <div className="toolbar-layername">{compName ? `${compName} — ${rowLayers.length} row(s)` : "No layer selected"}</div>
         <div className="count-field">
@@ -126,6 +126,13 @@ export function LayerInfoPanel() {
             </div>
           </div>
         </div>
+        <button
+          className={"icon-btn" + (changelogOpen ? " active-state" : "")}
+          title="What's new"
+          onClick={() => setChangelogOpen(!changelogOpen)}
+        >
+          <Info />
+        </button>
       </div>
       {mode === "itr" && (
         <div className="settings-card">
@@ -191,13 +198,6 @@ export function LayerInfoPanel() {
         </div>
       ))}
       <RunButton effectiveValue={effectiveValue} />
-      <button
-        className={"icon-btn" + (changelogOpen ? " active-state" : "")}
-        title="What's new"
-        onClick={() => setChangelogOpen(!changelogOpen)}
-      >
-        <Info />
-      </button>
     </div>
   );
 }

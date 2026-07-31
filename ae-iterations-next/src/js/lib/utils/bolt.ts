@@ -101,7 +101,15 @@ export const evalTS = <
             (<string>parsed.name).toLowerCase().includes("error")
           ) {
             console.error(parsed.message);
-            reject(parsed);
+            // Reject with a real Error, not the plain object JSON.parse
+            // produced: every call site in this panel does `String(err)` to
+            // show the user what went wrong, and String() on a plain
+            // object (even one with a `message` field) is always
+            // "[object Object]" -- the actual ExtendScript error message
+            // (e.g. "No layer selected") was never reaching the user.
+            const err = new Error(parsed.message);
+            err.name = parsed.name;
+            reject(err);
           } else {
             resolve(parsed);
           }

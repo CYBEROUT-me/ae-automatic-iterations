@@ -121,6 +121,23 @@ export const evalTS = <
   });
 };
 
+/**
+ * @function evalTSErrorMessage Extracts a plain message from an evalTS()
+ * rejection for display (e.g. in an alert). evalTS rejects with a real
+ * Error (see above) in the normal case, so `.message` is just the
+ * ExtendScript error text with no redundant "Error: " prefix -- that
+ * prefix comes from Error.prototype.toString(), which "... failed: " +
+ * String(err) would otherwise double up on. Falls back to String(err) for
+ * the one other evalTS rejection shape (a raw unparsed response string,
+ * which has no `.message` at all).
+ */
+export function evalTSErrorMessage(err: unknown): string {
+  if (err && typeof err === "object" && "message" in err && typeof (err as { message: unknown }).message === "string") {
+    return (err as { message: string }).message;
+  }
+  return String(err);
+}
+
 export const evalFile = (file: string) => {
   return evalES(
     "typeof $ !== 'undefined' ? $.evalFile(\"" +

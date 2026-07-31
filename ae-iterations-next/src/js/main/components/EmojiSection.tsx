@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
-import { evalTS } from "../../lib/utils/bolt";
+import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
 import { EmojiPickerGrid } from "./EmojiPickerGrid";
 
 export function EmojiSection() {
@@ -35,7 +35,7 @@ export function EmojiSection() {
     setPreviewStatus("Previewing…");
     evalTS("previewEmoji", { emojiPath: firstPath, x: emojiX, y: emojiY, size: emojiSize, layerIndex: emojiLayerIndex })
       .then((res) => setPreviewStatus(`Previewed in ${res.compName} — Ctrl+Z to undo`))
-      .catch((err) => setPreviewStatus("Preview failed: " + String(err)));
+      .catch((err) => setPreviewStatus("Preview failed: " + evalTSErrorMessage(err)));
   };
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { evalTS } from "../../lib/utils/bolt";
+import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
 
 interface EmojiFile {
   path: string;
@@ -19,7 +19,7 @@ export function EmojiPickerGrid({
   useEffect(() => {
     evalTS("listEmojiFiles")
       .then((res) => setFiles(res.files))
-      .catch((err) => setError(String(err)));
+      .catch((err) => setError(evalTSErrorMessage(err)));
   }, []);
 
   if (error) return <div className="emoji-empty">{error}</div>;

@@ -1,6 +1,6 @@
 import type { RowLayer } from "../state/rowLayers";
 import { useAppStore } from "../state/store";
-import { evalTS } from "../../lib/utils/bolt";
+import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
 import { FolderOpen } from "lucide-react";
 
 export function MediaFields({ row, iter }: { row: RowLayer; iter: number }) {
@@ -13,7 +13,7 @@ export function MediaFields({ row, iter }: { row: RowLayer; iter: number }) {
       .then((res) => {
         if (res.path) setValue(row.rowKey, iter, { ...value, mediaPath: res.path });
       })
-      .catch((err) => alert("Browse failed: " + String(err)));
+      .catch((err) => alert("Browse failed: " + evalTSErrorMessage(err)));
   };
 
   return (

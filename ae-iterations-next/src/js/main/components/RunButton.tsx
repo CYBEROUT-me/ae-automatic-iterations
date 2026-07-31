@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { toCfgLayers } from "../state/rowLayers";
-import { evalTS } from "../../lib/utils/bolt";
+import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
 import { Play } from "lucide-react";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue, RunResult } from "../../../shared/types";
@@ -35,7 +35,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
     }
   };
   const handleError = (err: unknown) => {
-    setStatus("Error: " + String(err));
+    setStatus("Error: " + evalTSErrorMessage(err));
     setStatusKind("error");
   };
 

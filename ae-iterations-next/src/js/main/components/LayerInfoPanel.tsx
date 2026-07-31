@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
-import { evalTS } from "../../lib/utils/bolt";
+import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
 import { IterationRow } from "./IterationRow";
 import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
@@ -67,7 +67,7 @@ export function LayerInfoPanel() {
   const refresh = () => {
     evalTS("getLayerInfo")
       .then((res) => setLayerInfo(res.compName, res.layers))
-      .catch((err) => alert("Refresh failed: " + String(err)));
+      .catch((err) => alert("Refresh failed: " + evalTSErrorMessage(err)));
   };
 
   // Appends the currently selected AE layer(s) to the existing set instead
@@ -83,13 +83,13 @@ export function LayerInfoPanel() {
         }
         addLayerInfo(res.compName, res.layers);
       })
-      .catch((err) => alert("Add layer failed: " + String(err)));
+      .catch((err) => alert("Add layer failed: " + evalTSErrorMessage(err)));
   };
 
   const testVarComps = () => {
     evalTS("testVarRenderComps")
       .then((res) => setTestLog(res.log))
-      .catch((err) => setTestLog(["Test failed: " + String(err)]));
+      .catch((err) => setTestLog(["Test failed: " + evalTSErrorMessage(err)]));
   };
 
   // Effective value used for rendering/reading a non-first, non-stroke, non-video row
@@ -108,7 +108,7 @@ export function LayerInfoPanel() {
     const iterValues = rowLayers.map((r) => effectiveValue(r, iter));
     evalTS("previewApply", { compName, layers, values: iterValues })
       .then((res) => console.log(res.log.join("\n")))
-      .catch((err) => alert("Preview failed: " + String(err)));
+      .catch((err) => alert("Preview failed: " + evalTSErrorMessage(err)));
   };
 
   const showSameForAll = new Set(rowLayers.map((r) => r.layerIndex)).size > 1;

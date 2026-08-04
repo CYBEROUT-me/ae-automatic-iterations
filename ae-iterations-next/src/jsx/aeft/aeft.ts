@@ -2,6 +2,7 @@ import { dispatchTS } from "../utils/utils";
 import { getLayerType, collectFills, collectStrokes, readVideoLayerState } from "./lib/layerUtils";
 import { findCompByName, findCompsBySuffixes, resolveLayer, ITR_SUFFIXES } from "./lib/findComp";
 import { applyLayerValue } from "./lib/applyLayerValue";
+import { applyMediaLayer } from "./lib/applyMedia";
 import { addEmojiToComp, removeEmojiFromComp } from "./lib/applyEmoji";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
@@ -64,9 +65,38 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   if (!comp) throw new Error("Comp not found: " + cfg.compName);
 
   const log: string[] = [];
-  app.beginSuppressDialogs();
   app.beginUndoGroup("Preview Apply");
+  app.beginSuppressDialogs();
   removeEmojiFromComp(comp);
+
+  // Media swaps need importFile, which (per runVarIterationBatch) silently
+  // returns null while dialogs are suppressed -- lift suppression just for
+  // the import pass, then restore it for the rest of the apply.
+  app.endSuppressDialogs(false);
+  const preImportedMedia: Record<number, FootageItem> = {};
+  for (let pli = 0; pli < cfg.layers.length; pli++) {
+    const plc = cfg.layers[pli];
+    if (plc.layerType !== "media") continue;
+    const pval = cfg.values[pli];
+    if (!pval || !pval.mediaPath) continue;
+    try {
+      const mf = new File(pval.mediaPath);
+      if (!mf.exists) {
+        log.push("Layer " + plc.index + ": media file not found");
+        continue;
+      }
+      const fi = app.project.importFile(new ImportOptions(mf));
+      if (fi) {
+        preImportedMedia[plc.index] = fi as FootageItem;
+      } else {
+        log.push("Layer " + plc.index + ": importFile returned null");
+      }
+    } catch (e: any) {
+      log.push("Layer " + plc.index + ": import error: " + e.message);
+    }
+  }
+  app.beginSuppressDialogs();
+
   for (let li = 0; li < cfg.layers.length; li++) {
     const lc = cfg.layers[li];
     const layer = resolveLayer(comp, lc);
@@ -75,6 +105,13 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
       continue;
     }
     log.push("Layer " + lc.index + ": " + layer.name + "  [" + lc.layerType + "]");
+    if (lc.layerType === "media") {
+      const fi = preImportedMedia[lc.index];
+      if (fi) {
+        const ok = applyMediaLayer(layer as AVLayer, fi, !!cfg.values[li].flip);
+        log.push("  → mediaSwap: " + (ok ? "OK" : "FAILED"));
+      }
+    }
     // Plain for-loop, not .map(...): confirmed live in real After Effects
     // that Array.prototype.map is simply missing from this ExtendScript
     // engine — a standalone in-engine probe of map/filter/forEach/for-of/

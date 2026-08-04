@@ -219,7 +219,7 @@ export function LayerInfoPanel() {
               key={iter}
               row={row}
               iter={iter}
-              onPreview={mode === "itr" ? () => previewIteration(iter) : undefined}
+              onPreview={() => previewIteration(iter)}
             />
           ))}
         </div>

@@ -131,14 +131,13 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
         if (lc.layerType === "media") {
           const fi2 = preImportedMedia[lc.index];
           if (fi2) {
-            const ok = applyMediaLayer(layer as AVLayer, fi2);
+            const ok = applyMediaLayer(layer as AVLayer, fi2, !!val.flip);
             if (!ok) warnings.push("VAR " + varName + ": replaceSource failed on layer " + lc.index);
           }
-        } else {
-          const log = applyLayerValue(layer, lc, val);
-          for (const failure of applyLayerValueFailures(log)) {
-            warnings.push("VAR " + varName + " layer " + lc.index + ": " + failure);
-          }
+        }
+        const log = applyLayerValue(layer, lc, val);
+        for (const failure of applyLayerValueFailures(log)) {
+          warnings.push("VAR " + varName + " layer " + lc.index + ": " + failure);
         }
       }
       app.endUndoGroup();

@@ -16,7 +16,7 @@ export function applyLayerValue(layer: any, lc: CfgLayer, val: LayerValue): stri
   } else if (lc.layerType === "stroke") {
     const ok = applyShapeStrokeColor(layer, lc.fillPath, val.color as [number, number, number]);
     log.push("→ strokeColor: " + (ok ? "OK" : "FAILED"));
-  } else if (lc.layerType === "video") {
+  } else if (lc.layerType === "video" || lc.layerType === "media") {
     const ok = applyVideoLayer(layer, {
       flip: !!val.flip, bw: !!val.bw, tint: val.tint ?? null, tintAmount: val.tintAmount, hue: val.hue ?? 0,
     });

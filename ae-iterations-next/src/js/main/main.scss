@@ -390,12 +390,25 @@ body,
 // ── VAR media rows ───────────────────────────────────────────────────────
 
 .media-fields {
+  display: flex;
+  flex-direction: column;
+  row-gap: $space-2;
+  flex: 1;
+  min-width: 0;
+}
+
+.media-fields-browse-row {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
   column-gap: $space-4;
-  flex: 1;
-  min-width: 0;
+}
+
+.media-fields-effects-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  column-gap: $space-4;
 }
 
 .media-file-label {

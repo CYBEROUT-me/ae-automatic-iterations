@@ -391,3 +391,115 @@ gate" precedent in ITR mode.
   in this design alongside the shape/text layer creation already called out above, and should
   get the same "verify against the real running host/browser before trusting it" treatment
   rather than being assumed correct from the arithmetic alone.
+
+## Revision 2 — Feedback from real usage
+
+After the first implementation shipped, the user actually tried it in AE and reported four
+issues. Settled via direct Q&A (not inferred):
+
+1. **Bug: "Position visually…" required a refreshed layer selection for no reason.**
+   `renderPreviewFrame` already falls back to AE's active comp when no `compName` is given —
+   the panel's `disabled={!compName}` gate on the button never needed to exist. Fixed by
+   removing the gate; badge/logo positioning is layer-selection-independent, matching how they
+   already apply independently of `cfg.layers` everywhere else in this design.
+2. **The position-picker's marker was a generic dot/square, not a true preview.** Confirmed:
+   the popup should render the actual badge (real circle size/color + real text, sized by the
+   configured `size`) or the actual logo image (loaded and scaled by `size`), not an abstract
+   marker — real WYSIWYG placement, not just "roughly here."
+3. **Corner-snap buttons, in addition to drag + manual X/Y.** Confirmed: add TL/TR/BL/BR
+   quick-position buttons inside the position-picker popup (which already knows the comp's
+   width/height from `renderPreviewFrame`, so no new host call is needed) — one click for rough
+   placement, drag/typing still available for fine-tuning. This supplements Decision 5/7, it
+   doesn't replace either.
+4. **"Applies on top, so it also shows on packshot" — an "attach to layer" field, like Emoji's,
+   but layer-index alone doesn't solve it.** Emoji's existing `layerIndex` only controls
+   stacking order — Emoji still spans the *entire* comp duration regardless of which layer it's
+   attached to, so attaching alone wouldn't exclude a packshot/end-card section. Confirmed via
+   follow-up: **badge/logo's own timespan should inherit the attached layer's `inPoint`/
+   `outPoint`** instead of defaulting to the full comp duration. Picking the main content layer
+   (which ends before a packshot section) makes the overlay naturally disappear there too,
+   without needing any separate time-range UI.
+   - **Badge**: `layerIndex` (optional, `0`/unset = today's behavior — full comp duration, no
+     stacking change) drives *duration-matching only*. Badge is a two-layer construct (circle +
+     text); reordering both together while preserving their relative front/back order for an
+     arbitrary stacking target adds real complexity for uncertain benefit, so badge's own
+     stacking position stays fixed at the top of the stack, unchanged from the original design.
+     This is a deliberate asymmetry with Logo, not an oversight.
+   - **Logo**: `layerIndex` (optional, same `0`/unset sentinel) drives *both* stacking position
+     and duration-matching, mirroring Emoji's existing dual-purpose field exactly (Logo already
+     reuses `applyImageOverlay.ts`'s `targetIndex` mechanics via `addLogoToComp`).
+5. **Logo folder location stays Application Support** (Decision 4, unchanged) — confirmed
+   explicitly, since it survives extension reinstalls the same way saved presets already do.
+   The user had dropped logo files into `ae-iterations-next/src/Logo` (the extension's own dev
+   source tree) before finding the real path; fixed by making `LogoPickerGrid`'s empty-state
+   message more prominent, plus a one-time move of the already-dropped files into the real
+   folder.
+
+### Revised Data Flow
+
+```ts
+export interface BadgeConfig {
+  enabled: boolean;
+  perIteration: (string | null)[];
+  x: number;
+  y: number;
+  size: number;
+  circleColor: [number, number, number];
+  textColor: [number, number, number];
+  layerIndex?: number; // 0/unset = full comp duration, fixed top-of-stack (unchanged default)
+}
+
+export interface LogoConfig {
+  enabled: boolean;
+  path: string | null;
+  x: number;
+  y: number;
+  size: number;
+  layerIndex?: number; // 0/unset = full comp duration, top of stack (unchanged default);
+                        // a positive index also controls stacking, exactly like EmojiConfig
+}
+```
+
+**`lib/applyImageOverlay.ts`** gains a shared resolution helper, used by both Logo's and
+Badge's callers:
+
+```ts
+export function resolveOverlayAttachment(
+  comp: CompItem, layerIndex: number | undefined
+): { targetIndex: number; inPoint?: number; outPoint?: number } {
+  if (!layerIndex || layerIndex < 1) return { targetIndex: 1 };
+  try {
+    const target = comp.layer(layerIndex);
+    return { targetIndex: layerIndex, inPoint: target.inPoint, outPoint: target.outPoint };
+  } catch (e) {
+    return { targetIndex: 1 };
+  }
+}
+```
+
+`addImageOverlayToComp` (and therefore `addLogoToComp`/`addEmojiToComp`) gains optional
+trailing `inPoint?`/`outPoint?` parameters, defaulting to `0`/`comp.duration` exactly as today
+when omitted — **Emoji's two existing call sites pass neither, so its behavior is provably
+unchanged.** `addBadgeToComp` gains the same two optional parameters (duration only, no
+`targetIndex` parameter added, per the asymmetry above).
+
+Both `runVarIterationBatch.ts` and `previewApply` call `resolveOverlayAttachment(comp,
+layerIndex)` immediately before their existing `addBadgeToComp`/`addLogoToComp` calls, and pass
+its `inPoint`/`outPoint` (and, for Logo only, `targetIndex`) through.
+
+### Revised Panel-side Architecture
+
+- **Store** gains `badgeLayerIndex: number` (default `0`), `logoLayerIndex: number` (default
+  `0`), and their setters — same flat-field convention as everything else in this store.
+- **`BadgeSection`/`LogoSection`** each gain an "Attach to layer" row, reusing Emoji's exact
+  existing `.emoji-layer-row`/`.emoji-layer-label`/`.emoji-layer-input` markup and classes
+  (no new CSS needed for this part).
+- **`PositionPickerPopup`** changes from a generic-marker component to one that receives an
+  `overlay` prop (a discriminated union: `{ kind: "badge"; text; size; circleColor; textColor }`
+  or `{ kind: "logo"; size; imagePath }`) and renders the real thing at the correct on-screen
+  scale — a colored, sized `div` with centered text for badge; the actual `<img>` (loaded to
+  read its natural pixel dimensions, then scaled by `size` and the popup's display scale) for
+  logo. It also gains four corner-snap buttons (a fixed pixel margin, e.g. 80px, inset from
+  each edge) that call the same `onChange` the drag handler already uses.
+- **Both sections'** "Position visually…" buttons drop their `disabled={!compName}` — always
+  enabled, since positioning never depended on a refreshed layer selection.

@@ -11,6 +11,8 @@
 
 import { applyLayerValue, applyLayerValueFailures } from "../lib/applyLayerValue";
 import { applyMediaLayer } from "../lib/applyMedia";
+import { addBadgeToComp, removeBadgeFromComp } from "../lib/applyBadge";
+import { addLogoToComp, removeLogoFromComp } from "../lib/applyLogo";
 import { renderPNGs, renderVideos } from "../lib/render";
 import { cleanProject } from "../lib/clean";
 import { performCollect } from "../lib/collect";
@@ -97,6 +99,24 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
         }
       }
 
+      // Logo's import shares this same lifted-suppression window -- it's the
+      // same importFile-silently-returns-null-while-suppressed constraint as
+      // media above, so there's no reason to open a second window for it.
+      let logoFootage: FootageItem | null = null;
+      if (cfg.logo && cfg.logo.enabled && cfg.logo.path) {
+        try {
+          const lf = new File(cfg.logo.path);
+          if (!lf.exists) {
+            warnings.push("VAR " + varName + ": logo file not found");
+          } else {
+            logoFootage = app.project.importFile(new ImportOptions(lf)) as FootageItem;
+            if (!logoFootage) warnings.push("VAR " + varName + ": logo importFile returned null");
+          }
+        } catch (e: any) {
+          warnings.push("VAR " + varName + ": logo import error: " + e.message);
+        }
+      }
+
       // Restore suppression for apply / save / render / collect.
       app.beginSuppressDialogs();
 
@@ -140,6 +160,34 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
           warnings.push("VAR " + varName + " layer " + lc.index + ": " + failure);
         }
       }
+
+      // Badge/logo apply only to the 9x16 render comp, never 1x1/16x9/4x5 --
+      // independent of the per-layer loop above, same as Emoji is
+      // independent of the layer-value gate in ITR mode. Remove-before-add
+      // runs even though VAR doesn't chain iterations forward (unlike ITR):
+      // it's defending against a leftover Preview-button badge/logo layer
+      // that got saved into `tempFile` before this loop ever started (see
+      // this task's "watch out for" item 2).
+      const badgeLogoComp = renderComps["9x16"];
+      if (badgeLogoComp) {
+        if (cfg.badge && cfg.badge.enabled) {
+          removeBadgeFromComp(badgeLogoComp);
+          const badgeText = cfg.badge.perIteration[iter];
+          if (badgeText) {
+            addBadgeToComp(
+              badgeLogoComp, badgeText, cfg.badge.x, cfg.badge.y, cfg.badge.size,
+              cfg.badge.circleColor, cfg.badge.textColor
+            );
+          }
+        }
+        if (cfg.logo && cfg.logo.enabled && logoFootage) {
+          removeLogoFromComp(badgeLogoComp);
+          addLogoToComp(badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size);
+        }
+      } else if ((cfg.badge && cfg.badge.enabled) || (cfg.logo && cfg.logo.enabled)) {
+        warnings.push("VAR " + varName + ": 9x16 render comp not found, badge/logo skipped");
+      }
+
       app.endUndoGroup();
       app.endSuppressDialogs(false);
 

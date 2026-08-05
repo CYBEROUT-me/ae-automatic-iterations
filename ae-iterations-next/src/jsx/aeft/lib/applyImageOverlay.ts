@@ -71,9 +71,16 @@ export function addImageOverlayToComp(
   const sz = size || 100;
   layer.transform.scale.setValue([sz, sz]);
 
-  // Time remapping so loopOut works regardless of source duration
-  layer.timeRemapEnabled = true;
-  layer.timeRemap.expression = 'loopOut("cycle")';
+  // Time remapping so loopOut works regardless of source duration -- but
+  // only when the source actually supports it. Emoji's source is always an
+  // animated GIF (real duration, loopOut makes sense); Logo's source is
+  // typically a static PNG/JPG (zero duration, nothing to remap), and AE
+  // throws "Can not set timeRemapEnabled" for those -- canSetTimeRemapEnabled
+  // is exactly the check AE's own error message points at.
+  if (layer.canSetTimeRemapEnabled) {
+    layer.timeRemapEnabled = true;
+    layer.timeRemap.expression = 'loopOut("cycle")';
+  }
 
   // Move to target index.
   // After layers.add() our layer is at 1; original layers shifted to 2..N+1.

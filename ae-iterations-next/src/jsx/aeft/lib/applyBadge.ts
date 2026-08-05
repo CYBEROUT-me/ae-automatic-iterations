@@ -79,6 +79,14 @@ export function addBadgeToComp(
 
   const textProp = textLayer.property("Source Text") as any;
   const textDoc = textProp.value;
+  // Explicit, near-universally-available font -- a fresh text layer
+  // otherwise inherits whatever AE's own default/last-used font is, which
+  // is a plausible trigger for a missing-font substitution dialog on
+  // save+reopen (this project reopens every VAR variant mid-run). A dialog
+  // there would block scripted execution silently, matching a real report
+  // of only the 9x16 PNG rendering while 1x1/16x9/4x5 didn't (videos,
+  // rendered before reopen, were unaffected).
+  textDoc.font = "ArialMT";
   textDoc.fontSize = BASE_FONT_SIZE;
   textDoc.fillColor = textColor;
   textDoc.justification = ParagraphJustification.CENTER_JUSTIFY;

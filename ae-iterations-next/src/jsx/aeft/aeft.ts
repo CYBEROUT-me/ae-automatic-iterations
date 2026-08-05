@@ -130,6 +130,23 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   return { log };
 };
 
+// Renders frame 0 of a comp to a fixed temp-file path (overwritten on every
+// call -- no per-call unique filename, so no temp-file accumulation across
+// repeated popup opens) and reports its pixel dimensions, backing the
+// visual position-picker popup. Falls back to the active comp when no
+// compName is given, matching previewApply's own comp-resolution fallback.
+export const renderPreviewFrame = (cfg?: { compName?: string }): { path: string; width: number; height: number } => {
+  let comp: CompItem | null = null;
+  if (cfg && cfg.compName) comp = findCompByName(cfg.compName);
+  if (!comp && app.project.activeItem instanceof CompItem) comp = app.project.activeItem;
+  if (!comp) throw new Error("No comp found. Refresh a layer first.");
+
+  const outFile = new File(Folder.temp.fsName + "/aeiter_position_preview.png");
+  comp.saveFrameToPng(0, outFile);
+
+  return { path: outFile.fsName, width: comp.width, height: comp.height };
+};
+
 // Inserts a temporary, undo-groupable emoji layer into the active comp (or
 // falls back to any found ITR render comp) so the user can check
 // position/size before running a real batch. Ported from host.jsx's

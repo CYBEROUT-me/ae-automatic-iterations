@@ -4,6 +4,7 @@ import { rgbToHex } from "../lib/color";
 
 const POPUP_WIDTH = 320;
 const CORNER_MARGIN = 80; // comp pixels
+const MIN_SIZE = 1; // percent
 
 // Must match lib/applyBadge.ts's BASE_DIAMETER/BASE_FONT_SIZE exactly, so this
 // preview's proportions match the real AE render. Duplicated rather than
@@ -27,6 +28,7 @@ export function PositionPickerPopup({
   x,
   y,
   onChange,
+  onSizeChange,
   onClose,
   overlay,
 }: {
@@ -34,6 +36,7 @@ export function PositionPickerPopup({
   x: number;
   y: number;
   onChange: (x: number, y: number) => void;
+  onSizeChange: (size: number) => void;
   onClose: () => void;
   overlay: OverlayPreview;
 }) {
@@ -43,6 +46,7 @@ export function PositionPickerPopup({
   const [logoNatural, setLogoNatural] = useState<{ width: number; height: number } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
+  const resizingRef = useRef(false);
 
   useEffect(() => {
     evalTS("renderPreviewFrame", compName ? { compName } : undefined)
@@ -58,6 +62,10 @@ export function PositionPickerPopup({
   const scale = frame ? POPUP_WIDTH / frame.width : 1;
   const displayHeight = frame ? frame.height * scale : POPUP_WIDTH;
 
+  // Base half-width in comp pixels at size=100 -- the resize handle's
+  // distance from center is this, times size/100, times scale.
+  const baseHalfWidth = overlay.kind === "badge" ? BASE_DIAMETER / 2 : logoNatural ? logoNatural.width / 2 : 0;
+
   const updateFromClientPos = (clientX: number, clientY: number) => {
     if (!frame || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -66,12 +74,23 @@ export function PositionPickerPopup({
     onChange(Math.round(relX / scale), Math.round(relY / scale));
   };
 
+  const updateSizeFromClientX = (clientX: number) => {
+    if (!frame || !canvasRef.current || baseHalfWidth <= 0) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const dx = clientX - rect.left - x * scale;
+    const newHalfWidthScreen = Math.max(dx, 4);
+    const newSize = (newHalfWidthScreen / scale / baseHalfWidth) * 100;
+    onSizeChange(Math.max(MIN_SIZE, Math.round(newSize)));
+  };
+
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      if (draggingRef.current) updateFromClientPos(e.clientX, e.clientY);
+      if (resizingRef.current) updateSizeFromClientX(e.clientX);
+      else if (draggingRef.current) updateFromClientPos(e.clientX, e.clientY);
     };
     const onUp = () => {
       draggingRef.current = false;
+      resizingRef.current = false;
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
@@ -89,6 +108,9 @@ export function PositionPickerPopup({
         { label: "BR", x: frame.width - CORNER_MARGIN, y: frame.height - CORNER_MARGIN },
       ]
     : [];
+
+  const displayedHalfWidth = baseHalfWidth * (overlay.size / 100) * scale;
+  const showResizeHandle = overlay.kind === "badge" || !!logoNatural;
 
   return (
     <div className="position-picker-backdrop" data-testid="position-picker-backdrop" onClick={onClose}>
@@ -155,6 +177,19 @@ export function PositionPickerPopup({
               <div
                 className="position-picker-marker position-picker-marker-logo"
                 style={{ left: x * scale, top: y * scale }}
+              />
+            )}
+
+            {showResizeHandle && (
+              <div
+                data-testid="position-picker-resize-handle"
+                className="position-picker-resize-handle"
+                title="Drag to resize"
+                style={{ left: x * scale + displayedHalfWidth, top: y * scale }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  resizingRef.current = true;
+                }}
               />
             )}
           </div>

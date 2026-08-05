@@ -59,6 +59,7 @@ export function LogoSection() {
             setLogoX(nx);
             setLogoY(ny);
           }}
+          onSizeChange={setLogoSize}
           onClose={() => setPickerOpen(false)}
         />
       )}

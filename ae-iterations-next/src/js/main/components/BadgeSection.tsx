@@ -87,6 +87,7 @@ export function BadgeSection() {
             setBadgeX(nx);
             setBadgeY(ny);
           }}
+          onSizeChange={setBadgeSize}
           onClose={() => setPickerOpen(false)}
         />
       )}

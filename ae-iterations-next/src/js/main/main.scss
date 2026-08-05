@@ -1489,6 +1489,18 @@ input[type="checkbox"] {
   }
 }
 
+.position-picker-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: $accent;
+  border: 2px solid $text-strong;
+  transform: translate(-50%, -50%);
+  cursor: ew-resize;
+  z-index: 1;
+}
+
 .position-picker-loading,
 .position-picker-error {
   font-size: $text-sm;

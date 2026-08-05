@@ -31,6 +31,11 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
   const [statusKind, setStatusKind] = useState<StatusKind>("idle");
 
   const emojiOnly = mode === "itr" && emojiEnabled;
+  // VAR mode's badge/logo overlays are independent of cfg.layers (they apply
+  // to the 9x16 render comp directly), so a run with badge/logo enabled but
+  // no layer ever selected/refreshed is a legitimate, supported workflow --
+  // same reasoning as ITR's emojiOnly bypass above.
+  const overlayOnly = mode === "var" && (badgeEnabled || logoEnabled);
 
   const handleResult = (res: RunResult, noun: string) => {
     if (res.warnings.length) {
@@ -47,7 +52,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
   };
 
   const run = () => {
-    if (!compName && !emojiOnly) {
+    if (!compName && !emojiOnly && !overlayOnly) {
       setStatus("Refresh a layer first.");
       setStatusKind("error");
       return;
@@ -92,7 +97,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
 
   return (
     <div id="run-section">
-      <button id="btn-run" onClick={run} disabled={!compName && !emojiOnly}>
+      <button id="btn-run" onClick={run} disabled={!compName && !emojiOnly && !overlayOnly}>
         <Play />
         {mode === "var" ? "Run VAR" : "Run Iterations"}
       </button>

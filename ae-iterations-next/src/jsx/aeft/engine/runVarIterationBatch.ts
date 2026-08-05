@@ -125,40 +125,51 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
       // it was one of the render comps just renamed above -> look up
       // varBase + that suffix. Otherwise it's a nested precomp that was
       // never touched -> look it up by its original name unchanged.
-      const cfgCompBase = cfg.compName.replace(/\.aep$/i, "");
-      let origAspect = "";
-      for (let as = 0; as < VAR_ASPECT_SUFFIXES.length; as++) {
-        const asSuffix = "_" + VAR_ASPECT_SUFFIXES[as];
-        if (cfgCompBase.slice(-asSuffix.length) === asSuffix) {
-          origAspect = VAR_ASPECT_SUFFIXES[as];
-          break;
+      // cfg.compName is empty for a badge/logo-only run (no layer was ever
+      // selected/refreshed) -- that's not an error, since layer-value
+      // application is genuinely optional (badge/logo apply independently,
+      // via renderComps["9x16"] below, regardless of comp). Only warn (not
+      // throw) so the rest of this iteration -- including badge/logo --
+      // still runs.
+      let comp: CompItem | null = null;
+      if (cfg.compName) {
+        const cfgCompBase = cfg.compName.replace(/\.aep$/i, "");
+        let origAspect = "";
+        for (let as = 0; as < VAR_ASPECT_SUFFIXES.length; as++) {
+          const asSuffix = "_" + VAR_ASPECT_SUFFIXES[as];
+          if (cfgCompBase.slice(-asSuffix.length) === asSuffix) {
+            origAspect = VAR_ASPECT_SUFFIXES[as];
+            break;
+          }
         }
-      }
-      const searchCompName = origAspect ? varBase + "_" + origAspect : cfgCompBase;
-      const comp = findVarComp(searchCompName);
-      if (!comp) {
-        throw new Error("VAR " + varName + ": comp not found: " + searchCompName);
+        const searchCompName = origAspect ? varBase + "_" + origAspect : cfgCompBase;
+        comp = findVarComp(searchCompName);
+        if (!comp) {
+          warnings.push("VAR " + varName + ": comp not found: " + searchCompName + " (layer values skipped)");
+        }
       }
 
       app.beginUndoGroup("VAR " + varName);
-      for (let li = 0; li < cfg.layers.length; li++) {
-        const lc = cfg.layers[li];
-        const layer = comp.layer(lc.index);
-        if (!layer) {
-          warnings.push("VAR " + varName + ": layer " + lc.index + " not found");
-          continue;
-        }
-        const val = cfg.values[iter][li];
-        if (lc.layerType === "media") {
-          const fi2 = preImportedMedia[lc.index];
-          if (fi2) {
-            const ok = applyMediaLayer(layer as AVLayer, fi2, !!val.flip);
-            if (!ok) warnings.push("VAR " + varName + ": replaceSource failed on layer " + lc.index);
+      if (comp) {
+        for (let li = 0; li < cfg.layers.length; li++) {
+          const lc = cfg.layers[li];
+          const layer = comp.layer(lc.index);
+          if (!layer) {
+            warnings.push("VAR " + varName + ": layer " + lc.index + " not found");
+            continue;
           }
-        }
-        const log = applyLayerValue(layer, lc, val);
-        for (const failure of applyLayerValueFailures(log)) {
-          warnings.push("VAR " + varName + " layer " + lc.index + ": " + failure);
+          const val = cfg.values[iter][li];
+          if (lc.layerType === "media") {
+            const fi2 = preImportedMedia[lc.index];
+            if (fi2) {
+              const ok = applyMediaLayer(layer as AVLayer, fi2, !!val.flip);
+              if (!ok) warnings.push("VAR " + varName + ": replaceSource failed on layer " + lc.index);
+            }
+          }
+          const log = applyLayerValue(layer, lc, val);
+          for (const failure of applyLayerValueFailures(log)) {
+            warnings.push("VAR " + varName + " layer " + lc.index + ": " + failure);
+          }
         }
       }
 

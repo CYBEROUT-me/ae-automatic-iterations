@@ -87,7 +87,13 @@ export function BadgeSection() {
           compName={compName}
           x={badgeX}
           y={badgeY}
-          markerKind="badge"
+          overlay={{
+            kind: "badge",
+            text: badgeTexts.find((t) => !!t) || "25",
+            size: badgeSize,
+            circleColor: badgeCircleColor,
+            textColor: badgeTextColor,
+          }}
           onChange={(nx, ny) => {
             setBadgeX(nx);
             setBadgeY(ny);

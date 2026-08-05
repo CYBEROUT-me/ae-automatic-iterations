@@ -54,7 +54,7 @@ export function LogoSection() {
           compName={compName}
           x={logoX}
           y={logoY}
-          markerKind="logo"
+          overlay={{ kind: "logo", size: logoSize, imagePath: logoPath }}
           onChange={(nx, ny) => {
             setLogoX(nx);
             setLogoY(ny);

@@ -1388,14 +1388,14 @@ input[type="checkbox"] {
   cursor: crosshair;
   border-radius: $radius-sm;
   overflow: hidden;
+}
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    pointer-events: none;
-  }
+.position-picker-snapshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
 }
 
 .position-picker-marker {
@@ -1410,6 +1410,51 @@ input[type="checkbox"] {
 
   &.position-picker-marker-logo {
     border-radius: 4px;
+  }
+}
+
+// Real WYSIWYG preview: a circle sized/colored exactly like addBadgeToComp
+// will actually render, with the configured text centered inside.
+.position-picker-badge-preview {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-family: $mono-font;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.position-picker-logo-preview {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  object-fit: contain;
+}
+
+.position-picker-corners {
+  display: flex;
+  gap: $space-2;
+}
+
+.position-picker-corner-btn {
+  flex: 1;
+  background-color: $surface-raised;
+  color: $text-dim;
+  border: 1px solid $border-strong;
+  border-radius: $radius-sm;
+  padding: $space-1 0;
+  font-size: $text-xs;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $surface-hover;
+    color: $text;
   }
 }
 

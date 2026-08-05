@@ -9,8 +9,10 @@
 
 Give VAR mode (`ae-iterations-next`) two new overlay capabilities the user asked for directly:
 
-1. A circle-with-text "badge" (e.g. "25") in a corner, with the text settable per VAR variant.
-2. A logo image in a corner, shared across all variants.
+1. A circle-with-text "badge" (any free text, e.g. "25+") in a corner, with the text settable
+   per VAR variant.
+2. A logo image in a corner, shared across all variants, picked from a dedicated
+   user-maintained logo folder.
 
 The user also asked for a third capability — pulling a UI element out of a pre-built `.aep`
 project — which is explicitly deferred (see Out of Scope).
@@ -30,20 +32,30 @@ Settled during brainstorming (via direct user Q&A, not inferred):
 1. **VAR-only**, not generalized to ITR. Confirmed explicitly.
 2. **Badge and logo can both be active at once** (stacked), each with independent
    position/size — not a single-overlay-at-a-time picker.
-3. **Badge text is per-iteration** — each VAR variant has its own text field (e.g. variant A
-   = "25", variant B = "50"), matching Emoji's per-iteration-value pattern but with a plain
-   text input instead of an image picker.
-4. **Logo is one fixed image shared across all iterations** — a single Browse-for-file
-   picker, no per-iteration variation.
-5. **Position uses raw X/Y number fields**, matching the existing Emoji overlay's UI — not a
-   corner-dropdown-plus-margin control. Both overlays must be **live-previewable**.
+3. **Badge text is per-iteration and is free text, not limited to numbers** — each VAR
+   variant has its own text field (e.g. variant A = "25+", variant B = "50% OFF", or any
+   other string), matching Emoji's per-iteration-value pattern but with a plain text input
+   instead of an image picker.
+4. **Logo is one fixed image shared across all iterations, picked from a dedicated
+   user-maintained folder** — not a raw OS file-browse dialog. The user drops logo files into
+   a persistent folder once (survives extension updates, same category as the existing
+   user-presets location) and picks from a thumbnail grid, mirroring Emoji's picker UX but
+   sourced from a folder the user curates directly via Finder/Explorer instead of a bundled
+   asset set shipped with the extension.
+5. **Position uses raw X/Y number fields** as the source of truth, matching the existing
+   Emoji overlay's UI. Both overlays must be **live-previewable**.
 6. **Position only needs to be correct for the 9x16 render comp.** Badge and logo layers are
    added only to the `"9x16"` entry of `VAR_ASPECT_SUFFIXES` (`["9x16", "1x1", "16x9",
    "4x5"]`), never to the other three. This sidesteps the cross-aspect-ratio positioning
    problem Emoji's ITR implementation has (same x/y applied to comps of very different
    dimensions) rather than reproducing it.
-7. **`.aep`-UI import is deferred**, not built in this pass — it is the most technically novel
-   of the three asks (importing another AE project's composition needs ExtendScript
+7. **Position can also be set visually**, via a popup showing a live-rendered snapshot of the
+   current comp with a draggable marker — for both badge and logo, using one shared popup
+   component. Dragging updates the same X/Y fields live; the numeric fields from Decision 5
+   are kept and stay independently editable, not replaced. This is a supplement to Decision 5,
+   not an alternative to it.
+8. **`.aep`-UI import is deferred**, not built in this pass — it is the most technically novel
+   of the three original asks (importing another AE project's composition needs ExtendScript
    validation before a UI can be designed around it) and the user chose to ship the two
    well-understood overlays first.
 
@@ -52,7 +64,7 @@ Settled during brainstorming (via direct user Q&A, not inferred):
 ```ts
 export interface BadgeConfig {
   enabled: boolean;
-  perIteration: (string | null)[]; // badge text per iteration, count-length, e.g. "25"
+  perIteration: (string | null)[]; // badge text per iteration, count-length — free text, e.g. "25+"
   x: number;
   y: number;
   size: number; // uniform scale percentage, same shape as EmojiConfig
@@ -62,7 +74,7 @@ export interface BadgeConfig {
 
 export interface LogoConfig {
   enabled: boolean;
-  path: string | null; // one image, shared across all iterations
+  path: string | null; // path to a file inside the logo library folder (see logoLibrary.ts), shared across all iterations
   x: number;
   y: number;
   size: number;
@@ -177,6 +189,17 @@ gate" precedent in ITR mode.
   the currently open comp," not "what the real Run would do to the 9x16 render comp
   specifically." This is a deliberate, called-out simplification, not an oversight.
 
+- **`aeft.ts` gains `renderPreviewFrame(compName?: string): { path: string; width: number;
+  height: number }`** — backs the visual position-picker popup (Decision 7). Resolves the
+  target comp the same way `previewApply` does (`findCompByName(compName)` if given, else
+  `app.project.activeItem`), calls `comp.saveFrameToPng(0, new File(...))` (the exact call
+  `render.ts`'s `renderPNGs` already uses) against a **fixed** path in `Folder.temp`
+  (`aeiter_position_preview.png`, overwritten every call — no per-call unique filename, so no
+  temp-file accumulation across repeated popup opens), and returns that path plus
+  `comp.width`/`comp.height` so the panel can convert between comp-pixel coordinates and the
+  popup's on-screen rendering. Throws `Error` on failure (no comp found), per this codebase's
+  host-command convention.
+
 ## Panel-side Architecture (`src/js/main/`)
 
 - **`state/store.ts`** gains flat fields, matching the `varNames`/`emoji*` convention (not a
@@ -208,15 +231,59 @@ gate" precedent in ITR mode.
   sections). Rendered in `LayerInfoPanel.tsx` only when `mode === "var"` — the mirror image of
   the existing `{mode === "itr" && <div className="settings-card">...}` block.
   - **Badge overlay row** → toggle, then (when on) `BadgeSection`: shared X/Y/Size number
-    inputs (same layout as `EmojiSection`'s position/size row), a circle-color `<input
-    type="color">` and a text-color `<input type="color">` (reusing `hexToRgb`/`rgbToHex` from
-    `lib/color.ts`, the same helpers `VideoEffectFields`' tint picker already uses), and one
-    plain text input per iteration row (label = iteration number, input = badge text) —
-    structurally like `EmojiSection`'s per-iteration rows but a text input instead of a
-    thumbnail-grid picker, since there is no curated asset library for text.
-  - **Logo overlay row** → toggle, then (when on) `LogoSection`: a Browse-for-file button
-    (reusing the same `evalTS("browseForMedia")` call `MediaFields.tsx` already uses) +
-    filename label, then shared X/Y/Size number inputs. No per-iteration UI.
+    inputs (same layout as `EmojiSection`'s position/size row) plus a "Position visually…"
+    button (see Position Picker below), a circle-color `<input type="color">` and a
+    text-color `<input type="color">` (reusing `hexToRgb`/`rgbToHex` from `lib/color.ts`, the
+    same helpers `VideoEffectFields`' tint picker already uses), and one plain text input per
+    iteration row (label = iteration number, input = badge text, any string) — structurally
+    like `EmojiSection`'s per-iteration rows but a text input instead of a thumbnail-grid
+    picker, since there is no curated asset library for text.
+  - **Logo overlay row** → toggle, then (when on) `LogoSection`: a thumbnail grid (see Logo
+    Library below) instead of a Browse button, single-select (Decision 4 — one fixed logo,
+    not per-iteration), then shared X/Y/Size number inputs plus the same "Position visually…"
+    button. No per-iteration UI beyond the single selection.
+
+- **Logo library** (new) — `src/js/main/lib/logoLibrary.ts`, mirroring
+  `userPresets.ts`'s cross-platform path resolution exactly (same guarded try/catch around
+  `os`/`path`, same reasoning about Vite's dev server having no real Node runtime):
+  ```ts
+  export function logoLibraryPath(
+    platform: NodeJS.Platform = process.platform,
+    env: NodeJS.ProcessEnv = process.env,
+    homedir: string = ""
+  ): string; // .../AE Iterations/logos  (sibling to user-presets.json's parent folder)
+  export function listLogoFiles(dirPath: string = logoLibraryPath()): string[];
+  // returns absolute file paths for image files in dirPath, sorted; creates dirPath via
+  // fs.mkdirSync(dirPath, { recursive: true }) if it doesn't exist yet, so there's always
+  // somewhere for the user to drop files into, empty-state or not — same as
+  // saveUserPresets()'s mkdir-on-write, just triggered on first read instead.
+  ```
+  No new host/ExtendScript command needed for listing — this is a plain OS folder at a fixed,
+  known path (same category as `user-presets.json`'s location), so `fs.readdirSync` runs
+  directly panel-side, unlike Emoji's `listEmojiFiles` (which has to go through the host
+  because the emoji folder is bundled *inside* the running extension's own install path).
+  **`components/LogoPickerGrid.tsx`** (new) — thumbnail grid populated from
+  `listLogoFiles()`, single-select, highlighting the current `logoPath`, structurally like
+  `EmojiPickerGrid.tsx`'s selected-state visuals. Empty state shows the resolved
+  `logoLibraryPath()` as plain text (e.g. "No logos yet — drop image files into
+  `~/Library/Application Support/AE Iterations/logos/`") so the user knows exactly where to
+  put files, without any "reveal in Finder/Explorer" affordance (judged unnecessary scope for
+  this pass — the path is just text, copyable).
+
+- **Position picker** (new) — `components/PositionPickerPopup.tsx`, shared by both
+  `BadgeSection` and `LogoSection` (Decision 7). Props: `compName` (from the panel's existing
+  tracked state), current `x`/`y`, an `onChange(x, y)` callback wired to that section's own
+  store setters, and a `markerKind: "badge" | "logo"` (purely cosmetic — a circle outline vs a
+  small square/logo glyph). On open, calls `evalTS("renderPreviewFrame", { compName })` once
+  to fetch the snapshot path + comp `width`/`height`, renders that PNG as the popup's
+  background scaled to fit, and overlays a draggable marker whose on-screen position is
+  computed from `x/width` and `y/height`. Pointer-drag handling converts screen deltas back
+  into comp-pixel deltas using the same `width`/`height`, calling `onChange` continuously
+  during the drag (so the section's numeric X/Y inputs — which are still rendered, per
+  Decision 7 — update live alongside the drag, both reading from the same store fields). The
+  "Position visually…" button that opens this popup is disabled (with a tooltip) when no
+  `compName` is set yet, mirroring how other comp-dependent actions in this panel are already
+  gated behind "refresh a layer first."
 
 - **Preview integration**: no new "Preview Badge"/"Preview Logo" buttons. The existing
   `previewIteration(iter)` in `LayerInfoPanel.tsx` (already unconditionally wired to every
@@ -248,8 +315,13 @@ gate" precedent in ITR mode.
 - The `applyEmoji.ts` → `applyImageOverlay.ts` extraction is manually re-verified (Preview
   Emoji in ITR mode still places/removes correctly) since it touches shipped, reviewed code,
   even though the change is mechanical.
-- Panel-side (`VarOverlaysCard`, `BadgeSection`, `LogoSection`, new store setters) — Vitest +
-  RTL component tests mocking `evalTS`, matching `MediaFields.test.tsx`/`VarNamesRow.test.tsx`.
+- Panel-side (`VarOverlaysCard`, `BadgeSection`, `LogoSection`, `PositionPickerPopup`,
+  `LogoPickerGrid`, new store setters) — Vitest + RTL component tests mocking `evalTS`,
+  matching `MediaFields.test.tsx`/`VarNamesRow.test.tsx`.
+- **`logoLibrary.ts`'s `logoLibraryPath()`/`listLogoFiles()`** — Vitest unit tests with
+  injected `platform`/`env`/`homedir`/`dirPath` params, matching
+  `userPresets.test.ts`'s exact approach to testing cross-platform path resolution without
+  touching the real filesystem or `process.platform`.
 
 ## Edge Cases
 
@@ -266,10 +338,18 @@ gate" precedent in ITR mode.
 - Preview applies badge/logo unconditionally to whatever comp is currently active, without
   checking whether that comp's name ends in `9x16` — see the called-out simplification in
   Host-side Architecture.
+- If the user picks a logo from the library grid and later deletes that file from disk before
+  Run/Preview, the existing `mf.exists` guard already present in the media-swap import logic
+  (`runVarIterationBatch.ts`) covers this the same way — a missing-file warning, not a crash.
+  No new gap.
+- `renderPreviewFrame` always writes to the same fixed temp filename — the panel must
+  cache-bust the `<img src="file://...">` it renders (e.g. append `?t=` plus a counter that
+  increments per popup-open) so a second open doesn't show a stale, browser-cached frame from
+  the first. Called out explicitly in Risks below since it's an easy thing to miss.
 
 ## Out of Scope
 
-- **`.aep`-UI import** (Decision 7) — deferred as a fast-follow. Needs its own brainstorming
+- **`.aep`-UI import** (Decision 8) — deferred as a fast-follow. Needs its own brainstorming
   pass once badge/logo ship, including an ExtendScript spike to confirm how
   `app.project.importFile` behaves against an `.aep` source (does it return a folder of
   imported items, and how is a specific comp selected out of that folder) before UX can be
@@ -301,3 +381,13 @@ gate" precedent in ITR mode.
   no automated tests, so a manual live-AE re-check after the extraction is the only guardrail
   against a subtle behavior change (e.g. an accidental reordering of the position/scale/
   time-remap/moveAfter sequence during extraction).
+- **`renderPreviewFrame`'s fixed temp filename needs explicit cache-busting on the panel
+  side** (see Edge Cases) — an easy detail to drop, and if dropped, the position picker would
+  silently show a stale snapshot after the comp changes, which is worse than no snapshot at
+  all since it looks correct while being wrong.
+- **Drag-to-comp-pixel coordinate math in `PositionPickerPopup`** is new, fiddly code (screen
+  space → popup-image space → comp-pixel space, accounting for the snapshot being scaled to
+  fit the popup rather than shown 1:1) — this is the other genuinely new, unvalidated surface
+  in this design alongside the shape/text layer creation already called out above, and should
+  get the same "verify against the real running host/browser before trusting it" treatment
+  rather than being assumed correct from the arithmetic alone.

@@ -21,7 +21,8 @@ export function LayerInfoPanel() {
   const {
     compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, addLayerInfo, mode,
     emojiEnabled, setEmojiEnabled,
-    badgeEnabled, setBadgeEnabled, logoEnabled, setLogoEnabled,
+    badgeEnabled, setBadgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor,
+    logoEnabled, setLogoEnabled, logoPath, logoX, logoY, logoSize,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName,
@@ -38,8 +39,18 @@ export function LayerInfoPanel() {
       setEmojiEnabled: s.setEmojiEnabled,
       badgeEnabled: s.badgeEnabled,
       setBadgeEnabled: s.setBadgeEnabled,
+      badgeTexts: s.badgeTexts,
+      badgeX: s.badgeX,
+      badgeY: s.badgeY,
+      badgeSize: s.badgeSize,
+      badgeCircleColor: s.badgeCircleColor,
+      badgeTextColor: s.badgeTextColor,
       logoEnabled: s.logoEnabled,
       setLogoEnabled: s.setLogoEnabled,
+      logoPath: s.logoPath,
+      logoX: s.logoX,
+      logoY: s.logoY,
+      logoSize: s.logoSize,
     }))
   );
 
@@ -113,7 +124,18 @@ export function LayerInfoPanel() {
     if (!compName) return;
     const layers = toCfgLayers(rowLayers);
     const iterValues = rowLayers.map((r) => effectiveValue(r, iter));
-    evalTS("previewApply", { compName, layers, values: iterValues })
+    // Gated on mode === "var", not just badgeEnabled/logoEnabled: those flags
+    // persist in the store across a mode switch (nothing resets them), so an
+    // ITR-mode Preview must not send a leftover VAR-mode badge/logo config.
+    const badge =
+      mode === "var" && badgeEnabled
+        ? { text: badgeTexts[iter] ?? "", x: badgeX, y: badgeY, size: badgeSize, circleColor: badgeCircleColor, textColor: badgeTextColor }
+        : undefined;
+    const logo =
+      mode === "var" && logoEnabled && logoPath
+        ? { path: logoPath, x: logoX, y: logoY, size: logoSize }
+        : undefined;
+    evalTS("previewApply", { compName, layers, values: iterValues, badge, logo })
       .then((res) => console.log(res.log.join("\n")))
       .catch((err) => alert("Preview failed: " + evalTSErrorMessage(err)));
   };

@@ -4,6 +4,8 @@ import { findCompByName, findCompsBySuffixes, resolveLayer, ITR_SUFFIXES } from 
 import { applyLayerValue } from "./lib/applyLayerValue";
 import { applyMediaLayer } from "./lib/applyMedia";
 import { addEmojiToComp, removeEmojiFromComp } from "./lib/applyEmoji";
+import { addBadgeToComp, removeBadgeFromComp } from "./lib/applyBadge";
+import { addLogoToComp, removeLogoFromComp } from "./lib/applyLogo";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
 import { runVarIterationBatch } from "./engine/runVarIterationBatch";
@@ -60,7 +62,13 @@ export const getLayerInfo = (): LayerInfoResult => {
 // leftover emoji-preview layer shifts every subsequent layer's index by one,
 // and stroke rows (whose CfgLayer.name is a synthetic label no real AE layer
 // has) have no by-name fallback to recover from a stale index.
-export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values: LayerValue[] }): { log: string[] } => {
+export const previewApply = (cfg: {
+  compName: string;
+  layers: CfgLayer[];
+  values: LayerValue[];
+  badge?: { text: string; x: number; y: number; size: number; circleColor: [number, number, number]; textColor: [number, number, number] };
+  logo?: { path: string; x: number; y: number; size: number };
+}): { log: string[] } => {
   const comp = findCompByName(cfg.compName);
   if (!comp) throw new Error("Comp not found: " + cfg.compName);
 
@@ -68,10 +76,16 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
   app.beginUndoGroup("Preview Apply");
   app.beginSuppressDialogs();
   removeEmojiFromComp(comp);
+  // Unconditional, regardless of whether THIS call includes cfg.badge/cfg.logo
+  // -- if a previous Preview click left one behind (e.g. the user then
+  // disabled the toggle and clicked Preview again), it must not linger and
+  // shift layer indices, same reasoning as removeEmojiFromComp above.
+  removeBadgeFromComp(comp);
+  removeLogoFromComp(comp);
 
-  // Media swaps need importFile, which (per runVarIterationBatch) silently
-  // returns null while dialogs are suppressed -- lift suppression just for
-  // the import pass, then restore it for the rest of the apply.
+  // Media/logo swaps need importFile, which (per runVarIterationBatch)
+  // silently returns null while dialogs are suppressed -- lift suppression
+  // just for the import pass, then restore it for the rest of the apply.
   app.endSuppressDialogs(false);
   const preImportedMedia: Record<number, FootageItem> = {};
   for (let pli = 0; pli < cfg.layers.length; pli++) {
@@ -93,6 +107,21 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
       }
     } catch (e: any) {
       log.push("Layer " + plc.index + ": import error: " + e.message);
+    }
+  }
+
+  let logoFootage: FootageItem | null = null;
+  if (cfg.logo) {
+    try {
+      const lf = new File(cfg.logo.path);
+      if (!lf.exists) {
+        log.push("Logo: file not found");
+      } else {
+        logoFootage = app.project.importFile(new ImportOptions(lf)) as FootageItem;
+        if (!logoFootage) log.push("Logo: importFile returned null");
+      }
+    } catch (e: any) {
+      log.push("Logo: import error: " + e.message);
     }
   }
   app.beginSuppressDialogs();
@@ -124,6 +153,17 @@ export const previewApply = (cfg: { compName: string; layers: CfgLayer[]; values
       log.push("  " + results[ri]);
     }
   }
+
+  // Independent of the per-layer loop above, same as the media-import block.
+  if (cfg.badge) {
+    addBadgeToComp(comp, cfg.badge.text, cfg.badge.x, cfg.badge.y, cfg.badge.size, cfg.badge.circleColor, cfg.badge.textColor);
+    log.push("Badge: applied");
+  }
+  if (cfg.logo && logoFootage) {
+    addLogoToComp(comp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size);
+    log.push("Logo: applied");
+  }
+
   app.endUndoGroup();
   app.endSuppressDialogs(false);
 

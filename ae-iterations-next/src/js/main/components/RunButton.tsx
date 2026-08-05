@@ -13,11 +13,16 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
   const {
     compName, rowLayers, count, mode, varNames,
     emojiEnabled, emojiPaths, emojiX, emojiY, emojiSize, emojiLayerIndex,
+    badgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor,
+    logoEnabled, logoPath, logoX, logoY, logoSize,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName, rowLayers: s.rowLayers, count: s.count, mode: s.mode, varNames: s.varNames,
       emojiEnabled: s.emojiEnabled, emojiPaths: s.emojiPaths, emojiX: s.emojiX, emojiY: s.emojiY,
       emojiSize: s.emojiSize, emojiLayerIndex: s.emojiLayerIndex,
+      badgeEnabled: s.badgeEnabled, badgeTexts: s.badgeTexts, badgeX: s.badgeX, badgeY: s.badgeY,
+      badgeSize: s.badgeSize, badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor,
+      logoEnabled: s.logoEnabled, logoPath: s.logoPath, logoX: s.logoX, logoY: s.logoY, logoSize: s.logoSize,
     }))
   );
   const [status, setStatus] = useState("");
@@ -52,7 +57,17 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
       setStatus("Running VAR…");
       setStatusKind("running");
       const names = Array.from({ length: count }, (_, i) => varNames[i] || `VAR${i + 1}`);
-      evalTS("runVarIterations", { compName: compName || "", layers, values, count, varNames: names })
+      const badge = {
+        enabled: badgeEnabled,
+        perIteration: Array.from({ length: count }, (_, i) => badgeTexts[i] ?? null),
+        x: badgeX,
+        y: badgeY,
+        size: badgeSize,
+        circleColor: badgeCircleColor,
+        textColor: badgeTextColor,
+      };
+      const logo = { enabled: logoEnabled, path: logoPath, x: logoX, y: logoY, size: logoSize };
+      evalTS("runVarIterations", { compName: compName || "", layers, values, count, varNames: names, badge, logo })
         .then((res) => handleResult(res, "variants"))
         .catch(handleError);
     } else {

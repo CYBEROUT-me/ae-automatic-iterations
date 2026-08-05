@@ -30,7 +30,9 @@ export function logoLibraryPath(
 
 // Creates the folder (so there's always somewhere for the user to drop
 // files into, empty-state or not) and returns absolute paths to the image
-// files inside it, sorted by filename.
+// files inside it, sorted by path. Recurses into subfolders -- organizing
+// logos one folder per brand/client is a natural, expected way to use this,
+// not just a flat dump of files.
 export function listLogoFiles(dirPath: string = logoLibraryPath()): string[] {
   try {
     if (!dirPath) return [];
@@ -38,11 +40,25 @@ export function listLogoFiles(dirPath: string = logoLibraryPath()): string[] {
       fs.mkdirSync(dirPath, { recursive: true });
       return [];
     }
-    return fs
-      .readdirSync(dirPath)
-      .filter((name) => IMAGE_EXTENSIONS.indexOf(path.extname(name).toLowerCase()) !== -1)
-      .sort()
-      .map((name) => path.join(dirPath, name));
+    const results: string[] = [];
+    const walk = (dir: string) => {
+      for (const name of fs.readdirSync(dir)) {
+        const full = path.join(dir, name);
+        let isDirectory: boolean;
+        try {
+          isDirectory = fs.statSync(full).isDirectory();
+        } catch (e) {
+          continue;
+        }
+        if (isDirectory) {
+          walk(full);
+        } else if (IMAGE_EXTENSIONS.indexOf(path.extname(name).toLowerCase()) !== -1) {
+          results.push(full);
+        }
+      }
+    };
+    walk(dirPath);
+    return results.sort();
   } catch (e) {
     return [];
   }

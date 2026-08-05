@@ -846,6 +846,30 @@ input[type="checkbox"] {
   padding: 0.3rem;
 }
 
+// More prominent than .emoji-empty on purpose: a user actually missed the
+// real logo folder path once and dropped files into the extension's dev
+// source tree instead -- the path needs to read as an instruction, not a
+// footnote.
+.logo-empty-state {
+  font-size: $text-sm;
+  color: $text-dim;
+  padding: $space-3;
+  line-height: 1.6;
+  text-align: center;
+
+  code {
+    display: inline-block;
+    margin-top: $space-1;
+    padding: $space-1 $space-2;
+    background-color: $inset;
+    border-radius: $radius-sm;
+    color: $accent;
+    font-family: $mono-font;
+    font-size: $text-xs;
+    word-break: break-all;
+  }
+}
+
 .emoji-preview-status {
   font-size: 0.7rem;
   color: $text-dim;

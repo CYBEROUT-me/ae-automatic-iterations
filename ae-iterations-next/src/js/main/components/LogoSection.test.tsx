@@ -10,7 +10,7 @@ vi.mock("../../lib/utils/bolt", () => ({
 
 vi.mock("../lib/logoLibrary", () => ({
   listLogoFiles: vi.fn(() => ["/logos/brand-a.png"]),
-  logoLibraryPath: vi.fn(() => "/fake/logos"),
+  logoLibraryPath: vi.fn(() => "/logos"),
 }));
 
 describe("LogoSection", () => {

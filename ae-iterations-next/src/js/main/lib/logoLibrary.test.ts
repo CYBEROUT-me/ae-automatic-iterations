@@ -27,6 +27,7 @@ describe("listLogoFiles", () => {
     vi.mocked(fs.existsSync).mockReset();
     vi.mocked(fs.mkdirSync).mockReset();
     vi.mocked(fs.readdirSync).mockReset();
+    vi.mocked(fs.statSync).mockReset();
   });
 
   it("creates the folder and returns [] when it doesn't exist yet", () => {
@@ -38,11 +39,23 @@ describe("listLogoFiles", () => {
   it("returns image files as absolute paths, sorted, skipping non-images", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readdirSync).mockReturnValue(["b.png", "a.jpg", "readme.txt", "c.PNG"] as any);
+    vi.mocked(fs.statSync).mockReturnValue({ isDirectory: () => false } as any);
     expect(listLogoFiles("/fake/logos")).toEqual([
       "/fake/logos/a.jpg",
       "/fake/logos/b.png",
       "/fake/logos/c.PNG",
     ]);
+  });
+
+  it("recurses into subfolders (e.g. one per brand/client)", () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(fs.readdirSync).mockImplementation((dir: any) => {
+      if (dir === "/fake/logos") return ["BrandA", "top.png"] as any;
+      if (dir === "/fake/logos/BrandA") return ["a-icon.png"] as any;
+      return [] as any;
+    });
+    vi.mocked(fs.statSync).mockImplementation((p: any) => ({ isDirectory: () => String(p).endsWith("BrandA") }) as any);
+    expect(listLogoFiles("/fake/logos")).toEqual(["/fake/logos/BrandA/a-icon.png", "/fake/logos/top.png"]);
   });
 
   it("returns [] without throwing when reading the directory fails", () => {

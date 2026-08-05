@@ -7,18 +7,21 @@ import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
 import { EmojiSection } from "./EmojiSection";
+import { BadgeSection } from "./BadgeSection";
+import { LogoSection } from "./LogoSection";
 import { PresetPanel } from "./PresetPanel";
 import { ChangelogList } from "./ChangelogList";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
-import { RefreshCw, Plus, ChevronUp, ChevronDown, Smile, Star, ChevronRight, Info } from "lucide-react";
+import { RefreshCw, Plus, ChevronUp, ChevronDown, Smile, Star, ChevronRight, Info, Badge, Image } from "lucide-react";
 
 export function LayerInfoPanel() {
   const {
     compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, addLayerInfo, mode,
     emojiEnabled, setEmojiEnabled,
+    badgeEnabled, setBadgeEnabled, logoEnabled, setLogoEnabled,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName,
@@ -33,6 +36,10 @@ export function LayerInfoPanel() {
       mode: s.mode,
       emojiEnabled: s.emojiEnabled,
       setEmojiEnabled: s.setEmojiEnabled,
+      badgeEnabled: s.badgeEnabled,
+      setBadgeEnabled: s.setBadgeEnabled,
+      logoEnabled: s.logoEnabled,
+      setLogoEnabled: s.setLogoEnabled,
     }))
   );
 
@@ -203,6 +210,39 @@ export function LayerInfoPanel() {
           <input type="checkbox" checked={sameForAll} onChange={(e) => setSameForAll(e.target.checked)} />
           Same value for all layers
         </label>
+      )}
+      {mode === "var" && (
+        <div className="settings-card">
+          <div className="settings-row">
+            <div className="settings-row-label">
+              <Badge />
+              Badge overlay
+            </div>
+            <button
+              className={"settings-switch" + (badgeEnabled ? " on" : "")}
+              role="switch"
+              aria-checked={badgeEnabled}
+              title="Badge overlay"
+              onClick={() => setBadgeEnabled(!badgeEnabled)}
+            />
+          </div>
+          {badgeEnabled && <BadgeSection />}
+          <div className="settings-divider" />
+          <div className="settings-row">
+            <div className="settings-row-label">
+              <Image />
+              Logo overlay
+            </div>
+            <button
+              className={"settings-switch" + (logoEnabled ? " on" : "")}
+              role="switch"
+              aria-checked={logoEnabled}
+              title="Logo overlay"
+              onClick={() => setLogoEnabled(!logoEnabled)}
+            />
+          </div>
+          {logoEnabled && <LogoSection />}
+        </div>
       )}
       {mode === "var" && (
         <>

@@ -763,6 +763,56 @@ input[type="checkbox"] {
   margin: 0.2rem 0 $space-3;
 }
 
+// ── VAR badge overlay fields ──────────────────────────────────────────────
+
+.overlay-color-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-bottom: $space-3;
+}
+
+.overlay-color-field {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $text-xs;
+  color: $text-faint;
+
+  input[type="color"] {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    padding: 0;
+    border: none;
+    box-shadow: 0 0 0 1px $border-strong;
+    flex-shrink: 0;
+  }
+}
+
+.badge-iter-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-2;
+  border-radius: $radius-sm;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: $surface-hover;
+  }
+}
+
+.badge-text-input {
+  flex: 1;
+  background-color: $inset;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 0.15rem $space-2;
+  color: $text;
+  font-size: $text-sm;
+}
+
 .emoji-grid-item {
   aspect-ratio: 1;
   border: 1px solid transparent;

@@ -64,14 +64,20 @@ export const getLayerInfo = (): LayerInfoResult => {
 // and stroke rows (whose CfgLayer.name is a synthetic label no real AE layer
 // has) have no by-name fallback to recover from a stale index.
 export const previewApply = (cfg: {
-  compName: string;
+  compName?: string;
   layers: CfgLayer[];
   values: LayerValue[];
   badge?: { text: string; x: number; y: number; size: number; circleColor: [number, number, number]; textColor: [number, number, number]; layerIndex?: number };
   logo?: { path: string; x: number; y: number; size: number; layerIndex?: number };
 }): { log: string[] } => {
-  const comp = findCompByName(cfg.compName);
-  if (!comp) throw new Error("Comp not found: " + cfg.compName);
+  // compName is optional: badge/logo previews are independent of any
+  // selected/refreshed layer (they apply regardless of cfg.layers), so a
+  // badge/logo-only preview falls back to whatever comp is currently active
+  // in AE, matching renderPreviewFrame's exact same fallback.
+  let comp: CompItem | null = null;
+  if (cfg.compName) comp = findCompByName(cfg.compName);
+  if (!comp && app.project.activeItem instanceof CompItem) comp = app.project.activeItem;
+  if (!comp) throw new Error("Comp not found" + (cfg.compName ? ": " + cfg.compName : " — no comp active"));
 
   const log: string[] = [];
   app.beginUndoGroup("Preview Apply");

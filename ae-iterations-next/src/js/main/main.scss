@@ -503,9 +503,16 @@ input[type="checkbox"] {
   flex-shrink: 0;
 }
 
+.var-field-input-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
 .var-field input[type="text"] {
   width: 100%;
   box-sizing: border-box;
+  flex: 1;
 }
 
 // ── Run section / status ─────────────────────────────────────────────────

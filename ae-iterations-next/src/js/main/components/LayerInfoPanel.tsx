@@ -123,9 +123,6 @@ export function LayerInfoPanel() {
   // has always applied the whole iteration column across every row at once,
   // not a single row in isolation.
   const previewIteration = (iter: number) => {
-    if (!compName) return;
-    const layers = toCfgLayers(rowLayers);
-    const iterValues = rowLayers.map((r) => effectiveValue(r, iter));
     // Gated on mode === "var", not just badgeEnabled/logoEnabled: those flags
     // persist in the store across a mode switch (nothing resets them), so an
     // ITR-mode Preview must not send a leftover VAR-mode badge/logo config.
@@ -137,7 +134,13 @@ export function LayerInfoPanel() {
       mode === "var" && logoEnabled && logoPath
         ? { path: logoPath, x: logoX, y: logoY, size: logoSize, layerIndex: logoLayerIndex }
         : undefined;
-    evalTS("previewApply", { compName, layers, values: iterValues, badge, logo })
+    // No early-return on !compName: badge/logo previews are independent of
+    // any selected layer (previewApply falls back to AE's active comp when
+    // compName is omitted). Only bail if there's truly nothing to preview.
+    if (!compName && !badge && !logo) return;
+    const layers = toCfgLayers(rowLayers);
+    const iterValues = rowLayers.map((r) => effectiveValue(r, iter));
+    evalTS("previewApply", { compName: compName || undefined, layers, values: iterValues, badge, logo })
       .then((res) => console.log(res.log.join("\n")))
       .catch((err) => alert("Preview failed: " + evalTSErrorMessage(err)));
   };
@@ -236,6 +239,13 @@ export function LayerInfoPanel() {
         </label>
       )}
       {mode === "var" && (
+        <>
+          <VarNamesRow onPreview={previewIteration} />
+          <button className="var-test-btn" onClick={testVarComps}>Test</button>
+          {testLog && <pre id="var-test-log">{testLog.join("\n")}</pre>}
+        </>
+      )}
+      {mode === "var" && (
         <div className="settings-card">
           <div className="settings-row">
             <div className="settings-row-label">
@@ -267,13 +277,6 @@ export function LayerInfoPanel() {
           </div>
           {logoEnabled && <LogoSection />}
         </div>
-      )}
-      {mode === "var" && (
-        <>
-          <VarNamesRow />
-          <button className="var-test-btn" onClick={testVarComps}>Test</button>
-          {testLog && <pre id="var-test-log">{testLog.join("\n")}</pre>}
-        </>
       )}
       {rowLayers.map((row) => (
         <div key={row.rowKey} className="extra-layer-group">

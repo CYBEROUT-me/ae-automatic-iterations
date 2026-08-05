@@ -64,6 +64,7 @@ export interface BadgeConfig {
   size: number; // uniform scale percentage, same convention as EmojiConfig
   circleColor: [number, number, number];
   textColor: [number, number, number];
+  layerIndex?: number; // 0/unset = full comp duration, fixed top-of-stack (duration-only attachment)
 }
 
 export interface LogoConfig {
@@ -72,6 +73,8 @@ export interface LogoConfig {
   x: number;
   y: number;
   size: number;
+  layerIndex?: number; // 0/unset = full comp duration, top of stack; a positive index also
+                        // controls stacking, exactly like EmojiConfig.layerIndex
 }
 
 export interface CfgLayer {

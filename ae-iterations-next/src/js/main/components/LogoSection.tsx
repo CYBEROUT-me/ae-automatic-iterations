@@ -6,12 +6,14 @@ import { PositionPickerPopup } from "./PositionPickerPopup";
 
 export function LogoSection() {
   const {
-    compName, logoPath, logoX, logoY, logoSize,
-    setLogoPath, setLogoX, setLogoY, setLogoSize,
+    compName, logoPath, logoX, logoY, logoSize, logoLayerIndex,
+    setLogoPath, setLogoX, setLogoY, setLogoSize, setLogoLayerIndex,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName, logoPath: s.logoPath, logoX: s.logoX, logoY: s.logoY, logoSize: s.logoSize,
+      logoLayerIndex: s.logoLayerIndex,
       setLogoPath: s.setLogoPath, setLogoX: s.setLogoX, setLogoY: s.setLogoY, setLogoSize: s.setLogoSize,
+      setLogoLayerIndex: s.setLogoLayerIndex,
     }))
   );
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -35,14 +37,18 @@ export function LogoSection() {
           <input type="number" value={logoSize} onChange={(e) => setLogoSize(parseInt(e.target.value, 10) || 100)} />
         </div>
       </div>
-      <button
-        className="video-toggle"
-        disabled={!compName}
-        title={compName ? "Position visually" : "Refresh a layer first"}
-        onClick={() => setPickerOpen(true)}
-      >
+      <button className="video-toggle" title="Position visually" onClick={() => setPickerOpen(true)}>
         Position visually…
       </button>
+      <div className="emoji-layer-row">
+        <span className="emoji-layer-label">Attach to layer</span>
+        <input
+          className="emoji-layer-input"
+          type="number"
+          value={logoLayerIndex}
+          onChange={(e) => setLogoLayerIndex(parseInt(e.target.value, 10) || 0)}
+        />
+      </div>
       {pickerOpen && (
         <PositionPickerPopup
           compName={compName}

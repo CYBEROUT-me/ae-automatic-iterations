@@ -6,6 +6,7 @@ import { applyMediaLayer } from "./lib/applyMedia";
 import { addEmojiToComp, removeEmojiFromComp } from "./lib/applyEmoji";
 import { addBadgeToComp, removeBadgeFromComp } from "./lib/applyBadge";
 import { addLogoToComp, removeLogoFromComp } from "./lib/applyLogo";
+import { resolveOverlayAttachment } from "./lib/applyImageOverlay";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
 import { runVarIterationBatch } from "./engine/runVarIterationBatch";
@@ -66,8 +67,8 @@ export const previewApply = (cfg: {
   compName: string;
   layers: CfgLayer[];
   values: LayerValue[];
-  badge?: { text: string; x: number; y: number; size: number; circleColor: [number, number, number]; textColor: [number, number, number] };
-  logo?: { path: string; x: number; y: number; size: number };
+  badge?: { text: string; x: number; y: number; size: number; circleColor: [number, number, number]; textColor: [number, number, number]; layerIndex?: number };
+  logo?: { path: string; x: number; y: number; size: number; layerIndex?: number };
 }): { log: string[] } => {
   const comp = findCompByName(cfg.compName);
   if (!comp) throw new Error("Comp not found: " + cfg.compName);
@@ -156,11 +157,19 @@ export const previewApply = (cfg: {
 
   // Independent of the per-layer loop above, same as the media-import block.
   if (cfg.badge) {
-    addBadgeToComp(comp, cfg.badge.text, cfg.badge.x, cfg.badge.y, cfg.badge.size, cfg.badge.circleColor, cfg.badge.textColor);
+    const badgeAttach = resolveOverlayAttachment(comp, cfg.badge.layerIndex);
+    addBadgeToComp(
+      comp, cfg.badge.text, cfg.badge.x, cfg.badge.y, cfg.badge.size,
+      cfg.badge.circleColor, cfg.badge.textColor, badgeAttach.inPoint, badgeAttach.outPoint
+    );
     log.push("Badge: applied");
   }
   if (cfg.logo && logoFootage) {
-    addLogoToComp(comp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size);
+    const logoAttach = resolveOverlayAttachment(comp, cfg.logo.layerIndex);
+    addLogoToComp(
+      comp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size,
+      logoAttach.targetIndex, logoAttach.inPoint, logoAttach.outPoint
+    );
     log.push("Logo: applied");
   }
 

@@ -13,6 +13,7 @@ import { applyLayerValue, applyLayerValueFailures } from "../lib/applyLayerValue
 import { applyMediaLayer } from "../lib/applyMedia";
 import { addBadgeToComp, removeBadgeFromComp } from "../lib/applyBadge";
 import { addLogoToComp, removeLogoFromComp } from "../lib/applyLogo";
+import { resolveOverlayAttachment } from "../lib/applyImageOverlay";
 import { renderPNGs, renderVideos } from "../lib/render";
 import { cleanProject } from "../lib/clean";
 import { performCollect } from "../lib/collect";
@@ -174,15 +175,20 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
           removeBadgeFromComp(badgeLogoComp);
           const badgeText = cfg.badge.perIteration[iter];
           if (badgeText) {
+            const badgeAttach = resolveOverlayAttachment(badgeLogoComp, cfg.badge.layerIndex);
             addBadgeToComp(
               badgeLogoComp, badgeText, cfg.badge.x, cfg.badge.y, cfg.badge.size,
-              cfg.badge.circleColor, cfg.badge.textColor
+              cfg.badge.circleColor, cfg.badge.textColor, badgeAttach.inPoint, badgeAttach.outPoint
             );
           }
         }
         if (cfg.logo && cfg.logo.enabled && logoFootage) {
           removeLogoFromComp(badgeLogoComp);
-          addLogoToComp(badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size);
+          const logoAttach = resolveOverlayAttachment(badgeLogoComp, cfg.logo.layerIndex);
+          addLogoToComp(
+            badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size,
+            logoAttach.targetIndex, logoAttach.inPoint, logoAttach.outPoint
+          );
         }
       } else if ((cfg.badge && cfg.badge.enabled) || (cfg.logo && cfg.logo.enabled)) {
         warnings.push("VAR " + varName + ": 9x16 render comp not found, badge/logo skipped");

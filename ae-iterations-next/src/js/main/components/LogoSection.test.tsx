@@ -42,4 +42,10 @@ describe("LogoSection", () => {
     fireEvent.click(screen.getByText("Position visually…"));
     expect(await screen.findByAltText("Comp preview")).toBeInTheDocument();
   });
+
+  it("updates the Attach to layer field", () => {
+    render(<LogoSection />);
+    fireEvent.change(screen.getByText("Attach to layer").nextSibling as Element, { target: { value: "2" } });
+    expect(useAppStore.getState().logoLayerIndex).toBe(2);
+  });
 });

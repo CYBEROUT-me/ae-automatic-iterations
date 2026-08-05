@@ -38,11 +38,13 @@ interface AppState {
   badgeSize: number;
   badgeCircleColor: [number, number, number];
   badgeTextColor: [number, number, number];
+  badgeLayerIndex: number;
   logoEnabled: boolean;
   logoPath: string | null;
   logoX: number;
   logoY: number;
   logoSize: number;
+  logoLayerIndex: number;
   setBadgeEnabled(v: boolean): void;
   setBadgeText(iter: number, text: string | null): void;
   setBadgeX(v: number): void;
@@ -50,11 +52,13 @@ interface AppState {
   setBadgeSize(v: number): void;
   setBadgeCircleColor(color: [number, number, number]): void;
   setBadgeTextColor(color: [number, number, number]): void;
+  setBadgeLayerIndex(v: number): void;
   setLogoEnabled(v: boolean): void;
   setLogoPath(path: string | null): void;
   setLogoX(v: number): void;
   setLogoY(v: number): void;
   setLogoSize(v: number): void;
+  setLogoLayerIndex(v: number): void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -130,11 +134,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   badgeSize: 100,
   badgeCircleColor: [1, 1, 1],
   badgeTextColor: [0, 0, 0],
+  badgeLayerIndex: 0,
   logoEnabled: false,
   logoPath: null,
   logoX: 990,
   logoY: 90,
   logoSize: 100,
+  logoLayerIndex: 0,
   setBadgeEnabled: (v) => set({ badgeEnabled: v }),
   setBadgeText: (iter, text) =>
     set((s) => {
@@ -147,9 +153,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   setBadgeSize: (v) => set({ badgeSize: v }),
   setBadgeCircleColor: (color) => set({ badgeCircleColor: color }),
   setBadgeTextColor: (color) => set({ badgeTextColor: color }),
+  setBadgeLayerIndex: (v) => set({ badgeLayerIndex: v }),
   setLogoEnabled: (v) => set({ logoEnabled: v }),
   setLogoPath: (path) => set({ logoPath: path }),
   setLogoX: (v) => set({ logoX: v }),
   setLogoY: (v) => set({ logoY: v }),
   setLogoSize: (v) => set({ logoSize: v }),
+  setLogoLayerIndex: (v) => set({ logoLayerIndex: v }),
 }));

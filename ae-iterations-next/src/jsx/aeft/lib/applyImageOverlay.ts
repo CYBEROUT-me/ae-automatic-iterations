@@ -15,12 +15,35 @@ export function removeImageOverlayFromComp(comp: CompItem, layerName: string): v
   }
 }
 
+// Resolves what "attach to layer" (badge/logo's optional layerIndex, mirroring
+// EmojiConfig.layerIndex) means for a given comp: unset/0/an out-of-range
+// index falls back to today's default (top of stack, no duration override);
+// a valid index reports that layer's own inPoint/outPoint so the caller can
+// make the overlay match that layer's timespan instead of the full comp --
+// this is what actually excludes an overlay from e.g. a packshot section,
+// since attaching by stacking position alone does not.
+export function resolveOverlayAttachment(
+  comp: CompItem,
+  layerIndex: number | undefined
+): { targetIndex: number; inPoint?: number; outPoint?: number } {
+  if (!layerIndex || layerIndex < 1) return { targetIndex: 1 };
+  try {
+    const target = comp.layer(layerIndex);
+    return { targetIndex: layerIndex, inPoint: target.inPoint, outPoint: target.outPoint };
+  } catch (e) {
+    return { targetIndex: 1 };
+  }
+}
+
 // comp:        CompItem to add the overlay into
 // footage:     already-imported overlay FootageItem (shared across comps by caller)
 // layerName:   sentinel name so this exact overlay can be found/removed later
 // x, y:        position in comp pixels
 // targetIndex: 1-based layer position from top (1 = topmost)
 // size:        uniform scale percentage
+// inPoint/outPoint: optional overrides (see resolveOverlayAttachment); default
+//   to the full comp duration when omitted, matching every existing caller's
+//   behavior exactly (Emoji passes neither, so its behavior is unchanged).
 export function addImageOverlayToComp(
   comp: CompItem,
   footage: FootageItem,
@@ -28,7 +51,9 @@ export function addImageOverlayToComp(
   x: number,
   y: number,
   targetIndex: number,
-  size: number
+  size: number,
+  inPoint?: number,
+  outPoint?: number
 ): void {
   // Remove any overlay left over from a previous iteration
   removeImageOverlayFromComp(comp, layerName);
@@ -37,9 +62,9 @@ export function addImageOverlayToComp(
   const layer = comp.layers.add(footage);
   layer.name = layerName;
 
-  // Span the full comp
-  layer.inPoint = 0;
-  layer.outPoint = comp.duration;
+  // Span the full comp, unless a specific attachment timespan was given.
+  layer.inPoint = inPoint ?? 0;
+  layer.outPoint = outPoint ?? comp.duration;
 
   // Position and scale
   layer.transform.position.setValue([x, y]);

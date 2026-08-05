@@ -21,8 +21,8 @@ export function LayerInfoPanel() {
   const {
     compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, addLayerInfo, mode,
     emojiEnabled, setEmojiEnabled,
-    badgeEnabled, setBadgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor,
-    logoEnabled, setLogoEnabled, logoPath, logoX, logoY, logoSize,
+    badgeEnabled, setBadgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
+    logoEnabled, setLogoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName,
@@ -45,12 +45,14 @@ export function LayerInfoPanel() {
       badgeSize: s.badgeSize,
       badgeCircleColor: s.badgeCircleColor,
       badgeTextColor: s.badgeTextColor,
+      badgeLayerIndex: s.badgeLayerIndex,
       logoEnabled: s.logoEnabled,
       setLogoEnabled: s.setLogoEnabled,
       logoPath: s.logoPath,
       logoX: s.logoX,
       logoY: s.logoY,
       logoSize: s.logoSize,
+      logoLayerIndex: s.logoLayerIndex,
     }))
   );
 
@@ -129,11 +131,11 @@ export function LayerInfoPanel() {
     // ITR-mode Preview must not send a leftover VAR-mode badge/logo config.
     const badge =
       mode === "var" && badgeEnabled
-        ? { text: badgeTexts[iter] ?? "", x: badgeX, y: badgeY, size: badgeSize, circleColor: badgeCircleColor, textColor: badgeTextColor }
+        ? { text: badgeTexts[iter] ?? "", x: badgeX, y: badgeY, size: badgeSize, circleColor: badgeCircleColor, textColor: badgeTextColor, layerIndex: badgeLayerIndex }
         : undefined;
     const logo =
       mode === "var" && logoEnabled && logoPath
-        ? { path: logoPath, x: logoX, y: logoY, size: logoSize }
+        ? { path: logoPath, x: logoX, y: logoY, size: logoSize, layerIndex: logoLayerIndex }
         : undefined;
     evalTS("previewApply", { compName, layers, values: iterValues, badge, logo })
       .then((res) => console.log(res.log.join("\n")))

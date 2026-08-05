@@ -39,9 +39,17 @@ describe("BadgeSection", () => {
     expect(await screen.findByAltText("Comp preview")).toBeInTheDocument();
   });
 
-  it("disables the position-picker button when no comp is set", () => {
+  it("opens the position picker even when no comp is set (relies on the active-comp fallback)", async () => {
     useAppStore.setState({ compName: null });
     render(<BadgeSection />);
-    expect(screen.getByText("Position visually…")).toBeDisabled();
+    expect(screen.getByText("Position visually…")).not.toBeDisabled();
+    fireEvent.click(screen.getByText("Position visually…"));
+    expect(await screen.findByAltText("Comp preview")).toBeInTheDocument();
+  });
+
+  it("updates the Attach to layer field", () => {
+    render(<BadgeSection />);
+    fireEvent.change(screen.getByText("Attach to layer").nextSibling as Element, { target: { value: "4" } });
+    expect(useAppStore.getState().badgeLayerIndex).toBe(4);
   });
 });

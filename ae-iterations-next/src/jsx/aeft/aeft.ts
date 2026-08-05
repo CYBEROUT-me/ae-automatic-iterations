@@ -162,13 +162,19 @@ export const previewApply = (cfg: {
   }
 
   // Independent of the per-layer loop above, same as the media-import block.
+  // Logo's attach-to-layer target is resolved BEFORE badge touches this comp
+  // at all -- badge's own two layers get inserted at the top, which shifts
+  // every existing layer's index by 2. Resolving after that would resolve
+  // "attach to layer N" against badge's own inserted layers, landing logo
+  // sandwiched between them instead of at the comp's real layer N. See
+  // resolveOverlayAttachment's header in applyImageOverlay.ts.
+  const logoAttachLayer = cfg.logo && logoFootage ? resolveOverlayAttachment(comp, cfg.logo.layerIndex) : null;
   if (cfg.badge) {
     addBadgeToComp(comp, cfg.badge.text, cfg.badge.x, cfg.badge.y, cfg.badge.size, cfg.badge.circleColor, cfg.badge.textColor);
     log.push("Badge: applied");
   }
   if (cfg.logo && logoFootage) {
-    const logoAttach = resolveOverlayAttachment(comp, cfg.logo.layerIndex);
-    addLogoToComp(comp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size, logoAttach.targetIndex);
+    addLogoToComp(comp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size, logoAttachLayer);
     log.push("Logo: applied");
   }
 

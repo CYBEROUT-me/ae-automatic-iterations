@@ -16,38 +16,54 @@ export function removeImageOverlayFromComp(comp: CompItem, layerName: string): v
 }
 
 // Resolves "attach to layer" (Logo's optional layerIndex, mirroring
-// EmojiConfig.layerIndex exactly) to a 1-based stacking target: unset/0/an
-// out-of-range index falls back to the top of the stack. Stacking-only --
-// an earlier revision also matched the attached layer's inPoint/outPoint
-// (to exclude the overlay from e.g. a packshot section), but real usage
-// showed that coupling was more confusing than useful (the overlay kept
-// coming out unexpectedly short even once the cause was understood), so
+// EmojiConfig.layerIndex exactly) to the actual Layer object at that index,
+// captured NOW -- before the caller does anything else to the comp.
+//
+// This must be called before ANY of this iteration's own overlay layers are
+// inserted, badge included. A plain index is a moving target: if badge (2
+// layers) is inserted first, every existing layer's index shifts by 2, so
+// resolving Logo's "attach to layer 2" AFTER that would resolve against
+// badge's own inserted layers, not the comp's real layer 2 -- landing Logo
+// sandwiched between badge's own two layers, not where the user meant.
+// A captured Layer *reference* stays valid as other layers are added around
+// it (only its 1-based index changes, not the object itself), so resolving
+// once, early, and passing the reference through fixes this regardless of
+// how many overlay layers get inserted afterward.
+//
+// Stacking-only, unset/0/an out-of-range index falls back to null (top of
+// stack) -- an earlier revision also matched the attached layer's
+// inPoint/outPoint (to exclude the overlay from e.g. a packshot section),
+// but real usage showed that coupling was more confusing than useful, so
 // badge/logo both always span the full comp duration again, unconditionally.
-export function resolveOverlayAttachment(comp: CompItem, layerIndex: number | undefined): { targetIndex: number } {
-  if (!layerIndex || layerIndex < 1) return { targetIndex: 1 };
+export function resolveOverlayAttachment(comp: CompItem, layerIndex: number | undefined): Layer | null {
+  if (!layerIndex || layerIndex < 1) return null;
   try {
-    comp.layer(layerIndex);
-    return { targetIndex: layerIndex };
+    return comp.layer(layerIndex);
   } catch (e) {
-    return { targetIndex: 1 };
+    return null;
   }
 }
 
-// comp:        CompItem to add the overlay into
-// footage:     already-imported overlay FootageItem (shared across comps by caller)
-// layerName:   sentinel name so this exact overlay can be found/removed later
-// x, y:        position in comp pixels
-// targetIndex: 1-based layer position from top (1 = topmost)
-// size:        uniform scale percentage
+// comp:            CompItem to add the overlay into
+// footage:          already-imported overlay FootageItem (shared across comps by caller)
+// layerName:        sentinel name so this exact overlay can be found/removed later
+// x, y:             position in comp pixels
+// size:             uniform scale percentage
+// moveAfterLayer:   a Layer reference (see resolveOverlayAttachment) to stack
+//                   this overlay directly below; null/omitted leaves it at
+//                   the top of the stack (comp.layers.add's own default).
+// Returns the newly-added layer, so a caller with its own reordering timing
+// requirements (see applyEmoji.ts's addEmojiToComp) can handle that itself
+// instead of using moveAfterLayer.
 export function addImageOverlayToComp(
   comp: CompItem,
   footage: FootageItem,
   layerName: string,
   x: number,
   y: number,
-  targetIndex: number,
-  size: number
-): void {
+  size: number,
+  moveAfterLayer?: Layer | null
+): AVLayer {
   // Remove any overlay left over from a previous iteration
   removeImageOverlayFromComp(comp, layerName);
 
@@ -75,14 +91,14 @@ export function addImageOverlayToComp(
     layer.timeRemap.expression = 'loopOut("cycle")';
   }
 
-  // Move to target index.
-  // After layers.add() our layer is at 1; original layers shifted to 2..N+1.
-  // moveAfter(comp.layer(P)) places our layer at index P.
-  if (targetIndex > 1) {
-    if (targetIndex >= comp.numLayers) {
-      layer.moveToEnd();
-    } else {
-      layer.moveAfter(comp.layer(targetIndex));
+  if (moveAfterLayer) {
+    try {
+      layer.moveAfter(moveAfterLayer);
+    } catch (e) {
+      // moveAfterLayer was invalidated (e.g. removed) between being resolved
+      // and used -- leave the overlay at the top rather than throwing.
     }
   }
+
+  return layer;
 }

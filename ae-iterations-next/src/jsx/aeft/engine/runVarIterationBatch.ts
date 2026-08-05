@@ -182,6 +182,16 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
       // this task's "watch out for" item 2).
       const badgeLogoComp = renderComps["9x16"];
       if (badgeLogoComp) {
+        // Resolve logo's attach-to-layer target BEFORE badge touches this
+        // comp at all -- badge's own two layers get inserted at the top,
+        // which shifts every existing layer's index by 2. Resolving after
+        // that would resolve "attach to layer N" against badge's own
+        // inserted layers, landing logo sandwiched between them instead of
+        // at the comp's real layer N. See resolveOverlayAttachment's header.
+        const logoAttachLayer = cfg.logo && cfg.logo.enabled && logoFootage
+          ? resolveOverlayAttachment(badgeLogoComp, cfg.logo.layerIndex)
+          : null;
+
         if (cfg.badge && cfg.badge.enabled) {
           removeBadgeFromComp(badgeLogoComp);
           const badgeText = cfg.badge.perIteration[iter];
@@ -191,8 +201,7 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
         }
         if (cfg.logo && cfg.logo.enabled && logoFootage) {
           removeLogoFromComp(badgeLogoComp);
-          const logoAttach = resolveOverlayAttachment(badgeLogoComp, cfg.logo.layerIndex);
-          addLogoToComp(badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size, logoAttach.targetIndex);
+          addLogoToComp(badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size, logoAttachLayer);
         }
       } else if ((cfg.badge && cfg.badge.enabled) || (cfg.logo && cfg.logo.enabled)) {
         warnings.push("VAR " + varName + ": 9x16 render comp not found, badge/logo skipped");

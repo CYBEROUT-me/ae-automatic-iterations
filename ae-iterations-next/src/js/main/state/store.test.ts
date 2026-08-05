@@ -143,3 +143,70 @@ describe("emoji state", () => {
     expect(s.emojiLayerIndex).toBe(3);
   });
 });
+
+describe("badge/logo overlay state", () => {
+  beforeEach(() => {
+    useAppStore.setState({
+      compName: null, layerInfo: [], rowLayers: [], count: 5, sameForAll: true, values: {},
+      mode: "var", varNames: [],
+      badgeEnabled: false, badgeTexts: [], badgeX: 90, badgeY: 90, badgeSize: 100,
+      badgeCircleColor: [1, 1, 1], badgeTextColor: [0, 0, 0],
+      logoEnabled: false, logoPath: null, logoX: 990, logoY: 90, logoSize: 100,
+    });
+  });
+
+  it("badge defaults are sane", () => {
+    const s = useAppStore.getState();
+    expect(s.badgeEnabled).toBe(false);
+    expect(s.badgeX).toBe(90);
+    expect(s.badgeY).toBe(90);
+    expect(s.badgeSize).toBe(100);
+    expect(s.badgeCircleColor).toEqual([1, 1, 1]);
+    expect(s.badgeTextColor).toEqual([0, 0, 0]);
+  });
+
+  it("logo defaults are sane", () => {
+    const s = useAppStore.getState();
+    expect(s.logoEnabled).toBe(false);
+    expect(s.logoPath).toBeNull();
+    expect(s.logoX).toBe(990);
+  });
+
+  it("setBadgeText sets free text at the given iteration without disturbing others", () => {
+    useAppStore.getState().setBadgeText(0, "25+");
+    useAppStore.getState().setBadgeText(2, "50% OFF");
+    expect(useAppStore.getState().badgeTexts[0]).toBe("25+");
+    expect(useAppStore.getState().badgeTexts[2]).toBe("50% OFF");
+    expect(useAppStore.getState().badgeTexts[1]).toBeUndefined();
+  });
+
+  it("setBadgeEnabled/X/Y/Size/CircleColor/TextColor update their fields independently", () => {
+    useAppStore.getState().setBadgeEnabled(true);
+    useAppStore.getState().setBadgeX(10);
+    useAppStore.getState().setBadgeY(20);
+    useAppStore.getState().setBadgeSize(50);
+    useAppStore.getState().setBadgeCircleColor([0.5, 0.5, 0.5]);
+    useAppStore.getState().setBadgeTextColor([1, 1, 0]);
+    const s = useAppStore.getState();
+    expect(s.badgeEnabled).toBe(true);
+    expect(s.badgeX).toBe(10);
+    expect(s.badgeY).toBe(20);
+    expect(s.badgeSize).toBe(50);
+    expect(s.badgeCircleColor).toEqual([0.5, 0.5, 0.5]);
+    expect(s.badgeTextColor).toEqual([1, 1, 0]);
+  });
+
+  it("setLogoEnabled/Path/X/Y/Size update their fields independently", () => {
+    useAppStore.getState().setLogoEnabled(true);
+    useAppStore.getState().setLogoPath("/logos/brand.png");
+    useAppStore.getState().setLogoX(100);
+    useAppStore.getState().setLogoY(200);
+    useAppStore.getState().setLogoSize(75);
+    const s = useAppStore.getState();
+    expect(s.logoEnabled).toBe(true);
+    expect(s.logoPath).toBe("/logos/brand.png");
+    expect(s.logoX).toBe(100);
+    expect(s.logoY).toBe(200);
+    expect(s.logoSize).toBe(75);
+  });
+});

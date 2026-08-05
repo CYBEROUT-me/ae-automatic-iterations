@@ -31,6 +31,30 @@ interface AppState {
   setEmojiY(v: number): void;
   setEmojiSize(v: number): void;
   setEmojiLayerIndex(v: number): void;
+  badgeEnabled: boolean;
+  badgeTexts: (string | null)[];
+  badgeX: number;
+  badgeY: number;
+  badgeSize: number;
+  badgeCircleColor: [number, number, number];
+  badgeTextColor: [number, number, number];
+  logoEnabled: boolean;
+  logoPath: string | null;
+  logoX: number;
+  logoY: number;
+  logoSize: number;
+  setBadgeEnabled(v: boolean): void;
+  setBadgeText(iter: number, text: string | null): void;
+  setBadgeX(v: number): void;
+  setBadgeY(v: number): void;
+  setBadgeSize(v: number): void;
+  setBadgeCircleColor(color: [number, number, number]): void;
+  setBadgeTextColor(color: [number, number, number]): void;
+  setLogoEnabled(v: boolean): void;
+  setLogoPath(path: string | null): void;
+  setLogoX(v: number): void;
+  setLogoY(v: number): void;
+  setLogoSize(v: number): void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -99,4 +123,33 @@ export const useAppStore = create<AppState>((set, get) => ({
   setEmojiY: (v) => set({ emojiY: v }),
   setEmojiSize: (v) => set({ emojiSize: v }),
   setEmojiLayerIndex: (v) => set({ emojiLayerIndex: v }),
+  badgeEnabled: false,
+  badgeTexts: [],
+  badgeX: 90,
+  badgeY: 90,
+  badgeSize: 100,
+  badgeCircleColor: [1, 1, 1],
+  badgeTextColor: [0, 0, 0],
+  logoEnabled: false,
+  logoPath: null,
+  logoX: 990,
+  logoY: 90,
+  logoSize: 100,
+  setBadgeEnabled: (v) => set({ badgeEnabled: v }),
+  setBadgeText: (iter, text) =>
+    set((s) => {
+      const arr = [...s.badgeTexts];
+      arr[iter] = text;
+      return { badgeTexts: arr };
+    }),
+  setBadgeX: (v) => set({ badgeX: v }),
+  setBadgeY: (v) => set({ badgeY: v }),
+  setBadgeSize: (v) => set({ badgeSize: v }),
+  setBadgeCircleColor: (color) => set({ badgeCircleColor: color }),
+  setBadgeTextColor: (color) => set({ badgeTextColor: color }),
+  setLogoEnabled: (v) => set({ logoEnabled: v }),
+  setLogoPath: (path) => set({ logoPath: path }),
+  setLogoX: (v) => set({ logoX: v }),
+  setLogoY: (v) => set({ logoY: v }),
+  setLogoSize: (v) => set({ logoSize: v }),
 }));

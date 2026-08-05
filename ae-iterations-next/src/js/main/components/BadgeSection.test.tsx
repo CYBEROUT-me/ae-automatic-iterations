@@ -47,9 +47,8 @@ describe("BadgeSection", () => {
     expect(await screen.findByAltText("Comp preview")).toBeInTheDocument();
   });
 
-  it("updates the Attach to layer field", () => {
+  it("has no Attach to layer field (badge has no stacking mechanism to attach to)", () => {
     render(<BadgeSection />);
-    fireEvent.change(screen.getByText("Attach to layer").nextSibling as Element, { target: { value: "4" } });
-    expect(useAppStore.getState().badgeLayerIndex).toBe(4);
+    expect(screen.queryByText("Attach to layer")).not.toBeInTheDocument();
   });
 });

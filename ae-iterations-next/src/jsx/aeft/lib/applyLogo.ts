@@ -1,10 +1,10 @@
 // lib/applyLogo.ts — add/remove the logo overlay layer (VAR mode). Thin
 // wrapper around lib/applyImageOverlay.ts's generic mechanics, same pattern
-// as applyEmoji.ts. targetIndex/inPoint/outPoint default to "top of stack,
-// full comp duration" (matching the original design) when the caller omits
-// them; a caller that resolved LogoConfig.layerIndex via
-// resolveOverlayAttachment passes real values through instead, mirroring
-// EmojiConfig.layerIndex's dual stacking+duration behavior exactly.
+// as applyEmoji.ts. targetIndex defaults to "top of stack" when the caller
+// omits it; a caller that resolved LogoConfig.layerIndex via
+// resolveOverlayAttachment passes the real stacking target instead,
+// mirroring EmojiConfig.layerIndex's stacking behavior exactly (duration
+// always spans the full comp regardless -- see applyImageOverlay.ts).
 
 import { addImageOverlayToComp, removeImageOverlayFromComp } from "./applyImageOverlay";
 
@@ -20,9 +20,7 @@ export function addLogoToComp(
   x: number,
   y: number,
   size: number,
-  targetIndex: number = 1,
-  inPoint?: number,
-  outPoint?: number
+  targetIndex: number = 1
 ): void {
-  addImageOverlayToComp(comp, footage, LOGO_LAYER_NAME, x, y, targetIndex, size, inPoint, outPoint);
+  addImageOverlayToComp(comp, footage, LOGO_LAYER_NAME, x, y, targetIndex, size);
 }

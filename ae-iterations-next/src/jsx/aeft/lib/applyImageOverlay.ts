@@ -15,21 +15,19 @@ export function removeImageOverlayFromComp(comp: CompItem, layerName: string): v
   }
 }
 
-// Resolves what "attach to layer" (badge/logo's optional layerIndex, mirroring
-// EmojiConfig.layerIndex) means for a given comp: unset/0/an out-of-range
-// index falls back to today's default (top of stack, no duration override);
-// a valid index reports that layer's own inPoint/outPoint so the caller can
-// make the overlay match that layer's timespan instead of the full comp --
-// this is what actually excludes an overlay from e.g. a packshot section,
-// since attaching by stacking position alone does not.
-export function resolveOverlayAttachment(
-  comp: CompItem,
-  layerIndex: number | undefined
-): { targetIndex: number; inPoint?: number; outPoint?: number } {
+// Resolves "attach to layer" (Logo's optional layerIndex, mirroring
+// EmojiConfig.layerIndex exactly) to a 1-based stacking target: unset/0/an
+// out-of-range index falls back to the top of the stack. Stacking-only --
+// an earlier revision also matched the attached layer's inPoint/outPoint
+// (to exclude the overlay from e.g. a packshot section), but real usage
+// showed that coupling was more confusing than useful (the overlay kept
+// coming out unexpectedly short even once the cause was understood), so
+// badge/logo both always span the full comp duration again, unconditionally.
+export function resolveOverlayAttachment(comp: CompItem, layerIndex: number | undefined): { targetIndex: number } {
   if (!layerIndex || layerIndex < 1) return { targetIndex: 1 };
   try {
-    const target = comp.layer(layerIndex);
-    return { targetIndex: layerIndex, inPoint: target.inPoint, outPoint: target.outPoint };
+    comp.layer(layerIndex);
+    return { targetIndex: layerIndex };
   } catch (e) {
     return { targetIndex: 1 };
   }
@@ -41,9 +39,6 @@ export function resolveOverlayAttachment(
 // x, y:        position in comp pixels
 // targetIndex: 1-based layer position from top (1 = topmost)
 // size:        uniform scale percentage
-// inPoint/outPoint: optional overrides (see resolveOverlayAttachment); default
-//   to the full comp duration when omitted, matching every existing caller's
-//   behavior exactly (Emoji passes neither, so its behavior is unchanged).
 export function addImageOverlayToComp(
   comp: CompItem,
   footage: FootageItem,
@@ -51,9 +46,7 @@ export function addImageOverlayToComp(
   x: number,
   y: number,
   targetIndex: number,
-  size: number,
-  inPoint?: number,
-  outPoint?: number
+  size: number
 ): void {
   // Remove any overlay left over from a previous iteration
   removeImageOverlayFromComp(comp, layerName);
@@ -62,9 +55,9 @@ export function addImageOverlayToComp(
   const layer = comp.layers.add(footage);
   layer.name = layerName;
 
-  // Span the full comp, unless a specific attachment timespan was given.
-  layer.inPoint = inPoint ?? 0;
-  layer.outPoint = outPoint ?? comp.duration;
+  // Span the full comp
+  layer.inPoint = 0;
+  layer.outPoint = comp.duration;
 
   // Position and scale
   layer.transform.position.setValue([x, y]);

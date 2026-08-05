@@ -186,20 +186,13 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
           removeBadgeFromComp(badgeLogoComp);
           const badgeText = cfg.badge.perIteration[iter];
           if (badgeText) {
-            const badgeAttach = resolveOverlayAttachment(badgeLogoComp, cfg.badge.layerIndex);
-            addBadgeToComp(
-              badgeLogoComp, badgeText, cfg.badge.x, cfg.badge.y, cfg.badge.size,
-              cfg.badge.circleColor, cfg.badge.textColor, badgeAttach.inPoint, badgeAttach.outPoint
-            );
+            addBadgeToComp(badgeLogoComp, badgeText, cfg.badge.x, cfg.badge.y, cfg.badge.size, cfg.badge.circleColor, cfg.badge.textColor);
           }
         }
         if (cfg.logo && cfg.logo.enabled && logoFootage) {
           removeLogoFromComp(badgeLogoComp);
           const logoAttach = resolveOverlayAttachment(badgeLogoComp, cfg.logo.layerIndex);
-          addLogoToComp(
-            badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size,
-            logoAttach.targetIndex, logoAttach.inPoint, logoAttach.outPoint
-          );
+          addLogoToComp(badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size, logoAttach.targetIndex);
         }
       } else if ((cfg.badge && cfg.badge.enabled) || (cfg.logo && cfg.logo.enabled)) {
         warnings.push("VAR " + varName + ": 9x16 render comp not found, badge/logo skipped");

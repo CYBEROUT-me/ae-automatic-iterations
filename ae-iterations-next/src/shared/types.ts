@@ -64,7 +64,9 @@ export interface BadgeConfig {
   size: number; // uniform scale percentage, same convention as EmojiConfig
   circleColor: [number, number, number];
   textColor: [number, number, number];
-  layerIndex?: number; // 0/unset = full comp duration, fixed top-of-stack (duration-only attachment)
+  // No layerIndex: badge always spans the full comp duration and stays at
+  // the top of the stack -- unlike Logo, it has no stacking mechanism to
+  // attach to (see applyBadge.ts), so this field would have no effect.
 }
 
 export interface LogoConfig {
@@ -73,8 +75,9 @@ export interface LogoConfig {
   x: number;
   y: number;
   size: number;
-  layerIndex?: number; // 0/unset = full comp duration, top of stack; a positive index also
-                        // controls stacking, exactly like EmojiConfig.layerIndex
+  layerIndex?: number; // 0/unset = top of stack; a positive index controls
+                        // stacking position only, exactly like EmojiConfig.layerIndex
+                        // (duration always spans the full comp regardless)
 }
 
 export interface CfgLayer {

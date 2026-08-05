@@ -22,15 +22,12 @@ export function removeBadgeFromComp(comp: CompItem): void {
   }
 }
 
-// inPoint/outPoint: optional attachment-timespan override (see
-// lib/applyImageOverlay.ts's resolveOverlayAttachment) -- default to the
-// full comp duration when omitted, matching the original behavior exactly.
-// Unlike Logo, badge's stacking position always stays at the top of the
-// stack regardless of attachment -- a deliberate simplification, since
-// reordering two layers (circle + text) together while preserving their
-// relative front/back order for an arbitrary target isn't worth the
-// complexity for what "attach to layer" is actually for here (excluding a
-// packshot section via duration, not controlling stacking).
+// Badge always spans the full comp duration and stays at the top of the
+// stack -- an earlier revision let "attach to layer" also shrink the
+// badge's timespan to match that layer's, but real usage showed that
+// coupling was more confusing than useful (the badge kept coming out
+// unexpectedly short even once the cause was understood), so this reverted
+// to the simpler, unconditional behavior.
 export function addBadgeToComp(
   comp: CompItem,
   text: string,
@@ -38,9 +35,7 @@ export function addBadgeToComp(
   y: number,
   size: number,
   circleColor: [number, number, number],
-  textColor: [number, number, number],
-  inPoint?: number,
-  outPoint?: number
+  textColor: [number, number, number]
 ): void {
   removeBadgeFromComp(comp);
   const sz = size || 100;
@@ -49,8 +44,8 @@ export function addBadgeToComp(
   // anchor point so the layer's Position IS the circle's visual center.
   const circleLayer = comp.layers.addShape();
   circleLayer.name = BADGE_CIRCLE_LAYER_NAME;
-  circleLayer.inPoint = inPoint ?? 0;
-  circleLayer.outPoint = outPoint ?? comp.duration;
+  circleLayer.inPoint = 0;
+  circleLayer.outPoint = comp.duration;
 
   const contents = circleLayer.property("Contents") as any;
   const group = contents.addProperty("ADBE Vector Group");
@@ -74,8 +69,8 @@ export function addBadgeToComp(
   // needed for text-over-circle.
   const textLayer = comp.layers.addText(text);
   textLayer.name = BADGE_TEXT_LAYER_NAME;
-  textLayer.inPoint = inPoint ?? 0;
-  textLayer.outPoint = outPoint ?? comp.duration;
+  textLayer.inPoint = 0;
+  textLayer.outPoint = comp.duration;
 
   const textProp = textLayer.property("Source Text") as any;
   const textDoc = textProp.value;

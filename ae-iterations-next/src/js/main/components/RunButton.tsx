@@ -13,7 +13,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
   const {
     compName, rowLayers, count, mode, varNames,
     emojiEnabled, emojiPaths, emojiX, emojiY, emojiSize, emojiLayerIndex,
-    badgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
+    badgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor,
     logoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex,
   } = useAppStore(
     useShallow((s) => ({
@@ -22,7 +22,6 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
       emojiSize: s.emojiSize, emojiLayerIndex: s.emojiLayerIndex,
       badgeEnabled: s.badgeEnabled, badgeTexts: s.badgeTexts, badgeX: s.badgeX, badgeY: s.badgeY,
       badgeSize: s.badgeSize, badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor,
-      badgeLayerIndex: s.badgeLayerIndex,
       logoEnabled: s.logoEnabled, logoPath: s.logoPath, logoX: s.logoX, logoY: s.logoY, logoSize: s.logoSize,
       logoLayerIndex: s.logoLayerIndex,
     }))
@@ -72,7 +71,6 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
         size: badgeSize,
         circleColor: badgeCircleColor,
         textColor: badgeTextColor,
-        layerIndex: badgeLayerIndex,
       };
       const logo = { enabled: logoEnabled, path: logoPath, x: logoX, y: logoY, size: logoSize, layerIndex: logoLayerIndex };
       evalTS("runVarIterations", { compName: compName || "", layers, values, count, varNames: names, badge, logo })

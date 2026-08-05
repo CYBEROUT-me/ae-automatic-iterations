@@ -56,6 +56,24 @@ export interface EmojiConfig {
   layerIndex: number; // 1-based position from top of layer stack
 }
 
+export interface BadgeConfig {
+  enabled: boolean;
+  perIteration: (string | null)[]; // badge text per iteration, count-length — free text, e.g. "25+"
+  x: number;
+  y: number;
+  size: number; // uniform scale percentage, same convention as EmojiConfig
+  circleColor: [number, number, number];
+  textColor: [number, number, number];
+}
+
+export interface LogoConfig {
+  enabled: boolean;
+  path: string | null; // path to a file inside the logo library folder (see logoLibrary.ts)
+  x: number;
+  y: number;
+  size: number;
+}
+
 export interface CfgLayer {
   index: number;
   name: string;
@@ -81,6 +99,8 @@ export interface RunVarConfig {
   values: LayerValue[][]; // [iter][layer row index], matching `layers` order
   varNames: string[];
   count: number;
+  badge?: BadgeConfig;
+  logo?: LogoConfig;
 }
 
 export interface TestVarCompsResult {

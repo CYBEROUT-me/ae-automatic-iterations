@@ -227,6 +227,11 @@ body,
     background-color: $surface-hover !important;
     box-shadow: $shadow-md;
   }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 // Flip + B&W as one segmented control (one shared border) instead of two
@@ -1302,4 +1307,69 @@ input[type="checkbox"] {
     background-color: $surface-hover;
     color: $text-strong;
   }
+}
+
+// ── Position picker popup (badge + logo) ─────────────────────────────────
+
+.position-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.position-picker-popup {
+  background-color: $surface;
+  border: 1px solid $border-strong;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  padding: $space-4;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  align-items: center;
+}
+
+.position-picker-canvas {
+  position: relative;
+  cursor: crosshair;
+  border-radius: $radius-sm;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+  }
+}
+
+.position-picker-marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid $accent;
+  background-color: rgba($accent, 0.25);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+
+  &.position-picker-marker-logo {
+    border-radius: 4px;
+  }
+}
+
+.position-picker-loading,
+.position-picker-error {
+  font-size: $text-sm;
+  color: $text-dim;
+  padding: $space-4;
+}
+
+.position-picker-close {
+  align-self: stretch;
 }

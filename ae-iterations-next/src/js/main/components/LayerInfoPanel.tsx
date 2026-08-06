@@ -22,6 +22,7 @@ export function LayerInfoPanel() {
     compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, addLayerInfo, mode,
     emojiEnabled, setEmojiEnabled,
     badgeEnabled, setBadgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
+    badgeEnabledPerIteration,
     logoEnabled, setLogoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex, logoPerIteration,
   } = useAppStore(
     useShallow((s) => ({
@@ -46,6 +47,7 @@ export function LayerInfoPanel() {
       badgeCircleColor: s.badgeCircleColor,
       badgeTextColor: s.badgeTextColor,
       badgeLayerIndex: s.badgeLayerIndex,
+      badgeEnabledPerIteration: s.badgeEnabledPerIteration,
       logoEnabled: s.logoEnabled,
       setLogoEnabled: s.setLogoEnabled,
       logoPath: s.logoPath,
@@ -128,7 +130,7 @@ export function LayerInfoPanel() {
     // persist in the store across a mode switch (nothing resets them), so an
     // ITR-mode Preview must not send a leftover VAR-mode badge/logo config.
     const badge =
-      mode === "var" && badgeEnabled
+      mode === "var" && badgeEnabled && (badgeEnabledPerIteration[iter] ?? true)
         ? { text: badgeTexts[iter] ?? "", x: badgeX, y: badgeY, size: badgeSize, circleColor: badgeCircleColor, textColor: badgeTextColor, layerIndex: badgeLayerIndex }
         : undefined;
     const logo =

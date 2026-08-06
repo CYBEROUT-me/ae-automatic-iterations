@@ -53,4 +53,22 @@ describe("BadgeSection", () => {
     fireEvent.change(screen.getByText("Attach to layer").nextSibling as Element, { target: { value: "2" } });
     expect(useAppStore.getState().badgeLayerIndex).toBe(2);
   });
+
+  it("renders one Apply-badge checkbox per iteration, checked by default", () => {
+    useAppStore.setState({ badgeEnabledPerIteration: [] });
+    render(<BadgeSection />);
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(3);
+    checkboxes.forEach((cb) => expect(cb).toBeChecked());
+  });
+
+  it("unchecking a per-iteration checkbox updates the store without clearing that iteration's text", () => {
+    useAppStore.setState({ badgeEnabledPerIteration: [], badgeTexts: ["25+", "50%", null] });
+    render(<BadgeSection />);
+    const checkboxes = screen.getAllByRole("checkbox");
+    fireEvent.click(checkboxes[1]);
+    expect(useAppStore.getState().badgeEnabledPerIteration[1]).toBe(false);
+    expect(useAppStore.getState().badgeEnabledPerIteration[0]).toBeUndefined();
+    expect(useAppStore.getState().badgeTexts[1]).toBe("50%");
+  });
 });

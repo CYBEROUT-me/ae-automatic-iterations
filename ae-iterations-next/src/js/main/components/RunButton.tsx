@@ -14,6 +14,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
     compName, rowLayers, count, mode, varNames,
     emojiEnabled, emojiPaths, emojiX, emojiY, emojiSize, emojiLayerIndex,
     badgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
+    badgeEnabledPerIteration,
     logoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex, logoPerIteration,
   } = useAppStore(
     useShallow((s) => ({
@@ -22,7 +23,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
       emojiSize: s.emojiSize, emojiLayerIndex: s.emojiLayerIndex,
       badgeEnabled: s.badgeEnabled, badgeTexts: s.badgeTexts, badgeX: s.badgeX, badgeY: s.badgeY,
       badgeSize: s.badgeSize, badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor,
-      badgeLayerIndex: s.badgeLayerIndex,
+      badgeLayerIndex: s.badgeLayerIndex, badgeEnabledPerIteration: s.badgeEnabledPerIteration,
       logoEnabled: s.logoEnabled, logoPath: s.logoPath, logoX: s.logoX, logoY: s.logoY, logoSize: s.logoSize,
       logoLayerIndex: s.logoLayerIndex, logoPerIteration: s.logoPerIteration,
     }))
@@ -73,6 +74,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
         circleColor: badgeCircleColor,
         textColor: badgeTextColor,
         layerIndex: badgeLayerIndex,
+        enabledPerIteration: Array.from({ length: count }, (_, i) => badgeEnabledPerIteration[i] ?? true),
       };
       const logo = {
         enabled: logoEnabled,

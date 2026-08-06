@@ -68,6 +68,13 @@ export interface BadgeConfig {
                         // stacking position only, exactly like
                         // LogoConfig/EmojiConfig.layerIndex (duration
                         // always spans the full comp regardless)
+  enabledPerIteration?: boolean[]; // per-iteration on/off, count-length; a
+                                    // missing entry defaults to true. Kept
+                                    // separate from `perIteration` (the text
+                                    // content) so a variation's badge text
+                                    // can be typed once and toggled off/on
+                                    // without losing it, mirroring
+                                    // LogoConfig.perIteration
 }
 
 export interface LogoConfig {

@@ -198,7 +198,11 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
         if (cfg.badge && cfg.badge.enabled) {
           removeBadgeFromComp(badgeLogoComp);
           const badgeText = cfg.badge.perIteration[iter];
-          if (badgeText) {
+          // enabledPerIteration[iter] undefined (array shorter than count,
+          // or omitted entirely) defaults to true, same convention as
+          // Logo's perIteration.
+          const badgeOnThisIter = !cfg.badge.enabledPerIteration || cfg.badge.enabledPerIteration[iter] !== false;
+          if (badgeText && badgeOnThisIter) {
             addBadgeToComp(badgeLogoComp, badgeText, cfg.badge.x, cfg.badge.y, cfg.badge.size, cfg.badge.circleColor, cfg.badge.textColor, badgeAttachLayer);
           }
         }

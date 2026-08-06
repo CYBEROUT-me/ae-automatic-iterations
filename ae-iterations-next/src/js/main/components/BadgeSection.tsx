@@ -7,15 +7,17 @@ import { PositionPickerPopup } from "./PositionPickerPopup";
 export function BadgeSection() {
   const {
     compName, count, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
+    badgeEnabledPerIteration,
     setBadgeText, setBadgeX, setBadgeY, setBadgeSize, setBadgeCircleColor, setBadgeTextColor, setBadgeLayerIndex,
+    setBadgeEnabledPerIteration,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName, count: s.count, badgeTexts: s.badgeTexts, badgeX: s.badgeX, badgeY: s.badgeY,
       badgeSize: s.badgeSize, badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor,
-      badgeLayerIndex: s.badgeLayerIndex,
+      badgeLayerIndex: s.badgeLayerIndex, badgeEnabledPerIteration: s.badgeEnabledPerIteration,
       setBadgeText: s.setBadgeText, setBadgeX: s.setBadgeX, setBadgeY: s.setBadgeY, setBadgeSize: s.setBadgeSize,
       setBadgeCircleColor: s.setBadgeCircleColor, setBadgeTextColor: s.setBadgeTextColor,
-      setBadgeLayerIndex: s.setBadgeLayerIndex,
+      setBadgeLayerIndex: s.setBadgeLayerIndex, setBadgeEnabledPerIteration: s.setBadgeEnabledPerIteration,
     }))
   );
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -72,6 +74,13 @@ export function BadgeSection() {
         {Array.from({ length: count }, (_, iter) => (
           <div key={iter} className="badge-iter-row">
             <span className="emoji-iter-num">{iter + 1}</span>
+            <input
+              type="checkbox"
+              className="badge-iter-checkbox"
+              title="Apply badge to this variation"
+              checked={badgeEnabledPerIteration[iter] ?? true}
+              onChange={(e) => setBadgeEnabledPerIteration(iter, e.target.checked)}
+            />
             <input
               type="text"
               className="badge-text-input"

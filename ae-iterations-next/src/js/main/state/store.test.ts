@@ -227,4 +227,12 @@ describe("badge/logo overlay state", () => {
     expect(useAppStore.getState().logoPerIteration[2]).toBe(false);
     expect(useAppStore.getState().logoPerIteration[1]).toBeUndefined();
   });
+
+  it("setBadgeEnabledPerIteration sets a per-iteration flag without disturbing others", () => {
+    useAppStore.getState().setBadgeEnabledPerIteration(0, false);
+    useAppStore.getState().setBadgeEnabledPerIteration(2, false);
+    expect(useAppStore.getState().badgeEnabledPerIteration[0]).toBe(false);
+    expect(useAppStore.getState().badgeEnabledPerIteration[2]).toBe(false);
+    expect(useAppStore.getState().badgeEnabledPerIteration[1]).toBeUndefined();
+  });
 });

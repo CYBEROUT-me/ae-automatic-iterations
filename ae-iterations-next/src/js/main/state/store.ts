@@ -39,6 +39,7 @@ interface AppState {
   badgeCircleColor: [number, number, number];
   badgeTextColor: [number, number, number];
   badgeLayerIndex: number;
+  badgeEnabledPerIteration: boolean[];
   logoEnabled: boolean;
   logoPath: string | null;
   logoX: number;
@@ -54,6 +55,7 @@ interface AppState {
   setBadgeCircleColor(color: [number, number, number]): void;
   setBadgeTextColor(color: [number, number, number]): void;
   setBadgeLayerIndex(v: number): void;
+  setBadgeEnabledPerIteration(iter: number, v: boolean): void;
   setLogoEnabled(v: boolean): void;
   setLogoPath(path: string | null): void;
   setLogoX(v: number): void;
@@ -137,6 +139,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   badgeCircleColor: [1, 1, 1],
   badgeTextColor: [0, 0, 0],
   badgeLayerIndex: 0,
+  badgeEnabledPerIteration: [],
   logoEnabled: false,
   logoPath: null,
   logoX: 990,
@@ -157,6 +160,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   setBadgeCircleColor: (color) => set({ badgeCircleColor: color }),
   setBadgeTextColor: (color) => set({ badgeTextColor: color }),
   setBadgeLayerIndex: (v) => set({ badgeLayerIndex: v }),
+  setBadgeEnabledPerIteration: (iter, v) =>
+    set((s) => {
+      const arr = [...s.badgeEnabledPerIteration];
+      arr[iter] = v;
+      return { badgeEnabledPerIteration: arr };
+    }),
   setLogoEnabled: (v) => set({ logoEnabled: v }),
   setLogoPath: (path) => set({ logoPath: path }),
   setLogoX: (v) => set({ logoX: v }),

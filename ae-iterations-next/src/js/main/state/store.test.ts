@@ -219,4 +219,12 @@ describe("badge/logo overlay state", () => {
     useAppStore.getState().setBadgeLayerIndex(5);
     expect(useAppStore.getState().badgeLayerIndex).toBe(5);
   });
+
+  it("setLogoPerIteration sets a per-iteration flag without disturbing others", () => {
+    useAppStore.getState().setLogoPerIteration(0, false);
+    useAppStore.getState().setLogoPerIteration(2, false);
+    expect(useAppStore.getState().logoPerIteration[0]).toBe(false);
+    expect(useAppStore.getState().logoPerIteration[2]).toBe(false);
+    expect(useAppStore.getState().logoPerIteration[1]).toBeUndefined();
+  });
 });

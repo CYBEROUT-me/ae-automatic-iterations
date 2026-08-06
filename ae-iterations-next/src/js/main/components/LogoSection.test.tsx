@@ -48,4 +48,22 @@ describe("LogoSection", () => {
     fireEvent.change(screen.getByText("Attach to layer").nextSibling as Element, { target: { value: "2" } });
     expect(useAppStore.getState().logoLayerIndex).toBe(2);
   });
+
+  it("renders one Apply-logo checkbox per iteration, checked by default", () => {
+    useAppStore.setState({ count: 2, logoPerIteration: [] });
+    render(<LogoSection />);
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(2);
+    expect(checkboxes[0]).toBeChecked();
+    expect(checkboxes[1]).toBeChecked();
+  });
+
+  it("unchecking a per-iteration checkbox updates the store without disturbing others", () => {
+    useAppStore.setState({ count: 2, logoPerIteration: [] });
+    render(<LogoSection />);
+    const checkboxes = screen.getAllByRole("checkbox");
+    fireEvent.click(checkboxes[1]);
+    expect(useAppStore.getState().logoPerIteration[1]).toBe(false);
+    expect(useAppStore.getState().logoPerIteration[0]).toBeUndefined();
+  });
 });

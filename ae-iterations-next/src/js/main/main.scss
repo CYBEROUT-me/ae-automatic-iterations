@@ -820,6 +820,19 @@ input[type="checkbox"] {
   font-size: $text-sm;
 }
 
+.logo-iter-toggle {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $text-sm;
+  color: $text-dim;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    margin: 0;
+  }
+}
+
 .emoji-grid-item {
   aspect-ratio: 1;
   border: 1px solid transparent;

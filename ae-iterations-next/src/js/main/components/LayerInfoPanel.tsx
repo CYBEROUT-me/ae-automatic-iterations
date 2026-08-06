@@ -22,7 +22,7 @@ export function LayerInfoPanel() {
     compName, rowLayers, count, setCount, values, sameForAll, setSameForAll, setLayerInfo, addLayerInfo, mode,
     emojiEnabled, setEmojiEnabled,
     badgeEnabled, setBadgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
-    logoEnabled, setLogoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex,
+    logoEnabled, setLogoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex, logoPerIteration,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName,
@@ -53,6 +53,7 @@ export function LayerInfoPanel() {
       logoY: s.logoY,
       logoSize: s.logoSize,
       logoLayerIndex: s.logoLayerIndex,
+      logoPerIteration: s.logoPerIteration,
     }))
   );
 
@@ -131,7 +132,7 @@ export function LayerInfoPanel() {
         ? { text: badgeTexts[iter] ?? "", x: badgeX, y: badgeY, size: badgeSize, circleColor: badgeCircleColor, textColor: badgeTextColor, layerIndex: badgeLayerIndex }
         : undefined;
     const logo =
-      mode === "var" && logoEnabled && logoPath
+      mode === "var" && logoEnabled && logoPath && (logoPerIteration[iter] ?? true)
         ? { path: logoPath, x: logoX, y: logoY, size: logoSize, layerIndex: logoLayerIndex }
         : undefined;
     // No early-return on !compName: badge/logo previews are independent of

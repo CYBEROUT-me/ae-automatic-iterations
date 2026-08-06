@@ -45,6 +45,7 @@ interface AppState {
   logoY: number;
   logoSize: number;
   logoLayerIndex: number;
+  logoPerIteration: boolean[];
   setBadgeEnabled(v: boolean): void;
   setBadgeText(iter: number, text: string | null): void;
   setBadgeX(v: number): void;
@@ -59,6 +60,7 @@ interface AppState {
   setLogoY(v: number): void;
   setLogoSize(v: number): void;
   setLogoLayerIndex(v: number): void;
+  setLogoPerIteration(iter: number, v: boolean): void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -141,6 +143,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   logoY: 90,
   logoSize: 10,
   logoLayerIndex: 0,
+  logoPerIteration: [],
   setBadgeEnabled: (v) => set({ badgeEnabled: v }),
   setBadgeText: (iter, text) =>
     set((s) => {
@@ -160,4 +163,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   setLogoY: (v) => set({ logoY: v }),
   setLogoSize: (v) => set({ logoSize: v }),
   setLogoLayerIndex: (v) => set({ logoLayerIndex: v }),
+  setLogoPerIteration: (iter, v) =>
+    set((s) => {
+      const arr = [...s.logoPerIteration];
+      arr[iter] = v;
+      return { logoPerIteration: arr };
+    }),
 }));

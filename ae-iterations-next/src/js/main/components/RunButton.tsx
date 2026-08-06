@@ -14,7 +14,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
     compName, rowLayers, count, mode, varNames,
     emojiEnabled, emojiPaths, emojiX, emojiY, emojiSize, emojiLayerIndex,
     badgeEnabled, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
-    logoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex,
+    logoEnabled, logoPath, logoX, logoY, logoSize, logoLayerIndex, logoPerIteration,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName, rowLayers: s.rowLayers, count: s.count, mode: s.mode, varNames: s.varNames,
@@ -24,7 +24,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
       badgeSize: s.badgeSize, badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor,
       badgeLayerIndex: s.badgeLayerIndex,
       logoEnabled: s.logoEnabled, logoPath: s.logoPath, logoX: s.logoX, logoY: s.logoY, logoSize: s.logoSize,
-      logoLayerIndex: s.logoLayerIndex,
+      logoLayerIndex: s.logoLayerIndex, logoPerIteration: s.logoPerIteration,
     }))
   );
   const [status, setStatus] = useState("");
@@ -74,7 +74,15 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
         textColor: badgeTextColor,
         layerIndex: badgeLayerIndex,
       };
-      const logo = { enabled: logoEnabled, path: logoPath, x: logoX, y: logoY, size: logoSize, layerIndex: logoLayerIndex };
+      const logo = {
+        enabled: logoEnabled,
+        path: logoPath,
+        x: logoX,
+        y: logoY,
+        size: logoSize,
+        layerIndex: logoLayerIndex,
+        perIteration: Array.from({ length: count }, (_, i) => logoPerIteration[i] ?? true),
+      };
       evalTS("runVarIterations", { compName: compName || "", layers, values, count, varNames: names, badge, logo })
         .then((res) => handleResult(res, "variants"))
         .catch(handleError);

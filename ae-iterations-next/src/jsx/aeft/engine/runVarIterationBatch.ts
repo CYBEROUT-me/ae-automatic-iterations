@@ -204,7 +204,14 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
         }
         if (cfg.logo && cfg.logo.enabled && logoFootage) {
           removeLogoFromComp(badgeLogoComp);
-          addLogoToComp(badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size, logoAttachLayer);
+          // perIteration[iter] undefined (array shorter than count, or
+          // omitted entirely) defaults to true -- applies to every
+          // iteration, the pre-existing behavior before this per-iteration
+          // toggle existed.
+          const applyThisIter = !cfg.logo.perIteration || cfg.logo.perIteration[iter] !== false;
+          if (applyThisIter) {
+            addLogoToComp(badgeLogoComp, logoFootage, cfg.logo.x, cfg.logo.y, cfg.logo.size, logoAttachLayer);
+          }
         }
       } else if ((cfg.badge && cfg.badge.enabled) || (cfg.logo && cfg.logo.enabled)) {
         warnings.push("VAR " + varName + ": 9x16 render comp not found, badge/logo skipped");

@@ -6,14 +6,14 @@ import { PositionPickerPopup } from "./PositionPickerPopup";
 
 export function LogoSection() {
   const {
-    compName, logoPath, logoX, logoY, logoSize, logoLayerIndex,
-    setLogoPath, setLogoX, setLogoY, setLogoSize, setLogoLayerIndex,
+    compName, count, logoPath, logoX, logoY, logoSize, logoLayerIndex, logoPerIteration,
+    setLogoPath, setLogoX, setLogoY, setLogoSize, setLogoLayerIndex, setLogoPerIteration,
   } = useAppStore(
     useShallow((s) => ({
-      compName: s.compName, logoPath: s.logoPath, logoX: s.logoX, logoY: s.logoY, logoSize: s.logoSize,
-      logoLayerIndex: s.logoLayerIndex,
+      compName: s.compName, count: s.count, logoPath: s.logoPath, logoX: s.logoX, logoY: s.logoY, logoSize: s.logoSize,
+      logoLayerIndex: s.logoLayerIndex, logoPerIteration: s.logoPerIteration,
       setLogoPath: s.setLogoPath, setLogoX: s.setLogoX, setLogoY: s.setLogoY, setLogoSize: s.setLogoSize,
-      setLogoLayerIndex: s.setLogoLayerIndex,
+      setLogoLayerIndex: s.setLogoLayerIndex, setLogoPerIteration: s.setLogoPerIteration,
     }))
   );
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -48,6 +48,21 @@ export function LogoSection() {
           value={logoLayerIndex}
           onChange={(e) => setLogoLayerIndex(parseInt(e.target.value, 10) || 0)}
         />
+      </div>
+      <div id="emoji-iter-rows">
+        {Array.from({ length: count }, (_, iter) => (
+          <div key={iter} className="badge-iter-row">
+            <span className="emoji-iter-num">{iter + 1}</span>
+            <label className="logo-iter-toggle">
+              <input
+                type="checkbox"
+                checked={logoPerIteration[iter] ?? true}
+                onChange={(e) => setLogoPerIteration(iter, e.target.checked)}
+              />
+              Apply logo
+            </label>
+          </div>
+        ))}
       </div>
       {pickerOpen && (
         <PositionPickerPopup

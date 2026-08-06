@@ -79,6 +79,11 @@ export interface LogoConfig {
   layerIndex?: number; // 0/unset = top of stack; a positive index controls
                         // stacking position only, exactly like EmojiConfig.layerIndex
                         // (duration always spans the full comp regardless)
+  perIteration?: boolean[]; // per-iteration on/off, count-length; a missing
+                             // entry (undefined) defaults to true (applied),
+                             // so an untouched/shorter array keeps the
+                             // pre-existing "applies to every iteration"
+                             // behavior unchanged
 }
 
 export interface CfgLayer {

@@ -13,6 +13,7 @@ describe("BadgeSection", () => {
     useAppStore.setState({
       compName: "Comp A", count: 3,
       badgeTexts: [], badgeX: 90, badgeY: 90, badgeSize: 100, badgeCircleColor: [1, 1, 1], badgeTextColor: [0, 0, 0],
+      badgeLayerIndex: 0,
     });
   });
 
@@ -47,8 +48,9 @@ describe("BadgeSection", () => {
     expect(await screen.findByAltText("Comp preview")).toBeInTheDocument();
   });
 
-  it("has no Attach to layer field (badge has no stacking mechanism to attach to)", () => {
+  it("updates the Attach to layer field", () => {
     render(<BadgeSection />);
-    expect(screen.queryByText("Attach to layer")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByText("Attach to layer").nextSibling as Element, { target: { value: "2" } });
+    expect(useAppStore.getState().badgeLayerIndex).toBe(2);
   });
 });

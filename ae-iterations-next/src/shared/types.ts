@@ -64,9 +64,10 @@ export interface BadgeConfig {
   size: number; // uniform scale percentage, same convention as EmojiConfig
   circleColor: [number, number, number];
   textColor: [number, number, number];
-  // No layerIndex: badge always spans the full comp duration and stays at
-  // the top of the stack -- unlike Logo, it has no stacking mechanism to
-  // attach to (see applyBadge.ts), so this field would have no effect.
+  layerIndex?: number; // 0/unset = top of stack; a positive index controls
+                        // stacking position only, exactly like
+                        // LogoConfig/EmojiConfig.layerIndex (duration
+                        // always spans the full comp regardless)
 }
 
 export interface LogoConfig {

@@ -6,14 +6,16 @@ import { PositionPickerPopup } from "./PositionPickerPopup";
 
 export function BadgeSection() {
   const {
-    compName, count, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor,
-    setBadgeText, setBadgeX, setBadgeY, setBadgeSize, setBadgeCircleColor, setBadgeTextColor,
+    compName, count, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
+    setBadgeText, setBadgeX, setBadgeY, setBadgeSize, setBadgeCircleColor, setBadgeTextColor, setBadgeLayerIndex,
   } = useAppStore(
     useShallow((s) => ({
       compName: s.compName, count: s.count, badgeTexts: s.badgeTexts, badgeX: s.badgeX, badgeY: s.badgeY,
       badgeSize: s.badgeSize, badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor,
+      badgeLayerIndex: s.badgeLayerIndex,
       setBadgeText: s.setBadgeText, setBadgeX: s.setBadgeX, setBadgeY: s.setBadgeY, setBadgeSize: s.setBadgeSize,
       setBadgeCircleColor: s.setBadgeCircleColor, setBadgeTextColor: s.setBadgeTextColor,
+      setBadgeLayerIndex: s.setBadgeLayerIndex,
     }))
   );
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -56,6 +58,15 @@ export function BadgeSection() {
         <button className="video-toggle" title="Position visually" onClick={() => setPickerOpen(true)}>
           Position visually…
         </button>
+      </div>
+      <div className="emoji-layer-row">
+        <span className="emoji-layer-label">Attach to layer</span>
+        <input
+          className="emoji-layer-input"
+          type="number"
+          value={badgeLayerIndex}
+          onChange={(e) => setBadgeLayerIndex(parseInt(e.target.value, 10) || 0)}
+        />
       </div>
       <div id="emoji-iter-rows">
         {Array.from({ length: count }, (_, iter) => (

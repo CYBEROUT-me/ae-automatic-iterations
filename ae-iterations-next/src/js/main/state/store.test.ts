@@ -150,7 +150,7 @@ describe("badge/logo overlay state", () => {
       compName: null, layerInfo: [], rowLayers: [], count: 5, sameForAll: true, values: {},
       mode: "var", varNames: [],
       badgeEnabled: false, badgeTexts: [], badgeX: 90, badgeY: 90, badgeSize: 100,
-      badgeCircleColor: [1, 1, 1], badgeTextColor: [0, 0, 0],
+      badgeCircleColor: [1, 1, 1], badgeTextColor: [0, 0, 0], badgeLayerIndex: 0,
       logoEnabled: false, logoPath: null, logoX: 990, logoY: 90, logoSize: 100, logoLayerIndex: 0,
     });
   });
@@ -213,5 +213,10 @@ describe("badge/logo overlay state", () => {
   it("setLogoLayerIndex updates its field", () => {
     useAppStore.getState().setLogoLayerIndex(5);
     expect(useAppStore.getState().logoLayerIndex).toBe(5);
+  });
+
+  it("setBadgeLayerIndex updates its field", () => {
+    useAppStore.getState().setBadgeLayerIndex(5);
+    expect(useAppStore.getState().badgeLayerIndex).toBe(5);
   });
 });

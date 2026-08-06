@@ -182,12 +182,15 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
       // this task's "watch out for" item 2).
       const badgeLogoComp = renderComps["9x16"];
       if (badgeLogoComp) {
-        // Resolve logo's attach-to-layer target BEFORE badge touches this
-        // comp at all -- badge's own two layers get inserted at the top,
-        // which shifts every existing layer's index by 2. Resolving after
-        // that would resolve "attach to layer N" against badge's own
-        // inserted layers, landing logo sandwiched between them instead of
-        // at the comp's real layer N. See resolveOverlayAttachment's header.
+        // Resolve BOTH overlays' attach-to-layer targets BEFORE either
+        // touches this comp -- badge's own two layers get inserted at the
+        // top, which shifts every existing layer's index by 2. Resolving
+        // "attach to layer N" after that (for either overlay) would resolve
+        // against the other overlay's own inserted layers instead of the
+        // comp's real layer N. See resolveOverlayAttachment's header.
+        const badgeAttachLayer = cfg.badge && cfg.badge.enabled
+          ? resolveOverlayAttachment(badgeLogoComp, cfg.badge.layerIndex)
+          : null;
         const logoAttachLayer = cfg.logo && cfg.logo.enabled && logoFootage
           ? resolveOverlayAttachment(badgeLogoComp, cfg.logo.layerIndex)
           : null;
@@ -196,7 +199,7 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
           removeBadgeFromComp(badgeLogoComp);
           const badgeText = cfg.badge.perIteration[iter];
           if (badgeText) {
-            addBadgeToComp(badgeLogoComp, badgeText, cfg.badge.x, cfg.badge.y, cfg.badge.size, cfg.badge.circleColor, cfg.badge.textColor);
+            addBadgeToComp(badgeLogoComp, badgeText, cfg.badge.x, cfg.badge.y, cfg.badge.size, cfg.badge.circleColor, cfg.badge.textColor, badgeAttachLayer);
           }
         }
         if (cfg.logo && cfg.logo.enabled && logoFootage) {

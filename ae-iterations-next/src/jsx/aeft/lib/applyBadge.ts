@@ -22,12 +22,17 @@ export function removeBadgeFromComp(comp: CompItem): void {
   }
 }
 
-// Badge always spans the full comp duration and stays at the top of the
-// stack -- an earlier revision let "attach to layer" also shrink the
-// badge's timespan to match that layer's, but real usage showed that
-// coupling was more confusing than useful (the badge kept coming out
-// unexpectedly short even once the cause was understood), so this reverted
-// to the simpler, unconditional behavior.
+// Badge always spans the full comp duration regardless of moveAfterLayer --
+// an earlier revision let "attach to layer" also shrink the badge's
+// timespan to match that layer's, but real usage showed that coupling was
+// more confusing than useful (the badge kept coming out unexpectedly short
+// even once the cause was understood), so duration-matching was removed
+// unconditionally. Stacking position is a separate, independently useful
+// concern (e.g. keeping badge below a "packshot" layer that should cover
+// it) -- moveAfterLayer restores just that half, mirroring Logo/Emoji's
+// layerIndex mechanism exactly (see applyImageOverlay.ts's
+// resolveOverlayAttachment for why callers must resolve this to a Layer
+// reference BEFORE either overlay inserts anything).
 export function addBadgeToComp(
   comp: CompItem,
   text: string,
@@ -35,7 +40,8 @@ export function addBadgeToComp(
   y: number,
   size: number,
   circleColor: [number, number, number],
-  textColor: [number, number, number]
+  textColor: [number, number, number],
+  moveAfterLayer?: Layer | null
 ): void {
   removeBadgeFromComp(comp);
   const sz = size || 100;
@@ -94,4 +100,18 @@ export function addBadgeToComp(
   textLayer.transform.anchorPoint.setValue([rect.left + rect.width / 2, rect.top + rect.height / 2]);
   textLayer.transform.position.setValue([x, y]);
   textLayer.transform.scale.setValue([sz, sz]);
+
+  // Move both layers together, preserving text-above-circle. moveAfter
+  // anchored on the SAME target twice, circle first then text, lands text
+  // immediately after the target and circle immediately after text --
+  // i.e. target, text, circle -- regardless of where either started.
+  if (moveAfterLayer) {
+    try {
+      circleLayer.moveAfter(moveAfterLayer);
+      textLayer.moveAfter(moveAfterLayer);
+    } catch (e) {
+      // moveAfterLayer was invalidated (e.g. removed) between being
+      // resolved and used -- leave the badge at the top rather than throwing.
+    }
+  }
 }

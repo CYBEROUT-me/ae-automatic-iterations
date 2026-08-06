@@ -14,14 +14,22 @@ export function renderPNGs(comps: Record<string, CompItem>, outFolder: Folder, s
       errors.push("No comp found for suffix " + suffix);
       continue;
     }
-    const prevRes = comp.resolutionFactor;
-    if (prevRes[0] !== 1 || prevRes[1] !== 1) comp.resolutionFactor = [1, 1];
+    // Whole per-comp body in one try/catch, including resolutionFactor --
+    // an earlier version read/restored resolutionFactor outside the try, so
+    // any exception there (or from a comp reference invalidated mid-loop)
+    // propagated straight out of the function, silently discarding every
+    // error already collected for earlier comps AND skipping every comp
+    // still to come, with no trace of why. That's indistinguishable from
+    // "rendered only the first comp" -- exactly the repeatedly-reported
+    // symptom -- so this now can never abort the loop for one bad comp.
     try {
+      const prevRes = comp.resolutionFactor;
+      if (prevRes[0] !== 1 || prevRes[1] !== 1) comp.resolutionFactor = [1, 1];
       comp.saveFrameToPng(0, new File(outFolder.fsName + "/" + comp.name + ".png"));
+      comp.resolutionFactor = prevRes;
     } catch (e: any) {
       errors.push(comp.name + ": " + e.message);
     }
-    comp.resolutionFactor = prevRes;
   }
   if (errors.length) throw new Error(errors.join(" | "));
 }

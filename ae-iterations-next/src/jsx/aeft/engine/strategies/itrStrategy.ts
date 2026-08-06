@@ -8,8 +8,11 @@ import { incrementProjectId } from "../../lib/naming";
 import type { IterationStrategy, TargetState } from "../runIterationBatch";
 
 export const ITR_STRATEGY: IterationStrategy = {
-  nextTarget(current: TargetState): TargetState {
+  nextTarget(current: TargetState, _iter: number, warnings: string[]): TargetState {
     const copied = copyProject(current.file);
+    if (copied.overwrote) {
+      warnings.push("Overwrote existing project file " + copied.file.name + " from a previous run.");
+    }
     app.open(copied.file);
     renameComps(copied.oldId, copied.newId);
     const newCompName = incrementProjectId(current.compName);

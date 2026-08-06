@@ -48,6 +48,13 @@ export function runVarIterationBatch(cfg: RunVarConfig): RunResult {
 
       const varFile = new File(projectFile.parent.fsName + "/" + varName + ".aep");
       if (varFile.exists) {
+        // A project file with this exact name already exists -- almost
+        // certainly a previous run under the same VAR name, about to be
+        // replaced along with its delivery/collect folder. Surfacing this
+        // is the whole fix: the overwrite itself is intentional (re-running
+        // the same name is the normal fast-iteration workflow), it just
+        // must never happen silently.
+        warnings.push("VAR " + varName + ": overwrote existing project file and output from a previous run.");
         try {
           varFile.remove();
         } catch (e) {}

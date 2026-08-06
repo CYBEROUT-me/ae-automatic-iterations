@@ -2,17 +2,22 @@
 
 import { incrementProjectId } from "./naming";
 
-export function copyProject(srcFile: File): { file: File; oldId: string; newId: string } {
+export function copyProject(srcFile: File): { file: File; oldId: string; newId: string; overwrote: boolean } {
   const baseName = srcFile.name.replace(/\.[^.]+$/, "");
   const ext = (srcFile.name.match(/\.[^.]+$/) || [".aep"])[0];
   const parts = baseName.split("_");
   const oldId = parts[1];
   const newName = incrementProjectId(baseName);
   const newFile = new File(srcFile.parent.fsName + "/" + newName + ext);
-  if (newFile.exists) newFile.remove();
+  // A file at this exact target name already exists -- almost certainly
+  // left over from a previous run that used the same starting ID. The
+  // caller decides how to surface this; overwrote is reported rather than
+  // silently removed so a re-run replacing prior output is never silent.
+  const overwrote = newFile.exists;
+  if (overwrote) newFile.remove();
   const ok = srcFile.copy(newFile.fsName);
   if (!ok) throw new Error("File copy failed: " + newFile.name);
-  return { file: newFile, oldId, newId: newName.split("_")[1] };
+  return { file: newFile, oldId, newId: newName.split("_")[1], overwrote };
 }
 
 export function renameComps(oldId: string, newId: string): void {

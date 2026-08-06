@@ -62,9 +62,19 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
     const values = Array.from({ length: count }, (_, iter) => rowLayers.map((r) => effectiveValue(r, iter)));
 
     if (mode === "var") {
+      const names = Array.from({ length: count }, (_, i) => varNames[i] || `VAR${i + 1}`);
+      // Two variants sharing a name would silently overwrite each other's
+      // project file and delivery folder within this single run (the host
+      // side has no way to tell them apart) -- catch it here, before
+      // anything runs, rather than after the damage is done.
+      const dupes = [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];
+      if (dupes.length) {
+        setStatus(`Duplicate variant name${dupes.length > 1 ? "s" : ""}: ${dupes.join(", ")} — each variant needs a unique name.`);
+        setStatusKind("error");
+        return;
+      }
       setStatus("Running VAR…");
       setStatusKind("running");
-      const names = Array.from({ length: count }, (_, i) => varNames[i] || `VAR${i + 1}`);
       const badge = {
         enabled: badgeEnabled,
         perIteration: Array.from({ length: count }, (_, i) => badgeTexts[i] ?? null),

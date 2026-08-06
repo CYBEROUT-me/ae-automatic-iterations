@@ -20,7 +20,10 @@ export interface TargetState {
 export interface IterationStrategy {
   // Given the current target, produce the file+comp name for the NEXT iteration.
   // Called after finishing iteration `iter`, only when iter < count - 1.
-  nextTarget(current: TargetState, iter: number): TargetState;
+  // warnings: same aggregated array runIterationBatch returns -- lets a
+  // strategy report something like "overwrote existing project file X"
+  // without silently swallowing it or throwing and aborting the whole run.
+  nextTarget(current: TargetState, iter: number, warnings: string[]): TargetState;
   // Optional extra work to run against the target comp before render (no-op for ITR core in this plan).
   perIterationExtra?(comp: CompItem, iter: number): void;
   // Folder name (under GD/) for this iteration's delivery output.
@@ -146,7 +149,7 @@ export function runIterationBatch(cfg: RunConfig, strategy: IterationStrategy): 
         // strategy.nextTarget already makes the copied project the active
         // document (copyProject -> app.open -> renameComps) before returning,
         // so no separate app.open is needed here.
-        current = strategy.nextTarget(current, iter);
+        current = strategy.nextTarget(current, iter, warnings);
       }
     }
   } finally {

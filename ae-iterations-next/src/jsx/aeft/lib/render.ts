@@ -25,8 +25,29 @@ export function renderPNGs(comps: Record<string, CompItem>, outFolder: Folder, s
     try {
       const prevRes = comp.resolutionFactor;
       if (prevRes[0] !== 1 || prevRes[1] !== 1) comp.resolutionFactor = [1, 1];
-      comp.saveFrameToPng(0, new File(outFolder.fsName + "/" + comp.name + ".png"));
+      const pngFile = new File(outFolder.fsName + "/" + comp.name + ".png");
+
+      // saveFrameToPng can report success (no exception) without the file
+      // actually existing on disk yet -- observed live on a real VAR run:
+      // 3 of 4 render comps produced zero reported errors here, yet only
+      // 1 PNG ever landed in the delivery folder. A synthetic repro with
+      // solid-layer-only comps (no real footage) never reproduced this,
+      // pointing at AE not always having fully settled a comp's frame
+      // render -- e.g. footage still loading from cold caches right after
+      // a project reopen -- by the time saveFrameToPng returns. Verifying
+      // the artifact actually exists, with a short retry, closes that gap;
+      // if it's still missing after retrying, that's now a real, visible
+      // error instead of silent success.
+      let wrote = false;
+      for (let attempt = 0; attempt < 3 && !wrote; attempt++) {
+        comp.saveFrameToPng(0, pngFile);
+        wrote = pngFile.exists && pngFile.length > 0;
+        if (!wrote) $.sleep(500);
+      }
       comp.resolutionFactor = prevRes;
+      if (!wrote) {
+        errors.push(comp.name + ": saveFrameToPng reported no error, but no PNG existed at " + pngFile.fsName + " after 3 attempts");
+      }
     } catch (e: any) {
       errors.push(comp.name + ": " + e.message);
     }

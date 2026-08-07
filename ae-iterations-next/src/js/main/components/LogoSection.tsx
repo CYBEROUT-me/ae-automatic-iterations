@@ -57,20 +57,7 @@ export function LogoSection() {
           </div>
         ))}
       </div>
-      {pickerOpen && (
-        <PositionPickerPopup
-          compName={compName}
-          x={logoX}
-          y={logoY}
-          overlay={{ kind: "logo", size: logoSize, imagePath: logoPath }}
-          onChange={(nx, ny) => {
-            setLogoX(nx);
-            setLogoY(ny);
-          }}
-          onSizeChange={setLogoSize}
-          onClose={() => setPickerOpen(false)}
-        />
-      )}
+      {pickerOpen && <PositionPickerPopup focus="logo" onClose={() => setPickerOpen(false)} />}
     </div>
   );
 }

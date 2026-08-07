@@ -84,26 +84,7 @@ export function BadgeSection() {
           </div>
         ))}
       </div>
-      {pickerOpen && (
-        <PositionPickerPopup
-          compName={compName}
-          x={badgeX}
-          y={badgeY}
-          overlay={{
-            kind: "badge",
-            text: badgeTexts.find((t) => !!t) || "25",
-            size: badgeSize,
-            circleColor: badgeCircleColor,
-            textColor: badgeTextColor,
-          }}
-          onChange={(nx, ny) => {
-            setBadgeX(nx);
-            setBadgeY(ny);
-          }}
-          onSizeChange={setBadgeSize}
-          onClose={() => setPickerOpen(false)}
-        />
-      )}
+      {pickerOpen && <PositionPickerPopup focus="badge" onClose={() => setPickerOpen(false)} />}
     </div>
   );
 }

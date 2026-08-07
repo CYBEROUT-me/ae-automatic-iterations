@@ -1639,3 +1639,72 @@ input[type="checkbox"] {
 .position-picker-close {
   align-self: stretch;
 }
+
+// ── Position picker: multi-overlay canvas ────────────────────────────────
+
+// Alignment guides, shown only while a drag is actually snapped to the
+// other overlay — a persistent grid would compete with the artwork the
+// user is trying to judge placement against.
+.position-picker-guide-v,
+.position-picker-guide-h {
+  position: absolute;
+  background-color: $accent;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.position-picker-guide-v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.position-picker-guide-h {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+// The unselected overlay stays visible (that's the whole point of showing
+// both) but shouldn't read as the thing currently being edited.
+.position-picker-badge-preview,
+.position-picker-logo-preview {
+  cursor: move;
+
+  &:not(.selected) {
+    opacity: 0.75;
+  }
+
+  &.selected {
+    outline: 1px solid $accent;
+    outline-offset: 2px;
+  }
+}
+
+.position-picker-select-row {
+  display: flex;
+  gap: $space-2;
+  margin-top: $space-2;
+}
+
+.position-picker-select-btn {
+  flex: 1;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  background-color: $inset;
+  color: $text-dim;
+  font-size: $text-sm;
+  padding: 0.2rem 0;
+
+  &.active {
+    border-color: $accent;
+    color: $text;
+  }
+}
+
+.position-picker-hint {
+  font-size: $text-xs;
+  color: $text-faint;
+  margin-top: $space-2;
+  text-align: center;
+}

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { LayerInfo, LayerValue } from "../../../shared/types";
 import { buildRowLayers, type Mode, type RowLayer } from "./rowLayers";
 
-interface AppState {
+export interface AppState {
   compName: string | null;
   layerInfo: LayerInfo[];
   rowLayers: RowLayer[];

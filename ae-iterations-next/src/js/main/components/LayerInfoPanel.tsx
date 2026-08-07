@@ -12,6 +12,7 @@ import { LogoSection } from "./LogoSection";
 import { PresetPanel } from "./PresetPanel";
 import { ChangelogList } from "./ChangelogList";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
+import { usePanelPersistence } from "../state/usePanelPersistence";
 import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
@@ -58,6 +59,11 @@ export function LayerInfoPanel() {
       logoPerIteration: s.logoPerIteration,
     }))
   );
+
+  // Restores the last session's overlay/global setup on mount and keeps it
+  // saved as it changes. Comp-specific state (layers, values) deliberately
+  // still requires a Refresh — see state/panelSetup.ts.
+  usePanelPersistence();
 
   const [testLog, setTestLog] = useState<string[] | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);

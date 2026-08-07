@@ -13,6 +13,7 @@
     "symlink": "cross-env BOLT_ACTION=symlink vite",
     "delsymlink": "cross-env BOLT_ACTION=delsymlink vite",
     "test": "vitest run",
+    "build:selftest": "node scripts/build-selftest.mjs",
     "release": "node scripts/release.mjs"
   },
   "dependencies": {

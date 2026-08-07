@@ -196,6 +196,20 @@ export default defineConfig(({ command }) => ({
 }));
 
 // rollup es3 build
+//
+// The standalone self-test script (src/jsx/selftest.ts) is built by its own
+// scripts/build-selftest.mjs, NOT by adding a second extendscriptConfig call
+// here -- that was tried and reliably crashed vite-cep-plugin's `cep()`
+// plugin (used below in the main `plugins` array for the panel build), which
+// turns out to have an internal dependency on this exact extendscriptConfig
+// call completing within the very same `vite build` invocation it's part
+// of. Skipping it (to build only the self-test in isolation) broke that
+// dependency; running it a second time alongside this one raced on shared
+// state inside vite-cep-plugin's jsxPonyfill plugin. Both failed with
+// "extendscript-ponyfill-resolver" / "Cannot read properties of undefined
+// (reading 'code')" -- confirmed by reproducing each, then confirming a
+// plain `npm run build` on its own still works fine. See
+// scripts/build-selftest.mjs's header for the standalone approach instead.
 const outPathExtendscript = path.join("dist", cepDist, "jsx", "index.js");
 extendscriptConfig(
   `src/jsx/index.ts`,

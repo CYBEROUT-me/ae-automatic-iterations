@@ -6,3 +6,6 @@ dist-ssr
 dist
 yarn-error.log
 .media
+# build:selftest output (see scripts/build-selftest.mjs) -- compiled
+# artifact, same as dist/, regenerate with `npm run build:selftest`.
+selftest

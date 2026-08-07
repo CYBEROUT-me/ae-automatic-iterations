@@ -44,28 +44,27 @@ export function renderPNGs(comps: Record<string, CompItem>, outFolder: Folder, s
       if (prevRes[0] !== 1 || prevRes[1] !== 1) comp.resolutionFactor = [1, 1];
       const pngFile = new File(outFolder.fsName + "/" + comp.name + ".png");
 
-      // saveFrameToPng can report success (no exception) without the file
-      // actually existing on disk yet -- observed live on a real VAR run:
-      // 3 of 4 render comps produced zero reported errors here, yet only
-      // 1 PNG ever landed in the delivery folder. A synthetic repro with
-      // solid-layer-only comps (no real footage) never reproduced this,
-      // pointing at AE not always having fully settled a comp's frame
-      // render -- e.g. footage still loading from cold caches right after
-      // a project reopen -- by the time saveFrameToPng returns. Verifying
-      // the artifact actually exists, with a short retry, closes that gap;
-      // if it's still missing after retrying, that's now a real, visible
-      // error instead of silent success.
+      // saveFrameToPng can report success (no exception) well before the
+      // file actually lands on disk -- confirmed live: a run that reported
+      // this exact "no PNG existed after 3 attempts (500ms each)" error for
+      // 3 comps turned out to have 2 of those 3 PNGs appear on disk once
+      // checked again later, meaning the earlier 1.5s window simply wasn't
+      // long enough. Call it once, then poll for the artifact over a much
+      // longer window -- a FRESH File object each poll, since re-checking
+      // .exists on the SAME File instance in this ExtendScript engine can
+      // return stale cached state instead of the current filesystem truth.
+      comp.saveFrameToPng(0, pngFile);
       let wrote = false;
-      for (let attempt = 0; attempt < 3 && !wrote; attempt++) {
-        comp.saveFrameToPng(0, pngFile);
-        wrote = pngFile.exists && pngFile.length > 0;
-        if (!wrote) $.sleep(500);
+      for (let attempt = 0; attempt < 10 && !wrote; attempt++) {
+        const check = new File(pngFile.fsName);
+        wrote = check.exists && check.length > 0;
+        if (!wrote) $.sleep(750);
       }
       comp.resolutionFactor = prevRes;
       if (!wrote) {
         const missingFootage = findMissingFootageNames(comp);
         const missingNote = missingFootage.length ? " (missing footage in this comp: " + missingFootage.join(", ") + ")" : " (no missing footage detected on this comp's own layers)";
-        errors.push(comp.name + ": saveFrameToPng reported no error, but no PNG existed at " + pngFile.fsName + " after 3 attempts" + missingNote);
+        errors.push(comp.name + ": saveFrameToPng reported no error, but no PNG existed at " + pngFile.fsName + " after ~7.5s of polling" + missingNote);
       }
     } catch (e: any) {
       errors.push(comp.name + ": " + e.message);

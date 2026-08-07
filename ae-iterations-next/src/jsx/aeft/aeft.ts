@@ -9,7 +9,14 @@ import { addLogoToComp, removeLogoFromComp } from "./lib/applyLogo";
 import { resolveOverlayAttachment } from "./lib/applyImageOverlay";
 import { runIterationBatch } from "./engine/runIterationBatch";
 import { ITR_STRATEGY } from "./engine/strategies/itrStrategy";
-import { runVarIterationBatch } from "./engine/runVarIterationBatch";
+import {
+  runVarIterationBatch,
+  varRunBegin as engineVarRunBegin,
+  varRunStep as engineVarRunStep,
+  varRunEnd as engineVarRunEnd,
+} from "./engine/runVarIterationBatch";
+import type { VarRunContext } from "./engine/runVarIterationBatch";
+import { beginProgress, endProgress } from "./lib/progress";
 import { stripAspectSuffix, VAR_ASPECT_SUFFIXES } from "./lib/naming";
 import { findVarComp } from "./lib/findComp";
 import type {
@@ -250,6 +257,51 @@ export const runIterations = (cfg: RunConfig): RunResult => {
 // runVarIterationBatch's header for why it isn't built on IterationStrategy).
 export const runVarIterations = (cfg: RunVarConfig): RunResult => {
   return runVarIterationBatch(cfg);
+};
+
+// ── Chunked VAR run: one variant per call ────────────────────────────────
+//
+// The panel drives this loop (see RunButton.tsx) so it can show progress,
+// let AE repaint between variants, and stop partway through. Cancellation
+// needs no host-side flag: the panel simply stops calling varRunStep and
+// calls varRunEnd instead.
+//
+// The context lives in module scope because it has to survive between the
+// separate evalTS calls that make up one run. That is safe here precisely
+// because ExtendScript is single-threaded — no second run can interleave
+// with this one mid-step.
+let activeVarRun: { ctx: VarRunContext; cfg: RunVarConfig } | null = null;
+
+export const varRunBegin = (cfg: RunVarConfig): { total: number; progressPath: string } => {
+  // A previous run whose panel died (closed mid-run, reloaded, crashed)
+  // would otherwise strand its temp copy and leave the user in a variant
+  // project. Unwind it before starting rather than leaking it.
+  if (activeVarRun) {
+    try {
+      engineVarRunEnd(activeVarRun.ctx);
+    } catch (e) {}
+    activeVarRun = null;
+  }
+  activeVarRun = { ctx: engineVarRunBegin(), cfg: cfg };
+  return { total: cfg.count, progressPath: beginProgress() };
+};
+
+export const varRunStep = (iter: number): RunResult => {
+  if (!activeVarRun) throw new Error("No VAR run in progress — call varRunBegin first.");
+  return { warnings: engineVarRunStep(activeVarRun.ctx, activeVarRun.cfg, iter) };
+};
+
+// Idempotent: the panel calls this on the success path, the cancel path
+// and the error path, and any of those can follow the others.
+export const varRunEnd = (): RunResult => {
+  if (!activeVarRun) return { warnings: [] };
+  try {
+    engineVarRunEnd(activeVarRun.ctx);
+  } finally {
+    activeVarRun = null;
+    endProgress();
+  }
+  return { warnings: [] };
 };
 
 // Read-only diagnostic scan: reports which of the 4 VAR render comps

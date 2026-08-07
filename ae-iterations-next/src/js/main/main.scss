@@ -532,6 +532,41 @@ input[type="checkbox"] {
 // The one element in the panel that's meant to look "loud" — a gradient
 // fill, a glow, and now an icon, so it reads as "go" rather than just being
 // the button that happens to be a certain color.
+// Run grows to fill; Cancel takes only what it needs, so the primary
+// action keeps its weight and position even once Cancel appears mid-run.
+.run-actions {
+  display: flex;
+  align-items: stretch;
+  gap: $space-2;
+
+  #btn-run {
+    flex: 1;
+  }
+}
+
+#btn-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  flex-shrink: 0;
+  padding: 0 $space-4;
+  border: 1px solid $border-strong;
+  border-radius: $radius-md;
+  background-color: $inset;
+  color: $text;
+  font-size: $text-sm;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  &:hover {
+    background-color: $surface-hover;
+  }
+}
+
 #btn-run {
   display: flex !important;
   align-items: center;

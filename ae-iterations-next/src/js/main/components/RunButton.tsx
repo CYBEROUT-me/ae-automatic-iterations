@@ -3,7 +3,7 @@ import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { toCfgLayers } from "../state/rowLayers";
 import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
-import { Play, X } from "lucide-react";
+import { Play, X, FolderOpen } from "lucide-react";
 import { readRunProgress } from "../lib/runProgress";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue, RunResult } from "../../../shared/types";
@@ -196,6 +196,23 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
             <X /> Cancel
           </button>
         )}
+        <button
+          id="btn-reveal"
+          title="Open the output folder"
+          disabled={running}
+          onClick={() => {
+            evalTS("revealOutputFolder")
+              .then((res) => {
+                if (!res.ok) {
+                  setStatus(res.message);
+                  setStatusKind("warning");
+                }
+              })
+              .catch(handleError);
+          }}
+        >
+          <FolderOpen />
+        </button>
       </div>
       {status && <div id="status" className={`status-${statusKind}`}>{status}</div>}
     </div>

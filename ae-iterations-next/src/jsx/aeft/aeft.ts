@@ -392,3 +392,54 @@ export const listEmojiFiles = (): { files: { path: string; name: string }[] } =>
   files.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   return { files };
 };
+
+// Lists the layers of the comp that overlays actually land in, so the
+// panel can offer real layer names instead of a bare index field. The
+// index a user picks is meaningless on its own -- "attach to layer 2"
+// cost several rounds of confusion before this existed.
+//
+// Badge/logo (VAR) and emoji (ITR) both attach within the 9x16 render
+// comp, so that's the comp reported. Falls back to the first render comp
+// found, then to whatever comp is active, so the picker still has
+// something useful to show in a project that doesn't follow the naming
+// convention.
+export const listOverlayLayers = (mode: string): { compName: string; layers: { index: number; name: string }[] } => {
+  const suffixes = mode === "var" ? VAR_ASPECT_SUFFIXES : ITR_SUFFIXES;
+  const found = findCompsBySuffixes(suffixes);
+  const preferred = mode === "var" ? "9x16" : "ITR_9x16";
+
+  let comp: CompItem | null = found[preferred] || null;
+  if (!comp) {
+    for (let i = 0; i < suffixes.length; i++) {
+      if (found[suffixes[i]]) {
+        comp = found[suffixes[i]];
+        break;
+      }
+    }
+  }
+  if (!comp && app.project.activeItem instanceof CompItem) comp = app.project.activeItem;
+  if (!comp) return { compName: "", layers: [] };
+
+  const layers: { index: number; name: string }[] = [];
+  for (let i = 1; i <= comp.numLayers; i++) {
+    try {
+      layers.push({ index: i, name: comp.layer(i).name });
+    } catch (e) {}
+  }
+  return { compName: comp.name, layers: layers };
+};
+
+// Opens the delivery folder in Finder/Explorer. After a multi-minute run
+// the output was only reachable by navigating there by hand.
+export const revealOutputFolder = (): { ok: boolean; message: string } => {
+  const projectFile = app.project.file;
+  if (!projectFile) return { ok: false, message: "Project isn't saved yet, so there's no output folder." };
+  const gdFolder = new Folder(projectFile.parent.fsName + "/GD");
+  if (!gdFolder.exists) return { ok: false, message: "No output folder yet — run something first." };
+  try {
+    gdFolder.execute();
+    return { ok: true, message: "" };
+  } catch (e: any) {
+    return { ok: false, message: "Could not open " + gdFolder.fsName + ": " + e.message };
+  }
+};

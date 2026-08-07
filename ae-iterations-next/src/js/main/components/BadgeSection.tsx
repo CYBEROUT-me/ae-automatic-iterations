@@ -3,6 +3,7 @@ import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { hexToRgb, rgbToHex } from "../lib/color";
 import { PositionPickerPopup } from "./PositionPickerPopup";
+import { LayerPicker } from "./LayerPicker";
 
 export function BadgeSection() {
   const {
@@ -61,15 +62,7 @@ export function BadgeSection() {
           Position visually…
         </button>
       </div>
-      <div className="emoji-layer-row">
-        <span className="emoji-layer-label">Attach to layer</span>
-        <input
-          className="emoji-layer-input"
-          type="number"
-          value={badgeLayerIndex}
-          onChange={(e) => setBadgeLayerIndex(parseInt(e.target.value, 10) || 0)}
-        />
-      </div>
+      <LayerPicker value={badgeLayerIndex} onChange={setBadgeLayerIndex} />
       <div id="emoji-iter-rows">
         {Array.from({ length: count }, (_, iter) => (
           <div key={iter} className="badge-iter-row">

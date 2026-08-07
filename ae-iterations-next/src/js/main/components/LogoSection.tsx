@@ -3,6 +3,7 @@ import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { LogoPickerGrid } from "./LogoPickerGrid";
 import { PositionPickerPopup } from "./PositionPickerPopup";
+import { LayerPicker } from "./LayerPicker";
 
 export function LogoSection() {
   const {
@@ -40,15 +41,7 @@ export function LogoSection() {
       <button className="video-toggle" title="Position visually" onClick={() => setPickerOpen(true)}>
         Position visually…
       </button>
-      <div className="emoji-layer-row">
-        <span className="emoji-layer-label">Attach to layer</span>
-        <input
-          className="emoji-layer-input"
-          type="number"
-          value={logoLayerIndex}
-          onChange={(e) => setLogoLayerIndex(parseInt(e.target.value, 10) || 0)}
-        />
-      </div>
+      <LayerPicker value={logoLayerIndex} onChange={setLogoLayerIndex} />
       <div id="emoji-iter-rows">
         {Array.from({ length: count }, (_, iter) => (
           <div key={iter} className="badge-iter-row">

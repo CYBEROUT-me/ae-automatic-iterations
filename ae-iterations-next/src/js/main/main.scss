@@ -517,7 +517,17 @@ input[type="checkbox"] {
 
 // ── Run section / status ─────────────────────────────────────────────────
 
+// Sticky: Run renders after every iteration row, so with a few layers ×
+// several variants the primary action sat ~25 controls down the page and
+// had to be scrolled to on every single run. Pinning it to the bottom of
+// the viewport keeps Run, the live status line and Open-output reachable
+// at all times. Needs an opaque background — content scrolls underneath.
 #run-section {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background-color: $bg;
+  padding-bottom: 0.6rem;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -544,7 +554,8 @@ input[type="checkbox"] {
   }
 }
 
-#btn-cancel {
+#btn-cancel,
+#btn-reveal {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -562,8 +573,12 @@ input[type="checkbox"] {
     height: 13px;
   }
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: $surface-hover;
+  }
+
+  &:disabled {
+    opacity: 0.45;
   }
 }
 
@@ -720,6 +735,20 @@ input[type="checkbox"] {
   width: 46px;
   box-sizing: border-box;
   text-align: center;
+}
+
+// Wider than the number field it replaces — it now carries a layer name,
+// but must still shrink rather than push the row wider than the panel.
+.layer-picker-select {
+  flex: 1;
+  min-width: 0;
+  max-width: 62%;
+  background-color: $inset;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 0.15rem $space-2;
+  color: $text;
+  font-size: $text-sm;
 }
 
 #emoji-iter-rows {

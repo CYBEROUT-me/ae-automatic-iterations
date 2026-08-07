@@ -3,6 +3,7 @@ import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
 import { EmojiPickerGrid } from "./EmojiPickerGrid";
+import { LayerPicker } from "./LayerPicker";
 
 export function EmojiSection() {
   const {
@@ -56,15 +57,7 @@ export function EmojiSection() {
           <input type="number" value={emojiSize} onChange={(e) => setEmojiSize(parseInt(e.target.value, 10) || 100)} />
         </div>
       </div>
-      <div className="emoji-layer-row">
-        <span className="emoji-layer-label">Attach to layer</span>
-        <input
-          className="emoji-layer-input"
-          type="number"
-          value={emojiLayerIndex}
-          onChange={(e) => setEmojiLayerIndex(parseInt(e.target.value, 10) || 1)}
-        />
-      </div>
+      <LayerPicker value={emojiLayerIndex} onChange={setEmojiLayerIndex} />
       <div id="emoji-iter-rows">
         {Array.from({ length: count }, (_, iter) => {
           const path = emojiPaths[iter];

@@ -5,6 +5,8 @@
 // suffixes is parameterized so both ITR mode (ITR_SUFFIXES) and VAR mode
 // (VAR_ASPECT_SUFFIXES) can reuse these functions unchanged.
 
+import { saveFrameVerified } from "./saveFrame";
+
 // Top-level-only check (does not recurse into nested precomps) for whether
 // any of a comp's own layers point at footage AE currently considers
 // missing -- exactly the kind of thing that could make a comp fail to
@@ -44,27 +46,16 @@ export function renderPNGs(comps: Record<string, CompItem>, outFolder: Folder, s
       if (prevRes[0] !== 1 || prevRes[1] !== 1) comp.resolutionFactor = [1, 1];
       const pngFile = new File(outFolder.fsName + "/" + comp.name + ".png");
 
-      // saveFrameToPng can report success (no exception) well before the
-      // file actually lands on disk -- confirmed live: a run that reported
-      // this exact "no PNG existed after 3 attempts (500ms each)" error for
-      // 3 comps turned out to have 2 of those 3 PNGs appear on disk once
-      // checked again later, meaning the earlier 1.5s window simply wasn't
-      // long enough. Call it once, then poll for the artifact over a much
-      // longer window -- a FRESH File object each poll, since re-checking
-      // .exists on the SAME File instance in this ExtendScript engine can
-      // return stale cached state instead of the current filesystem truth.
-      comp.saveFrameToPng(0, pngFile);
-      let wrote = false;
-      for (let attempt = 0; attempt < 10 && !wrote; attempt++) {
-        const check = new File(pngFile.fsName);
-        wrote = check.exists && check.length > 0;
-        if (!wrote) $.sleep(750);
-      }
+      // Save-and-verify lives in lib/saveFrame.ts -- saveFrameToPng
+      // regularly returns before the file exists, so the artifact has to
+      // be waited for rather than assumed. See that file's header for the
+      // evidence behind it.
+      const wrote = saveFrameVerified(comp, pngFile);
       comp.resolutionFactor = prevRes;
       if (!wrote) {
         const missingFootage = findMissingFootageNames(comp);
         const missingNote = missingFootage.length ? " (missing footage in this comp: " + missingFootage.join(", ") + ")" : " (no missing footage detected on this comp's own layers)";
-        errors.push(comp.name + ": saveFrameToPng reported no error, but no PNG existed at " + pngFile.fsName + " after ~7.5s of polling" + missingNote);
+        errors.push(comp.name + ": saveFrameToPng reported no error, but no PNG existed at " + pngFile.fsName + " after ~7.5s of waiting" + missingNote);
       }
     } catch (e: any) {
       errors.push(comp.name + ": " + e.message);

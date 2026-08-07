@@ -17,6 +17,7 @@ import {
 } from "./engine/runVarIterationBatch";
 import type { VarRunContext } from "./engine/runVarIterationBatch";
 import { beginProgress, endProgress } from "./lib/progress";
+import { saveFrameVerified } from "./lib/saveFrame";
 import { stripAspectSuffix, VAR_ASPECT_SUFFIXES } from "./lib/naming";
 import { findVarComp } from "./lib/findComp";
 import type {
@@ -204,7 +205,16 @@ export const renderPreviewFrame = (cfg?: { compName?: string }): { path: string;
   if (!comp) throw new Error("No comp found. Refresh a layer first.");
 
   const outFile = new File(Folder.temp.fsName + "/aeiter_position_preview.png");
-  comp.saveFrameToPng(0, outFile);
+
+  // saveFrameToPng often returns before the file exists, and this always
+  // writes to the SAME filename -- so the panel could load a path that
+  // wasn't there yet (blank preview) or, worse, silently show the frame
+  // left over from the previous time the picker was opened. saveFrameVerified
+  // deletes first and then waits for the real file, which is what makes the
+  // preview reliably the current comp.
+  if (!saveFrameVerified(comp, outFile)) {
+    throw new Error("Could not render a preview frame for " + comp.name + " — AE reported no error but wrote no file.");
+  }
 
   return { path: outFile.fsName, width: comp.width, height: comp.height };
 };

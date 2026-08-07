@@ -5,6 +5,23 @@
 // suffixes is parameterized so both ITR mode (ITR_SUFFIXES) and VAR mode
 // (VAR_ASPECT_SUFFIXES) can reuse these functions unchanged.
 
+// Top-level-only check (does not recurse into nested precomps) for whether
+// any of a comp's own layers point at footage AE currently considers
+// missing -- exactly the kind of thing that could make a comp fail to
+// render a frame without saveFrameToPng itself ever throwing.
+function findMissingFootageNames(comp: CompItem): string[] {
+  const missing: string[] = [];
+  for (let i = 1; i <= comp.numLayers; i++) {
+    try {
+      const source = (comp.layer(i) as any).source;
+      if (source && source instanceof FootageItem && source.footageMissing) {
+        missing.push(source.name);
+      }
+    } catch (e) {}
+  }
+  return missing;
+}
+
 export function renderPNGs(comps: Record<string, CompItem>, outFolder: Folder, suffixes: string[]): void {
   const errors: string[] = [];
   for (let s = 0; s < suffixes.length; s++) {
@@ -46,7 +63,9 @@ export function renderPNGs(comps: Record<string, CompItem>, outFolder: Folder, s
       }
       comp.resolutionFactor = prevRes;
       if (!wrote) {
-        errors.push(comp.name + ": saveFrameToPng reported no error, but no PNG existed at " + pngFile.fsName + " after 3 attempts");
+        const missingFootage = findMissingFootageNames(comp);
+        const missingNote = missingFootage.length ? " (missing footage in this comp: " + missingFootage.join(", ") + ")" : " (no missing footage detected on this comp's own layers)";
+        errors.push(comp.name + ": saveFrameToPng reported no error, but no PNG existed at " + pngFile.fsName + " after 3 attempts" + missingNote);
       }
     } catch (e: any) {
       errors.push(comp.name + ": " + e.message);

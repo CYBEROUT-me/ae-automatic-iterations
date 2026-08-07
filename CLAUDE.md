@@ -169,3 +169,43 @@ Video presets use `"type": "video"` and iteration objects with `{ flip, bw, tint
 | Copy file | `srcFile.copy(destFsPath)` |
 | Open project | `app.open(new File(path))` |
 | Save project | `app.project.save(file)` |
+
+---
+
+## Live Testing Against a Running After Effects
+
+`ae-iterations-next/tools/ae-panel.mjs` drives the panel — and through it, AE
+itself — over the panel's CEP DevTools port. This is how to verify host-side
+behavior for real instead of reasoning about it.
+
+```bash
+node tools/ae-panel.mjs jsx 'app.project.numItems.toString()'
+node tools/ae-panel.mjs jsx --file probe.jsx    # returns the script's last expression
+node tools/ae-panel.mjs eval '({ title: document.title })'   # panel-side JS
+node tools/ae-panel.mjs shot /tmp/panel.png
+node tools/ae-panel.mjs reload
+```
+
+**Requires the panel to be OPEN in AE** (Window > Extensions). A closed panel
+has no page and no port. Also needs `PlayerDebugMode` and the built extension
+symlinked — both already set up here.
+
+Shipped host commands are reachable in a probe via `$["com.aeiter.iteration.next"]`
+(the bundle attaches to `$`, *not* `$.global`), so a probe can call
+`listOverlayLayers`, `renderPreviewFrame`, etc. directly.
+
+**Why not `osascript ... DoScriptFile`:** sending Apple events to AE needs a
+macOS Automation (TCC) grant tied to the calling app. An agent shell running
+under a host the OS never prompts for cannot obtain it — every attempt returns
+`-1743 Not authorized to send Apple events`. CDP is an ordinary localhost
+socket with no such gate, and the panel already holds a legitimate ExtendScript
+bridge, so going in through the panel works where the direct route is refused.
+
+Gotchas confirmed in practice here:
+- `evalScript` returns a **string**; `JSON.stringify` anything structured.
+- It resolves with the literal `"EvalScript error."` when the script throws —
+  wrap probe bodies in try/catch and return `e.toString()` to see the reason.
+- `Folder.temp` is `…/T/TemporaryItems/`, which is **not** Node's `os.tmpdir()`.
+  Always pass paths back from the host rather than deriving them panel-side.
+- `npm run build` starts with `rimraf dist/*`, which kills the panel's page mid-
+  session. Reopen the panel (or `Page.navigate` back) after a rebuild.

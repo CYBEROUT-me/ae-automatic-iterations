@@ -7,10 +7,9 @@ import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
 import { EmojiSection } from "./EmojiSection";
-import { BadgeSection } from "./BadgeSection";
-import { LogoSection } from "./LogoSection";
 import { PresetPanel } from "./PresetPanel";
 import { ChangelogList } from "./ChangelogList";
+import { OverlaysCard } from "./OverlaysCard";
 import { JobPresetBar } from "./JobPresetBar";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { usePanelPersistence } from "../state/usePanelPersistence";
@@ -256,39 +255,7 @@ export function LayerInfoPanel() {
           {testLog && <pre id="var-test-log">{testLog.join("\n")}</pre>}
         </>
       )}
-      {mode === "var" && (
-        <div className="settings-card">
-          <div className="settings-row">
-            <div className="settings-row-label">
-              <Badge />
-              Badge overlay
-            </div>
-            <button
-              className={"settings-switch" + (badgeEnabled ? " on" : "")}
-              role="switch"
-              aria-checked={badgeEnabled}
-              title="Badge overlay"
-              onClick={() => setBadgeEnabled(!badgeEnabled)}
-            />
-          </div>
-          {badgeEnabled && <BadgeSection />}
-          <div className="settings-divider" />
-          <div className="settings-row">
-            <div className="settings-row-label">
-              <Image />
-              Logo overlay
-            </div>
-            <button
-              className={"settings-switch" + (logoEnabled ? " on" : "")}
-              role="switch"
-              aria-checked={logoEnabled}
-              title="Logo overlay"
-              onClick={() => setLogoEnabled(!logoEnabled)}
-            />
-          </div>
-          {logoEnabled && <LogoSection />}
-        </div>
-      )}
+      {mode === "var" && <OverlaysCard />}
       {rowLayers.map((row) => (
         <div key={row.rowKey} className="extra-layer-group">
           <div className="layer-group-label">{row.name} [{row.type}]</div>

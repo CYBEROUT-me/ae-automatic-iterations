@@ -1,47 +1,40 @@
+// Badge's own settings only. Positioning (shared canvas) and the
+// per-variation text/on-off rows (shared table) both live in OverlaysCard
+// now, since neither makes sense to configure for one overlay in isolation.
+
 import { useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { hexToRgb, rgbToHex } from "../lib/color";
-import { PositionPickerPopup } from "./PositionPickerPopup";
 import { LayerPicker } from "./LayerPicker";
+import { ChevronRight } from "lucide-react";
 
 export function BadgeSection() {
   const {
-    compName, count, badgeTexts, badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
-    badgeEnabledPerIteration,
-    setBadgeText, setBadgeX, setBadgeY, setBadgeSize, setBadgeCircleColor, setBadgeTextColor, setBadgeLayerIndex,
-    setBadgeEnabledPerIteration,
+    badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
+    setBadgeX, setBadgeY, setBadgeSize, setBadgeCircleColor, setBadgeTextColor, setBadgeLayerIndex,
   } = useAppStore(
     useShallow((s) => ({
-      compName: s.compName, count: s.count, badgeTexts: s.badgeTexts, badgeX: s.badgeX, badgeY: s.badgeY,
-      badgeSize: s.badgeSize, badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor,
-      badgeLayerIndex: s.badgeLayerIndex, badgeEnabledPerIteration: s.badgeEnabledPerIteration,
-      setBadgeText: s.setBadgeText, setBadgeX: s.setBadgeX, setBadgeY: s.setBadgeY, setBadgeSize: s.setBadgeSize,
+      badgeX: s.badgeX, badgeY: s.badgeY, badgeSize: s.badgeSize,
+      badgeCircleColor: s.badgeCircleColor, badgeTextColor: s.badgeTextColor, badgeLayerIndex: s.badgeLayerIndex,
+      setBadgeX: s.setBadgeX, setBadgeY: s.setBadgeY, setBadgeSize: s.setBadgeSize,
       setBadgeCircleColor: s.setBadgeCircleColor, setBadgeTextColor: s.setBadgeTextColor,
-      setBadgeLayerIndex: s.setBadgeLayerIndex, setBadgeEnabledPerIteration: s.setBadgeEnabledPerIteration,
+      setBadgeLayerIndex: s.setBadgeLayerIndex,
     }))
   );
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [exactOpen, setExactOpen] = useState(false);
 
   return (
-    <div id="badge-section">
-      <div className="emoji-fields-row">
-        <div className="emoji-field emoji-field-position">
-          <label className="emoji-field-label">Position</label>
-          <div className="emoji-position-group">
-            <span className="emoji-axis">X</span>
-            <input type="number" value={badgeX} onChange={(e) => setBadgeX(parseInt(e.target.value, 10) || 0)} />
-            <span className="emoji-position-sep" />
-            <span className="emoji-axis">Y</span>
-            <input type="number" value={badgeY} onChange={(e) => setBadgeY(parseInt(e.target.value, 10) || 0)} />
-          </div>
-        </div>
-        <div className="emoji-field emoji-field-size">
-          <label className="emoji-field-label">Size</label>
-          <input type="number" value={badgeSize} onChange={(e) => setBadgeSize(parseInt(e.target.value, 10) || 100)} />
-        </div>
-      </div>
-      <div className="overlay-color-row">
+    <div id="badge-section" className="overlay-settings">
+      <div className="overlay-settings-row">
+        <label className="overlay-field">
+          <span className="overlay-field-label">Size</span>
+          <input
+            type="number"
+            value={badgeSize}
+            onChange={(e) => setBadgeSize(parseInt(e.target.value, 10) || 100)}
+          />
+        </label>
         <label className="overlay-color-field">
           Circle
           <input
@@ -58,33 +51,27 @@ export function BadgeSection() {
             onChange={(e) => setBadgeTextColor(hexToRgb(e.target.value))}
           />
         </label>
-        <button className="video-toggle" title="Position visually" onClick={() => setPickerOpen(true)}>
-          Position visually…
-        </button>
       </div>
+
       <LayerPicker value={badgeLayerIndex} onChange={setBadgeLayerIndex} />
-      <div id="emoji-iter-rows">
-        {Array.from({ length: count }, (_, iter) => (
-          <div key={iter} className="badge-iter-row">
-            <span className="emoji-iter-num">{iter + 1}</span>
-            <input
-              type="checkbox"
-              className="badge-iter-checkbox"
-              title="Apply badge to this variation"
-              checked={badgeEnabledPerIteration[iter] ?? true}
-              onChange={(e) => setBadgeEnabledPerIteration(iter, e.target.checked)}
-            />
-            <input
-              type="text"
-              className="badge-text-input"
-              placeholder="Badge text"
-              value={badgeTexts[iter] ?? ""}
-              onChange={(e) => setBadgeText(iter, e.target.value || null)}
-            />
-          </div>
-        ))}
-      </div>
-      {pickerOpen && <PositionPickerPopup focus="badge" onClose={() => setPickerOpen(false)} />}
+
+      {/* Collapsed by default: placement is normally done on the canvas, but
+          typing an exact value still matters for reproducing a position
+          across jobs. */}
+      <button
+        className={"overlay-exact-toggle" + (exactOpen ? " open" : "")}
+        onClick={() => setExactOpen(!exactOpen)}
+      >
+        <ChevronRight /> Exact position
+      </button>
+      {exactOpen && (
+        <div className="overlay-exact-row">
+          <span className="emoji-axis">X</span>
+          <input type="number" value={badgeX} onChange={(e) => setBadgeX(parseInt(e.target.value, 10) || 0)} />
+          <span className="emoji-axis">Y</span>
+          <input type="number" value={badgeY} onChange={(e) => setBadgeY(parseInt(e.target.value, 10) || 0)} />
+        </div>
+      )}
     </div>
   );
 }

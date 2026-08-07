@@ -89,9 +89,15 @@ export function LayerPicker({ value, onChange }: { value: number; onChange: (v: 
       {targetComp && (
         <div className="layer-picker-source" title={targetComp}>
           in {targetComp}
-          {candidates.length > 1 && (
-            <span className="layer-picker-warn"> · {candidates.length} comps match this pattern</span>
-          )}
+        </div>
+      )}
+      {/* Its own line rather than appended to the comp name: the comp name
+          is long enough to ellipsize on a narrow panel, which was cutting
+          the warning down to "2 comps ma…" — the one part that must stay
+          readable. */}
+      {candidates.length > 1 && (
+        <div className="layer-picker-warn">
+          {candidates.length} comps match this pattern — using the one above
         </div>
       )}
     </>

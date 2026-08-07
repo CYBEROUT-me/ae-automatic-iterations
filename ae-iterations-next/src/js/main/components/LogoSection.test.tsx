@@ -4,7 +4,9 @@ import { LogoSection } from "./LogoSection";
 import { useAppStore } from "../state/store";
 
 vi.mock("../../lib/utils/bolt", () => ({
-  evalTS: vi.fn(() => Promise.resolve({ path: "/tmp/preview.png", width: 1080, height: 1920 })),
+  // Real layers so LayerPicker renders its <select>; with an empty list it
+  // falls back to a number input, which would collide with the size field.
+  evalTS: vi.fn(() => Promise.resolve({ compName: "X_9x16", layers: [{ index: 1, name: "L1" }], candidates: ["X_9x16"] })),
   evalTSErrorMessage: (err: unknown) => String(err),
 }));
 
@@ -16,7 +18,8 @@ vi.mock("../lib/logoLibrary", () => ({
 describe("LogoSection", () => {
   beforeEach(() => {
     useAppStore.setState({
-      compName: "Comp A", logoPath: null, logoX: 990, logoY: 90, logoSize: 100,
+      compName: "Comp A", count: 3, mode: "var",
+      logoPath: null, logoX: 990, logoY: 90, logoSize: 100, logoLayerIndex: 0,
     });
   });
 
@@ -26,44 +29,32 @@ describe("LogoSection", () => {
     expect(useAppStore.getState().logoPath).toBe("/logos/brand-a.png");
   });
 
-  it("updates X/Y/Size fields independently", () => {
+  it("updates the size field", async () => {
     render(<LogoSection />);
-    const [xInput, yInput, sizeInput] = screen.getAllByRole("spinbutton");
-    fireEvent.change(xInput, { target: { value: "500" } });
-    fireEvent.change(yInput, { target: { value: "600" } });
-    fireEvent.change(sizeInput, { target: { value: "80" } });
+    // Wait for LayerPicker to resolve — until it does, its number-input
+    // fallback is mounted and would collide with the size field.
+    await screen.findByRole("combobox");
+    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "25" } });
+    expect(useAppStore.getState().logoSize).toBe(25);
+  });
+
+  it("keeps the numeric X/Y behind a disclosure, and writes through when opened", async () => {
+    render(<LogoSection />);
+    await screen.findByRole("combobox");
+    expect(screen.queryByText("X")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Exact position"));
+    const spinners = screen.getAllByRole("spinbutton");
+    fireEvent.change(spinners[1], { target: { value: "500" } });
+    fireEvent.change(spinners[2], { target: { value: "600" } });
+
     expect(useAppStore.getState().logoX).toBe(500);
     expect(useAppStore.getState().logoY).toBe(600);
-    expect(useAppStore.getState().logoSize).toBe(80);
   });
 
-  it("opens the position picker on button click", async () => {
+  it("no longer owns positioning or the per-variation rows", () => {
     render(<LogoSection />);
-    fireEvent.click(screen.getByText("Position visually…"));
-    expect(await screen.findByAltText("Comp preview")).toBeInTheDocument();
-  });
-
-  it("updates the Attach to layer field", () => {
-    render(<LogoSection />);
-    fireEvent.change(screen.getByText("Attach to layer").nextSibling as Element, { target: { value: "2" } });
-    expect(useAppStore.getState().logoLayerIndex).toBe(2);
-  });
-
-  it("renders one Apply-logo checkbox per iteration, checked by default", () => {
-    useAppStore.setState({ count: 2, logoPerIteration: [] });
-    render(<LogoSection />);
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes).toHaveLength(2);
-    expect(checkboxes[0]).toBeChecked();
-    expect(checkboxes[1]).toBeChecked();
-  });
-
-  it("unchecking a per-iteration checkbox updates the store without disturbing others", () => {
-    useAppStore.setState({ count: 2, logoPerIteration: [] });
-    render(<LogoSection />);
-    const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[1]);
-    expect(useAppStore.getState().logoPerIteration[1]).toBe(false);
-    expect(useAppStore.getState().logoPerIteration[0]).toBeUndefined();
+    expect(screen.queryByText(/Position visually/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Apply logo")).not.toBeInTheDocument();
   });
 });

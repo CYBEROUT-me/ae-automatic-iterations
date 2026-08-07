@@ -78,6 +78,33 @@ describe("LayerPicker", () => {
     expect(onChange).toHaveBeenCalledWith(4);
   });
 
+  it("names the comp the layers came from", async () => {
+    vi.mocked(evalTS).mockResolvedValue({
+      compName: "LO_13148_VAR_9x16",
+      layers: LAYERS,
+      candidates: ["LO_13148_VAR_9x16"],
+    } as never);
+    render(<LayerPicker value={0} onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText(/in LO_13148_VAR_9x16/)).toBeInTheDocument());
+    expect(screen.queryByText(/comps match this pattern/)).not.toBeInTheDocument();
+  });
+
+  it("warns when more than one comp matches the naming convention", async () => {
+    // Two comps legitimately ending _VAR_9x16 is a real project shape —
+    // the picker must say which one it settled on rather than silently
+    // listing layers from whichever it happened to walk past last.
+    vi.mocked(evalTS).mockResolvedValue({
+      compName: "LO_13148_VAR_9x16",
+      layers: LAYERS,
+      candidates: ["LO_13148_VAR_9x16", "OL_8340_VAR_9x16"],
+    } as never);
+    render(<LayerPicker value={0} onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText(/2 comps match this pattern/)).toBeInTheDocument());
+    expect(screen.getByText(/in LO_13148_VAR_9x16/)).toBeInTheDocument();
+  });
+
   it("asks the host for the mode's own target comp", async () => {
     vi.mocked(evalTS).mockResolvedValue({ compName: "X", layers: LAYERS } as never);
     useAppStore.setState({ mode: "itr" });

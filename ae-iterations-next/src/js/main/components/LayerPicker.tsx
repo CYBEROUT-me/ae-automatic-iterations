@@ -23,6 +23,7 @@ export function LayerPicker({ value, onChange }: { value: number; onChange: (v: 
   const { mode, compName } = useAppStore(useShallow((s) => ({ mode: s.mode, compName: s.compName })));
   const [layers, setLayers] = useState<OverlayLayer[]>([]);
   const [targetComp, setTargetComp] = useState("");
+  const [candidates, setCandidates] = useState<string[]>([]);
 
   // Re-fetches when the mode changes (different target comp) and when
   // compName changes, which is the panel's signal that the user just hit
@@ -34,6 +35,7 @@ export function LayerPicker({ value, onChange }: { value: number; onChange: (v: 
         if (stale) return;
         setLayers(res.layers || []);
         setTargetComp(res.compName || "");
+        setCandidates(res.candidates || []);
       })
       .catch(() => {
         if (!stale) setLayers([]);
@@ -64,23 +66,34 @@ export function LayerPicker({ value, onChange }: { value: number; onChange: (v: 
   const known = layers.filter((l) => l.index === value).length > 0;
 
   return (
-    <div className="emoji-layer-row">
-      <span className="emoji-layer-label" title={targetComp ? `Layers in ${targetComp}` : undefined}>
-        Attach to layer
-      </span>
-      <select
-        className="layer-picker-select"
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
-      >
-        <option value={0}>Top of stack</option>
-        {layers.map((l) => (
-          <option key={l.index} value={l.index}>
-            {l.index} — {l.name}
-          </option>
-        ))}
-        {value > 0 && !known && <option value={value}>{value} — (no such layer)</option>}
-      </select>
-    </div>
+    <>
+      <div className="emoji-layer-row">
+        <span className="emoji-layer-label">Attach to layer</span>
+        <select
+          className="layer-picker-select"
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
+        >
+          <option value={0}>Top of stack</option>
+          {layers.map((l) => (
+            <option key={l.index} value={l.index}>
+              {l.index} — {l.name}
+            </option>
+          ))}
+          {value > 0 && !known && <option value={value}>{value} — (no such layer)</option>}
+        </select>
+      </div>
+      {/* Named, not just a tooltip: more than one comp in a project can
+          legitimately match the studio naming convention, so which one
+          these layers came from has to be verifiable at a glance. */}
+      {targetComp && (
+        <div className="layer-picker-source" title={targetComp}>
+          in {targetComp}
+          {candidates.length > 1 && (
+            <span className="layer-picker-warn"> · {candidates.length} comps match this pattern</span>
+          )}
+        </div>
+      )}
+    </>
   );
 }

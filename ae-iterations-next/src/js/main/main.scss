@@ -737,6 +737,19 @@ input[type="checkbox"] {
   text-align: center;
 }
 
+.layer-picker-source {
+  font-size: $text-xs;
+  color: $text-faint;
+  margin: -0.15rem 0 $space-3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layer-picker-warn {
+  color: $warning;
+}
+
 // Wider than the number field it replaces — it now carries a layer name,
 // but must still shrink rather than push the row wider than the panel.
 .layer-picker-select {

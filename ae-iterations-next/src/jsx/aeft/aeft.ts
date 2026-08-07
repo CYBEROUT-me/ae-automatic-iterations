@@ -399,26 +399,61 @@ export const listEmojiFiles = (): { files: { path: string; name: string }[] } =>
 // cost several rounds of confusion before this existed.
 //
 // Badge/logo (VAR) and emoji (ITR) both attach within the 9x16 render
-// comp, so that's the comp reported. Falls back to the first render comp
-// found, then to whatever comp is active, so the picker still has
-// something useful to show in a project that doesn't follow the naming
-// convention.
-export const listOverlayLayers = (mode: string): { compName: string; layers: { index: number; name: string }[] } => {
+// comp, so that's the comp reported.
+//
+// VAR resolves it the SAME way varRunStep does -- by exact name derived
+// from the project filename -- and deliberately NOT via
+// findCompsBySuffixes. A real project can hold more than one comp whose
+// name ends in the standard "_VAR_9x16" (e.g. an imported precomp from
+// another job sitting alongside the main render comp), and
+// findCompsBySuffixes keeps the LAST match it walks past. That made the
+// picker list one comp's layers while overlays actually landed in
+// another -- the indices shown didn't correspond to anything real.
+// Matching the run's own resolution is what keeps the two in step.
+//
+// candidates reports every comp sharing the preferred suffix, so the
+// panel can say which one it settled on when the name is ambiguous.
+export const listOverlayLayers = (
+  mode: string
+): { compName: string; layers: { index: number; name: string }[]; candidates: string[] } => {
   const suffixes = mode === "var" ? VAR_ASPECT_SUFFIXES : ITR_SUFFIXES;
-  const found = findCompsBySuffixes(suffixes);
   const preferred = mode === "var" ? "9x16" : "ITR_9x16";
 
-  let comp: CompItem | null = found[preferred] || null;
+  const candidates: string[] = [];
+  const preferredSuffix = "_" + preferred;
+  for (let i = 1; i <= app.project.numItems; i++) {
+    const item = app.project.item(i);
+    if (item instanceof CompItem && item.name.slice(-preferredSuffix.length) === preferredSuffix) {
+      candidates.push(item.name);
+    }
+  }
+
+  let comp: CompItem | null = null;
+
+  const projectFile = app.project.file;
+  if (mode === "var" && projectFile) {
+    const originalBase = stripAspectSuffix(projectFile.name.replace(/\.[^.]+$/, ""));
+    comp = findVarComp(originalBase + "_" + preferred);
+  }
+
+  // Fallbacks, in descending order of confidence: suffix match (what ITR's
+  // own run uses), then any render comp at all, then the active comp — so
+  // an unsaved project or one off the naming convention still gets a
+  // usable list rather than an empty picker.
   if (!comp) {
-    for (let i = 0; i < suffixes.length; i++) {
-      if (found[suffixes[i]]) {
-        comp = found[suffixes[i]];
-        break;
+    const found = findCompsBySuffixes(suffixes);
+    comp = found[preferred] || null;
+    if (!comp) {
+      for (let i = 0; i < suffixes.length; i++) {
+        if (found[suffixes[i]]) {
+          comp = found[suffixes[i]];
+          break;
+        }
       }
     }
   }
   if (!comp && app.project.activeItem instanceof CompItem) comp = app.project.activeItem;
-  if (!comp) return { compName: "", layers: [] };
+  if (!comp) return { compName: "", layers: [], candidates: candidates };
 
   const layers: { index: number; name: string }[] = [];
   for (let i = 1; i <= comp.numLayers; i++) {
@@ -426,7 +461,7 @@ export const listOverlayLayers = (mode: string): { compName: string; layers: { i
       layers.push({ index: i, name: comp.layer(i).name });
     } catch (e) {}
   }
-  return { compName: comp.name, layers: layers };
+  return { compName: comp.name, layers: layers, candidates: candidates };
 };
 
 // Opens the delivery folder in Finder/Explorer. After a multi-minute run

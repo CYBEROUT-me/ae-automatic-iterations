@@ -11,6 +11,7 @@ import { BadgeSection } from "./BadgeSection";
 import { LogoSection } from "./LogoSection";
 import { PresetPanel } from "./PresetPanel";
 import { ChangelogList } from "./ChangelogList";
+import { JobPresetBar } from "./JobPresetBar";
 import { effectiveValue as effectiveValueImpl } from "../state/effectiveValue";
 import { usePanelPersistence } from "../state/usePanelPersistence";
 import { loadFonts } from "../lib/fonts";
@@ -196,6 +197,7 @@ export function LayerInfoPanel() {
           {changelogOpen && <ChangelogList />}
         </div>
       </div>
+      <JobPresetBar />
       {mode === "itr" && (
         <div className="settings-card">
           <div className="settings-row">

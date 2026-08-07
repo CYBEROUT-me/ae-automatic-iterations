@@ -1149,6 +1149,39 @@ input[type="checkbox"] {
   border-bottom: 1px solid $border;
 }
 
+// ── Saved job setups ──────────────────────────────────────────────────────
+
+.job-preset-bar {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  gap: $space-2;
+  padding: 0 $space-4;
+}
+
+.job-preset-label {
+  font-size: $text-xs;
+  color: $text-faint;
+  flex-shrink: 0;
+}
+
+.job-preset-select {
+  flex: 1;
+  min-width: 0; // lets a long setup name shrink instead of forcing the row wider
+  background-color: $inset;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 0.15rem $space-2;
+  color: $text;
+  font-size: $text-sm;
+}
+
+.job-preset-status {
+  font-size: $text-xs;
+  color: $text-dim;
+  flex-shrink: 0;
+}
+
 // Ghost by default — ungrouped, low-stakes toolbar actions (Refresh,
 // What's new) don't need a bordered box to prove they're buttons; a
 // background on hover is enough. Add Layer is the deliberate exception

@@ -68,8 +68,15 @@ body,
   // that must NOT grow, and it already has an explicit width that wins
   // over stretch sizing regardless of this change.
   align-items: stretch;
-  gap: 0.6rem;
-  padding: 0.75rem;
+  // Fills the window so #run-section's margin-top:auto has room to push the
+  // run bar to the bottom rather than leaving it floating mid-panel.
+  flex: 1;
+  // Section-level gap, deliberately much larger than the within-row gaps.
+  // At the old uniform 9.6px, the space between two unrelated sections was
+  // the same as between two rows of one section, so the eye had nothing to
+  // group on.
+  gap: $space-6;
+  padding: $space-5 $space-4 $space-4;
   width: 100%;
   max-width: 620px;
   box-sizing: border-box;
@@ -100,16 +107,47 @@ body,
 .extra-layer-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid $border;
+  gap: $space-2;
+  background-color: $surface-card;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  padding: $space-4 $space-5 $space-5;
+  box-shadow: $shadow-md;
 }
 
 .layer-group-label {
-  color: $text-dim;
-  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  color: $text;
+  font-size: $text-sm;
+  padding-bottom: $space-2;
+  min-width: 0;
+}
+
+// Filenames here run 50+ characters. Uppercased and wrapped across two
+// lines they were unreadable as a heading — mono, normal case, one line,
+// tail-truncated, with the full name on hover.
+.layer-group-name {
+  font-family: $mono-font;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+// The layer TYPE is the categorical bit, so it gets chip treatment rather
+// than being appended to the name in brackets.
+.layer-group-type {
+  flex-shrink: 0;
+  font-size: $text-xs;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  color: $text-faint;
+  background-color: $inset;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 1px $space-3;
 }
 
 // No box: a bordered/filled rectangle per row, repeated five times, was
@@ -527,13 +565,17 @@ input[type="checkbox"] {
   bottom: 0;
   z-index: 5;
   background-color: $bg;
-  padding-bottom: 0.6rem;
+  padding-bottom: $space-4;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
-  padding-top: 0.6rem;
+  gap: $space-3;
+  // auto, not a fixed gap: with a short panel `sticky bottom:0` never
+  // engages and the run bar sat floating mid-page with dead space beneath
+  // it. This parks it at the bottom when content is short; sticky takes
+  // over once the page actually scrolls.
+  margin-top: auto;
+  padding-top: $space-4;
   border-top: 1px solid $border;
   align-self: stretch;
   width: 100%;
@@ -1342,10 +1384,17 @@ input[type="checkbox"] {
 // rectangle that competed with the rows below it for attention. The
 // surrounding gap (#layer-section) plus .extra-layer-group's own top
 // border already separate this block from what comes next.
+// An actual card. This previously set padding and margin only — no
+// background, border or radius — so a thing called a "card" drew nothing at
+// all and Badge/Logo bled into each other and into the page with no
+// boundary. A contained surface is what makes a group read as a group.
 .settings-card {
-  padding: $space-2 $space-4;
-  margin: 0 $space-4 $space-4;
   align-self: stretch;
+  background-color: $surface-card;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  padding: $space-5;
+  box-shadow: $shadow-md;
 }
 
 .settings-row {
@@ -1362,6 +1411,10 @@ input[type="checkbox"] {
   color: $text-dim;
   font-size: $text-sm;
   font-weight: 500;
+  // Needed so the collapsed summary beside the label can take the leftover
+  // width and truncate at the row edge instead of at a fixed max-width.
+  flex: 1;
+  min-width: 0;
 
   svg {
     width: 12px;
@@ -1920,4 +1973,72 @@ input[type="checkbox"] {
     background-color: $surface-hover !important;
     border-color: $accent !important;
   }
+}
+
+// ── Collapsible groups ──────────────────────────────────────────────────
+
+// The collapsed state has to say what it's hiding, or collapsing just costs
+// the user a click to find out. Shows the actual configured values.
+.overlay-summary {
+  display: inline-flex !important;
+  align-items: center;
+  gap: $space-2;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 0 0 $space-3 !important;
+  color: $text-faint !important;
+  font-size: $text-xs !important;
+  font-family: $mono-font;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  svg {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    transition: transform $transition-fast;
+  }
+
+  &.open svg {
+    transform: rotate(90deg);
+  }
+
+  &:hover {
+    color: $text-dim !important;
+  }
+}
+
+.layer-group-label {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-align: left;
+  width: 100%;
+
+  .layer-group-chevron {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    color: $text-faint;
+    transition: transform $transition-fast;
+  }
+
+  &.open .layer-group-chevron {
+    transform: rotate(90deg);
+  }
+
+  &:hover .layer-group-name {
+    color: $text-strong;
+  }
+}
+
+.layer-group-count {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: $text-xs;
+  color: $text-faint;
 }

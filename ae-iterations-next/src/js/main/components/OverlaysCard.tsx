@@ -14,18 +14,33 @@ import { LogoSection } from "./LogoSection";
 import { OverlayIterationRows } from "./OverlayIterationRows";
 import { PositionPickerPopup, type OverlayKind } from "./PositionPickerPopup";
 import { useOverlayLayers } from "./LayerPicker";
-import { Badge, Image, Move } from "lucide-react";
+import { Badge, Image, Move, ChevronRight } from "lucide-react";
 
 export function OverlaysCard() {
-  const { badgeEnabled, setBadgeEnabled, logoEnabled, setLogoEnabled } = useAppStore(
-    useShallow((s) => ({
-      badgeEnabled: s.badgeEnabled,
-      setBadgeEnabled: s.setBadgeEnabled,
-      logoEnabled: s.logoEnabled,
-      setLogoEnabled: s.setLogoEnabled,
-    }))
-  );
+  const { badgeEnabled, setBadgeEnabled, logoEnabled, setLogoEnabled, badgeSize, badgeLayerIndex, logoSize, logoLayerIndex, logoPath } =
+    useAppStore(
+      useShallow((s) => ({
+        badgeEnabled: s.badgeEnabled,
+        setBadgeEnabled: s.setBadgeEnabled,
+        logoEnabled: s.logoEnabled,
+        setLogoEnabled: s.setLogoEnabled,
+        badgeSize: s.badgeSize,
+        badgeLayerIndex: s.badgeLayerIndex,
+        logoSize: s.logoSize,
+        logoLayerIndex: s.logoLayerIndex,
+        logoPath: s.logoPath,
+      }))
+    );
   const [pickerFocus, setPickerFocus] = useState<OverlayKind | null>(null);
+  // Each overlay's settings are set once per job and then never touched,
+  // but they occupied ~450px permanently. Collapsed by default with a
+  // summary of the values, so what stays on screen is what actually gets
+  // edited repeatedly: the per-variation rows and Run.
+  const [badgeOpen, setBadgeOpen] = useState(false);
+  const [logoOpen, setLogoOpen] = useState(false);
+
+  const layerLabel = (i: number) => (i > 0 ? `layer ${i}` : "top of stack");
+  const fileLabel = (p: string | null) => (p ? p.split("/").pop() : "no logo chosen");
   const anyEnabled = badgeEnabled || logoEnabled;
   // Fetched once here and shared with both overlays. Previously each
   // LayerPicker fetched its own copy and printed the same comp name under
@@ -48,6 +63,17 @@ export function OverlaysCard() {
         <div className="settings-row-label">
           <Badge />
           Badge overlay
+          {badgeEnabled && (
+            <button
+              className={"overlay-summary" + (badgeOpen ? " open" : "")}
+              title={badgeOpen ? "Hide badge settings" : "Show badge settings"}
+              aria-expanded={badgeOpen}
+              onClick={() => setBadgeOpen(!badgeOpen)}
+            >
+              <ChevronRight />
+              {badgeOpen ? "settings" : `${badgeSize} · ${layerLabel(badgeLayerIndex)}`}
+            </button>
+          )}
         </div>
         <button
           className={"settings-switch" + (badgeEnabled ? " on" : "")}
@@ -57,7 +83,7 @@ export function OverlaysCard() {
           onClick={() => setBadgeEnabled(!badgeEnabled)}
         />
       </div>
-      {badgeEnabled && <BadgeSection layers={layerInfo.layers} />}
+      {badgeEnabled && badgeOpen && <BadgeSection layers={layerInfo.layers} />}
 
       <div className="settings-divider" />
 
@@ -65,6 +91,17 @@ export function OverlaysCard() {
         <div className="settings-row-label">
           <Image />
           Logo overlay
+          {logoEnabled && (
+            <button
+              className={"overlay-summary" + (logoOpen ? " open" : "")}
+              title={logoOpen ? "Hide logo settings" : "Show logo settings"}
+              aria-expanded={logoOpen}
+              onClick={() => setLogoOpen(!logoOpen)}
+            >
+              <ChevronRight />
+              {logoOpen ? "settings" : `${fileLabel(logoPath)} · ${logoSize} · ${layerLabel(logoLayerIndex)}`}
+            </button>
+          )}
         </div>
         <button
           className={"settings-switch" + (logoEnabled ? " on" : "")}
@@ -74,7 +111,7 @@ export function OverlaysCard() {
           onClick={() => setLogoEnabled(!logoEnabled)}
         />
       </div>
-      {logoEnabled && <LogoSection layers={layerInfo.layers} />}
+      {logoEnabled && logoOpen && <LogoSection layers={layerInfo.layers} />}
 
       {anyEnabled && (
         <>

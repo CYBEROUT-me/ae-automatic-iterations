@@ -7,6 +7,8 @@ $bg: #1c1a16;
 $surface: #26221b;
 $surface-hover: #2e2a22;
 $surface-raised: #322c22;   // icon-button hover / stronger raised background
+$surface-card: #221e18;     // card fill — one step off $bg so a group reads
+                            // as a contained surface rather than bare page
 $inset: #14120e;            // input/well background — darker than $surface, reads as "recessed"
 $border: #2c2820;           // hairline dividers between rows/sections
 $border-strong: #423c30;    // stronger borders — segmented controls, swatch rings
@@ -51,6 +53,12 @@ $space-2: 4px;
 $space-3: 6px;
 $space-4: 8px;
 $space-5: 12px;
+// Group-level spacing. The scale previously stopped at 12px, which meant the
+// gap BETWEEN major sections was the same as the gap between rows inside one
+// — so nothing read as grouped. These are the "this is a separate thing"
+// steps.
+$space-6: 16px;
+$space-7: 24px;
 
 // Radii — unchanged
 $radius-sm: 6px;

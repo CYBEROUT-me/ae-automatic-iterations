@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { evalTS, evalTSErrorMessage } from "../../lib/utils/bolt";
-import { IterationRow } from "./IterationRow";
+import { LayerGroup } from "./LayerGroup";
 import { toCfgLayers } from "../state/rowLayers";
 import { RunButton } from "./RunButton";
 import { VarNamesRow } from "./VarNamesRow";
@@ -264,17 +264,7 @@ export function LayerInfoPanel() {
       )}
       {mode === "var" && <OverlaysCard />}
       {rowLayers.map((row) => (
-        <div key={row.rowKey} className="extra-layer-group">
-          <div className="layer-group-label">{row.name} [{row.type}]</div>
-          {Array.from({ length: count }, (_, iter) => (
-            <IterationRow
-              key={iter}
-              row={row}
-              iter={iter}
-              onPreview={() => previewIteration(iter)}
-            />
-          ))}
-        </div>
+        <LayerGroup key={row.rowKey} row={row} count={count} onPreview={previewIteration} />
       ))}
       <RunButton effectiveValue={effectiveValue} />
     </div>

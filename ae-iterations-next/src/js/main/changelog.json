@@ -1,5 +1,46 @@
 [
   {
+    "version": "0.5.0",
+    "date": "2026-08-18",
+    "changes": [
+      "VAR overlays: badge (circle + free text) and logo, positioned together on one live preview of the comp \u2014 drag to place, drag the handle to resize, hold Shift to drag straight, and overlays snap to each other's centre line for matching heights",
+      "Per-variation control: each variant can have its own badge text, and badge or logo can be switched off for individual variants",
+      "Attach to layer is now a list of real layer names instead of a bare index, so you can see what an overlay will sit behind",
+      "Runs go one variant at a time: live progress ('Variant 3/5 \u2014 rendering video'), After Effects stays responsive between variants, and Cancel stops cleanly after the current variant",
+      "Your setup is remembered between sessions, and named setups can be saved and reloaded for recurring formats",
+      "Open output folder button next to Run; the Run bar now stays pinned and reachable",
+      "Panel redesign: grouped cards, real spacing, and settings that fold away once configured \u2014 VAR fits one screen instead of one and a half",
+      "Fixed: only the 9x16 still image was being written \u2014 saveFrameToPng can return before the file exists, so all four stills now render reliably",
+      "Fixed: the position preview sometimes came up blank or showed the previous comp's frame",
+      "Fixed: the layer picker could target an imported precomp that shared the studio naming convention instead of the real render comp",
+      "Fixed: hex colour fields could not be typed into by hand, only pasted",
+      "Fixed: duplicate variant names are now blocked before a run instead of silently overwriting each other, and re-run overwrites are reported",
+      "Fixed: crash when adding a still-image logo (timeRemapEnabled), and a logo landing between the badge's own two layers"
+    ]
+  },
+  {
+    "version": "0.4.3",
+    "date": "2026-07-30",
+    "changes": [
+      "Fixed: host errors were being swallowed, so failures showed no message at all"
+    ]
+  },
+  {
+    "version": "0.4.2",
+    "date": "2026-07-30",
+    "changes": [
+      "Redesign: warm amber palette, fewer boxes, clearer hierarchy",
+      "Fixed: Presets panel appeared in the wrong place and could be opened with nothing to apply it to"
+    ]
+  },
+  {
+    "version": "0.4.1",
+    "date": "2026-07-30",
+    "changes": [
+      "Release tooling: cross-platform release script"
+    ]
+  },
+  {
     "version": "0.4.0",
     "date": "2026-07-14",
     "changes": [
@@ -25,7 +66,7 @@
     "version": "0.1.0",
     "date": "2026-07-06",
     "changes": [
-      "Initial BoltCEP rewrite: ITR core — shape/text/stroke/video color and effect iteration, PNG + video rendering, project collection"
+      "Initial BoltCEP rewrite: ITR core \u2014 shape/text/stroke/video color and effect iteration, PNG + video rendering, project collection"
     ]
   }
 ]

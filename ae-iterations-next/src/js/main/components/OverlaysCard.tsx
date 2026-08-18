@@ -13,6 +13,7 @@ import { BadgeSection } from "./BadgeSection";
 import { LogoSection } from "./LogoSection";
 import { OverlayIterationRows } from "./OverlayIterationRows";
 import { PositionPickerPopup, type OverlayKind } from "./PositionPickerPopup";
+import { useOverlayLayers } from "./LayerPicker";
 import { Badge, Image, Move } from "lucide-react";
 
 export function OverlaysCard() {
@@ -26,9 +27,23 @@ export function OverlaysCard() {
   );
   const [pickerFocus, setPickerFocus] = useState<OverlayKind | null>(null);
   const anyEnabled = badgeEnabled || logoEnabled;
+  // Fetched once here and shared with both overlays. Previously each
+  // LayerPicker fetched its own copy and printed the same comp name under
+  // itself, so the identical line appeared twice.
+  const layerInfo = useOverlayLayers();
 
   return (
     <div className="settings-card">
+      {anyEnabled && layerInfo.compName && (
+        <div className="overlay-target-line" title={layerInfo.compName}>
+          Overlays land in <strong>{layerInfo.compName}</strong>
+        </div>
+      )}
+      {anyEnabled && layerInfo.candidates.length > 1 && (
+        <div className="layer-picker-warn">
+          {layerInfo.candidates.length} comps match this pattern — using the one above
+        </div>
+      )}
       <div className="settings-row">
         <div className="settings-row-label">
           <Badge />
@@ -42,7 +57,7 @@ export function OverlaysCard() {
           onClick={() => setBadgeEnabled(!badgeEnabled)}
         />
       </div>
-      {badgeEnabled && <BadgeSection />}
+      {badgeEnabled && <BadgeSection layers={layerInfo.layers} />}
 
       <div className="settings-divider" />
 
@@ -59,7 +74,7 @@ export function OverlaysCard() {
           onClick={() => setLogoEnabled(!logoEnabled)}
         />
       </div>
-      {logoEnabled && <LogoSection />}
+      {logoEnabled && <LogoSection layers={layerInfo.layers} />}
 
       {anyEnabled && (
         <>
@@ -67,7 +82,7 @@ export function OverlaysCard() {
           {/* One button for both. The picker shows every enabled overlay on
               a single canvas; focus only decides which starts selected. */}
           <button
-            className="video-toggle overlay-position-btn"
+            className="overlay-position-btn"
             title="Position overlays on a preview of the comp"
             onClick={() => setPickerFocus(badgeEnabled ? "badge" : "logo")}
           >

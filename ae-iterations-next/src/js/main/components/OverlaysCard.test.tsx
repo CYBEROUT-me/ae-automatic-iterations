@@ -69,6 +69,6 @@ describe("OverlaysCard", () => {
   it("shows the shared per-variation table once an overlay is on", () => {
     useAppStore.setState({ badgeEnabled: true });
     render(<OverlaysCard />);
-    expect(screen.getAllByPlaceholderText("Badge text")).toHaveLength(2);
+    expect(screen.getAllByLabelText(/^Badge text for variant/)).toHaveLength(2);
   });
 });

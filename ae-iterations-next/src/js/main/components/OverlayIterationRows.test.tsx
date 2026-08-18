@@ -23,14 +23,14 @@ describe("OverlayIterationRows", () => {
     render(<OverlayIterationRows />);
     expect(screen.getByText("Badge text")).toBeInTheDocument();
     expect(screen.queryByText("Logo")).not.toBeInTheDocument();
-    expect(screen.getAllByPlaceholderText("Badge text")).toHaveLength(3);
+    expect(screen.getAllByLabelText(/^Badge text for variant/)).toHaveLength(3);
   });
 
   it("shows only the logo column when only logo is on", () => {
     useAppStore.setState({ logoEnabled: true });
     render(<OverlayIterationRows />);
     expect(screen.getByText("Logo")).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText("Badge text")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Badge text for variant/)).not.toBeInTheDocument();
     expect(screen.getAllByRole("checkbox")).toHaveLength(3);
   });
 
@@ -41,13 +41,13 @@ describe("OverlayIterationRows", () => {
     expect(screen.getByText("Logo")).toBeInTheDocument();
     // 3 variations × (badge on/off + logo on/off)
     expect(screen.getAllByRole("checkbox")).toHaveLength(6);
-    expect(screen.getAllByPlaceholderText("Badge text")).toHaveLength(3);
+    expect(screen.getAllByLabelText(/^Badge text for variant/)).toHaveLength(3);
   });
 
   it("writes badge text for the right variation", () => {
     useAppStore.setState({ badgeEnabled: true });
     render(<OverlayIterationRows />);
-    fireEvent.change(screen.getAllByPlaceholderText("Badge text")[1], { target: { value: "50%" } });
+    fireEvent.change(screen.getAllByLabelText(/^Badge text for variant/)[1], { target: { value: "50%" } });
     expect(useAppStore.getState().badgeTexts[1]).toBe("50%");
     expect(useAppStore.getState().badgeTexts[0]).toBeUndefined();
   });
@@ -65,6 +65,6 @@ describe("OverlayIterationRows", () => {
   it("follows the count", () => {
     useAppStore.setState({ badgeEnabled: true, count: 5 });
     render(<OverlayIterationRows />);
-    expect(screen.getAllByPlaceholderText("Badge text")).toHaveLength(5);
+    expect(screen.getAllByLabelText(/^Badge text for variant/)).toHaveLength(5);
   });
 });

@@ -55,7 +55,7 @@ export function OverlayIterationRows() {
               <input
                 type="text"
                 className="badge-text-input"
-                placeholder="Badge text"
+                aria-label={`Badge text for variant ${iter + 1}`}
                 value={s.badgeTexts[iter] ?? ""}
                 onChange={(e) => s.setBadgeText(iter, e.target.value || null)}
               />

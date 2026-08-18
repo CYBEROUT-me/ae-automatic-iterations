@@ -1840,3 +1840,84 @@ input[type="checkbox"] {
   justify-content: center;
   min-width: 2.4rem;
 }
+
+// ── Variant names: one full-width field per variant ─────────────────────
+
+#var-names-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-self: stretch;
+}
+
+.var-names-head {
+  font-size: $text-xs;
+  color: $text-faint;
+}
+
+.var-row {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+
+  // The whole point of the single-column layout: studio names run ~50
+  // characters and only the tail distinguishes one variant from the next.
+  // Tabular mono at a slightly smaller size so a full studio name fits the
+  // default panel width instead of clipping the last few characters — the
+  // ones that actually differ between variants.
+  input {
+    flex: 1;
+    min-width: 0;
+    font-family: $mono-font;
+    font-size: 0.7rem;
+  }
+}
+
+// ── Overlays card: shared target line + primary action ──────────────────
+
+.overlay-target-line {
+  font-size: $text-xs;
+  color: $text-dim;
+  padding-bottom: $space-2;
+  // Wraps rather than ellipsizing: the aspect suffix at the end (_9x16) is
+  // precisely what identifies which comp this is, so clipping the tail
+  // removes the only informative part.
+  word-break: break-all;
+  line-height: 1.35;
+
+  strong {
+    color: $text;
+    font-weight: 600;
+  }
+}
+
+// Promoted from a small ghost button: this is now the only way to place
+// either overlay, so it should not read as an afterthought next to a
+// diagnostic.
+.overlay-position-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  // align-self does nothing here (.settings-card is a block), and a button
+  // sizes to its content regardless of display:flex — hence explicit width.
+  width: 100%;
+  margin: $space-3 0;
+  padding: $space-3 0 !important;
+  background-color: $surface-raised !important;
+  color: $text !important;
+  border: 1px solid $accent-dim !important;
+  border-radius: $radius-sm;
+  font-size: $text-sm !important;
+  font-weight: 600;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  &:hover {
+    background-color: $surface-hover !important;
+    border-color: $accent !important;
+  }
+}

@@ -8,22 +8,34 @@
 // whenever the layer list can't be resolved -- no comp open yet, a project
 // that doesn't follow the naming convention, or a host call that fails --
 // so this can never become a dead end that blocks configuring an overlay.
+//
+// Two modes: given a `layers` prop it renders only the field (the caller
+// already knows and displays which comp they came from — OverlaysCard shows
+// it once for both overlays instead of printing the identical comp name
+// under each). Without the prop it fetches its own list and names the comp
+// itself, which is how EmojiSection uses it standalone in ITR mode.
 
 import { useEffect, useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { evalTS } from "../../lib/utils/bolt";
 
-interface OverlayLayer {
+export interface OverlayLayer {
   index: number;
   name: string;
 }
 
-export function LayerPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+export interface OverlayLayersInfo {
+  compName: string;
+  layers: OverlayLayer[];
+  candidates: string[];
+}
+
+// Shared by LayerPicker's standalone mode and by OverlaysCard, which needs
+// the same data to name the comp once at card level.
+export function useOverlayLayers(): OverlayLayersInfo {
   const { mode, compName } = useAppStore(useShallow((s) => ({ mode: s.mode, compName: s.compName })));
-  const [layers, setLayers] = useState<OverlayLayer[]>([]);
-  const [targetComp, setTargetComp] = useState("");
-  const [candidates, setCandidates] = useState<string[]>([]);
+  const [info, setInfo] = useState<OverlayLayersInfo>({ compName: "", layers: [], candidates: [] });
 
   // Re-fetches when the mode changes (different target comp) and when
   // compName changes, which is the panel's signal that the user just hit
@@ -33,17 +45,33 @@ export function LayerPicker({ value, onChange }: { value: number; onChange: (v: 
     evalTS("listOverlayLayers", mode)
       .then((res) => {
         if (stale) return;
-        setLayers(res.layers || []);
-        setTargetComp(res.compName || "");
-        setCandidates(res.candidates || []);
+        setInfo({ compName: res.compName || "", layers: res.layers || [], candidates: res.candidates || [] });
       })
       .catch(() => {
-        if (!stale) setLayers([]);
+        if (!stale) setInfo({ compName: "", layers: [], candidates: [] });
       });
     return () => {
       stale = true;
     };
   }, [mode, compName]);
+
+  return info;
+}
+
+export function LayerPicker({
+  value,
+  onChange,
+  layers: provided,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  layers?: OverlayLayer[];
+}) {
+  const own = useOverlayLayers();
+  const layers = provided ?? own.layers;
+  // Only the standalone form names its own comp; when the caller supplied
+  // the list, it is showing that itself.
+  const showSource = provided === undefined;
 
   if (!layers.length) {
     return (
@@ -83,21 +111,14 @@ export function LayerPicker({ value, onChange }: { value: number; onChange: (v: 
           {value > 0 && !known && <option value={value}>{value} — (no such layer)</option>}
         </select>
       </div>
-      {/* Named, not just a tooltip: more than one comp in a project can
-          legitimately match the studio naming convention, so which one
-          these layers came from has to be verifiable at a glance. */}
-      {targetComp && (
-        <div className="layer-picker-source" title={targetComp}>
-          in {targetComp}
+      {showSource && own.compName && (
+        <div className="layer-picker-source" title={own.compName}>
+          in {own.compName}
         </div>
       )}
-      {/* Its own line rather than appended to the comp name: the comp name
-          is long enough to ellipsize on a narrow panel, which was cutting
-          the warning down to "2 comps ma…" — the one part that must stay
-          readable. */}
-      {candidates.length > 1 && (
+      {showSource && own.candidates.length > 1 && (
         <div className="layer-picker-warn">
-          {candidates.length} comps match this pattern — using the one above
+          {own.candidates.length} comps match this pattern — using the one above
         </div>
       )}
     </>

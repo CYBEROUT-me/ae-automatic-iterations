@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { toCfgLayers } from "../state/rowLayers";
@@ -35,6 +35,18 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
   // A ref, not state: the run loop reads this between every variant, and a
   // state value captured in that closure would never see the update.
   const cancelRef = useRef(false);
+
+  // A plain "Done" is only interesting right after it happens; left up, it's
+  // indistinguishable from a run that just finished. Warnings and errors are
+  // not cleared — those exist to be read.
+  useEffect(() => {
+    if (statusKind !== "done") return;
+    const t = setTimeout(() => {
+      setStatus("");
+      setStatusKind("idle");
+    }, 30000);
+    return () => clearTimeout(t);
+  }, [statusKind, status]);
 
   const emojiOnly = mode === "itr" && emojiEnabled;
   // VAR mode's badge/logo overlays are independent of cfg.layers (they apply
@@ -211,7 +223,7 @@ export function RunButton({ effectiveValue }: { effectiveValue: (row: RowLayer, 
               .catch(handleError);
           }}
         >
-          <FolderOpen />
+          <FolderOpen /> Output
         </button>
       </div>
       {status && <div id="status" className={`status-${statusKind}`}>{status}</div>}

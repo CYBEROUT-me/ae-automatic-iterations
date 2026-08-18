@@ -7,9 +7,12 @@ import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { hexToRgb, rgbToHex } from "../lib/color";
 import { LayerPicker } from "./LayerPicker";
+import type { OverlayLayer } from "./LayerPicker";
 import { ChevronRight } from "lucide-react";
 
-export function BadgeSection() {
+// layers is supplied by OverlaysCard so both overlays share one fetch
+// and one comp-name line instead of each printing the same thing.
+export function BadgeSection({ layers }: { layers?: OverlayLayer[] } = {}) {
   const {
     badgeX, badgeY, badgeSize, badgeCircleColor, badgeTextColor, badgeLayerIndex,
     setBadgeX, setBadgeY, setBadgeSize, setBadgeCircleColor, setBadgeTextColor, setBadgeLayerIndex,
@@ -53,7 +56,7 @@ export function BadgeSection() {
         </label>
       </div>
 
-      <LayerPicker value={badgeLayerIndex} onChange={setBadgeLayerIndex} />
+      <LayerPicker value={badgeLayerIndex} onChange={setBadgeLayerIndex} layers={layers} />
 
       {/* Collapsed by default: placement is normally done on the canvas, but
           typing an exact value still matters for reproducing a position

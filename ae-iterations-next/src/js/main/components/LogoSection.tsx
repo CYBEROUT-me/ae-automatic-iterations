@@ -6,9 +6,12 @@ import { useAppStore } from "../state/store";
 import { useShallow } from "zustand/react/shallow";
 import { LogoPickerGrid } from "./LogoPickerGrid";
 import { LayerPicker } from "./LayerPicker";
+import type { OverlayLayer } from "./LayerPicker";
 import { ChevronRight } from "lucide-react";
 
-export function LogoSection() {
+// layers is supplied by OverlaysCard so both overlays share one fetch
+// and one comp-name line instead of each printing the same thing.
+export function LogoSection({ layers }: { layers?: OverlayLayer[] } = {}) {
   const { logoPath, logoX, logoY, logoSize, logoLayerIndex, setLogoPath, setLogoX, setLogoY, setLogoSize, setLogoLayerIndex } =
     useAppStore(
       useShallow((s) => ({
@@ -30,7 +33,7 @@ export function LogoSection() {
         </label>
       </div>
 
-      <LayerPicker value={logoLayerIndex} onChange={setLogoLayerIndex} />
+      <LayerPicker value={logoLayerIndex} onChange={setLogoLayerIndex} layers={layers} />
 
       <button
         className={"overlay-exact-toggle" + (exactOpen ? " open" : "")}

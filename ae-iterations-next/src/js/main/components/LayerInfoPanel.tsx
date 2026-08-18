@@ -16,7 +16,7 @@ import { usePanelPersistence } from "../state/usePanelPersistence";
 import { loadFonts } from "../lib/fonts";
 import type { RowLayer } from "../state/rowLayers";
 import type { LayerValue } from "../../../shared/types";
-import { RefreshCw, Plus, ChevronUp, ChevronDown, Smile, Star, ChevronRight, Info, Badge, Image } from "lucide-react";
+import { RefreshCw, Plus, ChevronUp, ChevronDown, Smile, Star, ChevronRight, Info, Stethoscope } from "lucide-react";
 
 export function LayerInfoPanel() {
   const {
@@ -185,6 +185,14 @@ export function LayerInfoPanel() {
             </div>
           </div>
         </div>
+        {/* A diagnostic, so it belongs with the other toolbar utilities —
+            as a full-width button mid-panel it outweighed the actual
+            workflow actions around it. */}
+        {mode === "var" && (
+          <button className="icon-btn" title="Test: scan for VAR render comps" onClick={testVarComps}>
+            <Stethoscope />
+          </button>
+        )}
         <div className="changelog-anchor" ref={changelogRef}>
           <button
             className={"icon-btn" + (changelogOpen ? " active-state" : "")}
@@ -251,7 +259,6 @@ export function LayerInfoPanel() {
       {mode === "var" && (
         <>
           <VarNamesRow onPreview={previewIteration} />
-          <button className="var-test-btn" onClick={testVarComps}>Test</button>
           {testLog && <pre id="var-test-log">{testLog.join("\n")}</pre>}
         </>
       )}
